@@ -11,7 +11,6 @@ let RENDERED_IFRAME;
 
 var { state } = I.store(NS, {
   state: {
-    htmlapiResult: "",
     html: "",
     DOM: {
       renderingMode: "",

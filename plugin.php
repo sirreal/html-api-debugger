@@ -148,9 +148,11 @@ add_action(
 			function () use ($slug) {
 				wp_interactivity_state( $slug, array(
 					'DOM' => array(
-						  'renderingMode' => "",
-						  'title' => "",
-						),
+						'renderingMode' => "",
+						'title' => "",
+					),
+					'htmlapiResult' => "<html>\n  <head>\n  <body>\n",
+					'htmlapiError' => '',
 				));
 				ob_start();
 ?>
