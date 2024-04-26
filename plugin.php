@@ -157,6 +157,7 @@ add_action(
 				ob_start();
 ?>
 <table
+	id="html-api-debugger-table"
 	data-wp-interactive="<?php echo esc_attr( $slug ); ?>"
 	data-wp-watch="watch"
 	data-wp-run="run"
@@ -165,26 +166,26 @@ add_action(
 <tbody>
 <tr>
 	<td>
-		This will include an implicit:
-		<pre><?php echo esc_html("<!DOCTYPE html>\n<html>\n<body>"); ?></pre>
+		<div id="html-input-note"></div>
 		<textarea data-wp-on--input="handleChange"></textarea>
 	</td>
 	<td>
 		<div>
-			<code>Title: <span data-wp-text="state.DOM.title"></span></code>
-			<br>
-			<code>Rendering mode: <span data-wp-text="state.DOM.renderingMode"></span></code>
+			<p>Title: <code data-wp-text="state.DOM.title"></code></p>
+			<p>Rendering mode: <code data-wp-text="state.DOM.renderingMode"></code></p>
 		</div>
 		<iframe id="rendered_iframe" src="about:blank" data-wp-on--load="onRenderedIframeLoad"></iframe>
 	</td>
+</tr>
+<tr>
 	<td>
 		<ul id="dom_tree" data-wp-ignore></ul>
 	</td>
 	<td>
-		<div style="background:red;" data-wp-text="state.htmlapiError"></div>
-		<pre style="background:#fff;padding:1em;" data-wp-text="state.htmlapiResult"></pre>
+		<div class="hide-on-empty error-holder" data-wp-text="state.htmlapiError"></div>
+		<pre class="hide-on-empty result-holder" data-wp-text="state.htmlapiResult"></pre>
 	</td>
-<tr>
+</tr>
 </tbody>
 </table>
 <?php
