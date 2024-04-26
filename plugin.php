@@ -127,6 +127,7 @@ add_action(
 	function( $hook_suffix ) use ($slug) {
 		if ( $hook_suffix === "toplevel_page_$slug") {
 				wp_enqueue_script( 'wp-api-fetch' );
+				wp_enqueue_style( $slug, plugins_url( 'style.css', __FILE__ ),);
 				wp_enqueue_script_module(
 					'@htmlapidebugger/view',
 					plugins_url( 'view.js', __FILE__ ),

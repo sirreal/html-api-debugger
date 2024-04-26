@@ -1,0 +1,130 @@
+#dom_tree {
+  border: inset thin;
+  padding: 0.5em 0.5em 0.5em 1em;
+  color: black;
+  min-height: 5em;
+  font-family: monospace;
+  background: white;
+}
+
+#dom_tree ul {
+  padding: 0 0 0 1em;
+  margin: 0;
+}
+
+#dom_tree li {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  position: relative;
+}
+
+#dom_tree li li {
+  list-style: disc;
+}
+
+#dom_tree .t1 code {
+  color: purple;
+  font-weight: bold;
+}
+
+#dom_tree .t2 {
+  font-style: normal;
+  font-family: monospace;
+}
+
+#dom_tree .t2 .name {
+  color: black;
+  font-weight: bold;
+}
+
+#dom_tree .t2 .value {
+  color: blue;
+  font-weight: normal;
+}
+
+#dom_tree .t3 code,
+#dom_tree .t4 code,
+#dom_tree .t5 code {
+  color: gray;
+}
+
+#dom_tree .t7 code,
+#dom_tree .t8 code {
+  color: green;
+}
+
+#dom_tree span {
+  font-style: italic;
+  font-family: serif;
+}
+
+#dom_tree .t10 code {
+  color: teal;
+}
+
+#dom_tree .misparented,
+#dom_tree .misparented code {
+  color: red;
+  font-weight: bold;
+}
+
+#dom_tree .unnamed {
+  color: red;
+  font-style: italic;
+}
+
+#dom_tree .template {
+  padding: 0 0 0 1.5em;
+  background: #eeeeee;
+  color: black;
+  position: relative;
+  overflow: hidden;
+}
+
+#dom_tree .template::after {
+  position: absolute;
+  top: 1em;
+  right: -2.6em;
+  content: "TEMPLATE";
+  width: 10em;
+  text-align: center;
+  transform: rotate(30deg);
+  background: black;
+  color: white;
+}
+
+#dom_tree.hidden,
+.hidden {
+  visibility: hidden;
+  margin: 0.5em 0;
+  padding: 0;
+  height: 0;
+  min-height: 0;
+}
+
+#dom_tree li li {
+  list-style: none;
+}
+
+#dom_tree li:first-child::before {
+  position: absolute;
+  top: 0;
+  height: 0.7em;
+  left: -0.75em;
+  width: 0.5em;
+  border-style: none none solid solid;
+  content: "";
+  border-width: 0.1em;
+}
+
+#dom_tree li:not(:last-child)::after {
+  position: absolute;
+  top: 0;
+  bottom: -0.7em;
+  left: -0.75em;
+  width: 0.5em;
+  border-style: none none solid solid;
+  content: "";
+  border-width: 0.1em;
+}
