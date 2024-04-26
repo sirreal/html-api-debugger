@@ -1,0 +1,13 @@
+{
+  "name": "test-dewp",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {},
+  "author": "sirreal",
+  "license": "GPL-2.0",
+  "devDependencies": {
+    "@wordpress/api-fetch": "^6.53.0",
+    "@wordpress/interactivity": "5.5.0",
+    "prettier": "^3.1.1"
+  }
+}
