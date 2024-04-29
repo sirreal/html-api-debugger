@@ -1,5 +1,6 @@
 import * as I from "@wordpress/interactivity";
 import { printDOM } from "./dom-utils.js";
+import { printHtmlApiTree } from "./print-htmlapi-tree.js";
 
 /** @type {typeof import('@wordpress/api-fetch').default} */
 const apiFetch = window.wp.apiFetch;
@@ -9,7 +10,7 @@ const NS = "html-api-debugger";
 /** @type {HTMLIFrameElement} */
 let RENDERED_IFRAME;
 
-var { state } = I.store(NS, {
+var { state, handleChange } = I.store(NS, {
   state: {
     html: "",
     DOM: {
@@ -19,6 +20,7 @@ var { state } = I.store(NS, {
   },
   run() {
     RENDERED_IFRAME = document.getElementById("rendered_iframe");
+    handleChange()
   },
   onRenderedIframeLoad(e) {
     const doc = e.target.contentWindow.document;
@@ -28,7 +30,7 @@ var { state } = I.store(NS, {
     printDOM(document.getElementById("dom_tree"), doc);
   },
   handleChange: function* (e) {
-    const val = e.target.value;
+    const val = e?.target.value ?? '';
 
     state.html = val;
 
@@ -39,13 +41,18 @@ var { state } = I.store(NS, {
     });
 
     if (resp.error) {
-      state.htmlapiResult = "";
+      document.getElementById("html_api_result_holder").innerHTML = "";
       state.htmlapiError = resp.error;
+      state.htmlapiResult = null;
       return;
     }
 
-    state.htmlapiError = "";
-    state.htmlapiResult = resp.result;
+    state.htmlapiError = null;
+    state.htmlapiResult = JSON.stringify(resp.result, undefined, 2);
+    printHtmlApiTree(
+      resp.result,
+      document.getElementById("html_api_result_holder"),
+    );
   },
   watch() {
     RENDERED_IFRAME.contentWindow.document.open();
