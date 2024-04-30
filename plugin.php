@@ -1,5 +1,4 @@
 <?php
-
 /*
  * Plugin Name:       HTML API Debugger
  * Plugin URI:        …
@@ -12,6 +11,9 @@
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  */
 
+/**
+ * The plugin class.
+ */
 abstract class HTML_API_Debugger {
 
 	const SLUG = 'html-api-debugger';
@@ -57,13 +59,8 @@ abstract class HTML_API_Debugger {
 					array(
 						'methods'             => 'POST',
 						'callback'            => function ( WP_REST_Request $request ) {
-							$html = $request->get_json_params()['html'];
-							try {
-								$result = self::build_html_tree( $html );
-								return array( 'result' => $result );
-							} catch ( Exception $e ) {
-								return array( 'error' => (string) $e );
-							}
+							$html = $request->get_json_params()['html'] ?: '';
+							return self::prepare_html_result_object( $html );
 						},
 						'permission_callback' => '__return_true',
 					)
@@ -95,28 +92,30 @@ abstract class HTML_API_Debugger {
 					'unfiltered_html',
 					self::SLUG,
 					function () {
-						$html = $_GET['html'];
+						$html             = $_GET['html'] ?: '';
+						$htmlapi_response = self::prepare_html_result_object( $html );
+
 						wp_interactivity_state(
 							self::SLUG,
 							array(
-								'DOM'           => array(
+								'DOM'             => array(
 									'renderingMode' => '',
 									'title'         => '',
 								),
-								'htmlapiResult' => null,
-								'htmlapiError'  => null,
+								'html'            => $html,
+								'htmlapiResponse' => $htmlapi_response,
 							)
 						);
 						ob_start();
 						?>
-		<table
-			id="html-api-debugger-table"
-			data-wp-interactive="<?php echo esc_attr( self::SLUG ); ?>"
-			data-wp-watch="watch"
-			data-wp-run="run"
-			data-wp-init="state.updateData"
-		>
-		<tbody>
+<table
+	id="html-api-debugger-table"
+	data-wp-interactive="<?php echo esc_attr( self::SLUG ); ?>"
+	data-wp-watch="watch"
+	data-wp-run="run"
+	data-wp-init="state.updateData"
+>
+	<tbody>
 		<tr>
 			<td>
 				<h2>Input HTML</h2>
@@ -144,15 +143,20 @@ abstract class HTML_API_Debugger {
 			</td>
 			<td>
 				<h2>Interpreted by HTML API</h2>
-				<div class="hide-on-empty error-holder" data-wp-text="state.htmlapiError"></div>
+				<pre  class="hide-on-empty error-holder" data-wp-text="state.htmlapiResponse.error"></pre>
 				<ul id="html_api_result_holder" class="hide-on-empty" data-wp-ignore></ul>
 			</td>
 		</tr>
 		<tr>
-			<td><details><summary>debug response</summary><pre data-wp-text="state.htmlapiResult"></pre></details></td>
+			<td>
+				<details>
+					<summary>debug response</summary>
+					<pre data-wp-text="state.htmlapiResponse"></pre>
+				</details>
+			</td>
 		</tr>
-		</tbody>
-		</table>
+	</tbody>
+</table>
 						<?php
 						echo wp_interactivity_process_directives( ob_get_clean() );
 					},
@@ -162,6 +166,11 @@ abstract class HTML_API_Debugger {
 		);
 	}
 
+	/**
+	 * Build the HTML API tree.
+	 *
+	 * @param string $html The HTML.
+	 */
 	private static function build_html_tree( string $html ): array {
 		$processor = WP_HTML_Processor::create_fragment( $html );
 		if ( null === $processor ) {
@@ -335,6 +344,19 @@ abstract class HTML_API_Debugger {
 		}
 
 		return $result;
+	}
+
+	/**
+	 * Prepare a result object.
+	 *
+	 * @param string $html The HTML.
+	 */
+	private static function prepare_html_result_object( string $html ): array {
+		try {
+			return array( 'result' => self::build_html_tree( $html ) );
+		} catch ( Exception $e ) {
+			return array( 'error' => (string) $e );
+		}
 	}
 }
 

@@ -10,17 +10,10 @@ const NS = 'html-api-debugger';
 /** @type {HTMLIFrameElement} */
 let RENDERED_IFRAME;
 
-var { state, handleChange } = I.store( NS, {
-	state: {
-		html: document.getElementById( 'input_html' ).value,
-		DOM: {
-			renderingMode: '',
-			title: '',
-		},
-	},
+var { state, render } = I.store( NS, {
 	run() {
 		RENDERED_IFRAME = document.getElementById( 'rendered_iframe' );
-		handleChange();
+		render();
 	},
 	onRenderedIframeLoad( e ) {
 		const doc = e.target.contentWindow.document;
@@ -30,7 +23,7 @@ var { state, handleChange } = I.store( NS, {
 		printDOM( document.getElementById( 'dom_tree' ), doc );
 	},
 	handleChange: function* ( e ) {
-		const val = e?.target.value ?? state.html;
+		const val = e.target.value;
 
 		state.html = val;
 
@@ -44,25 +37,33 @@ var { state, handleChange } = I.store( NS, {
 			data: { html: val },
 		} );
 
+		state.htmlapiResponse = resp;
+
 		if ( resp.error ) {
 			document.getElementById( 'html_api_result_holder' ).innerHTML = '';
-			state.htmlapiError = resp.error;
-			state.htmlapiResult = null;
 			return;
 		}
 
-		state.htmlapiError = null;
-		state.htmlapiResult = JSON.stringify( resp.result, undefined, 2 );
 		printHtmlApiTree(
 			resp.result,
 			document.getElementById( 'html_api_result_holder' )
 		);
 	},
 	watch() {
+		render();
+	},
+	render() {
 		RENDERED_IFRAME.contentWindow.document.open();
 		RENDERED_IFRAME.contentWindow.document.write(
 			'<!DOCTYPE html>\n<html>\n<body>' + state.html
 		);
 		RENDERED_IFRAME.contentWindow.document.close();
+
+		if ( state.htmlapiResponse.result ) {
+			printHtmlApiTree(
+				state.htmlapiResponse.result,
+				document.getElementById( 'html_api_result_holder' )
+			);
+		}
 	},
 } );
