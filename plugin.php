@@ -282,18 +282,30 @@ abstract class HTML_API_Debugger {
 					break;
 
 				case '#comment':
+					$self = array(
+						'nodeType' => self::NODE_TYPE_COMMENT,
+					);
 					switch ( $processor->get_comment_type() ) {
 						case WP_HTML_Processor::COMMENT_AS_ABRUPTLY_CLOSED_COMMENT:
 						case WP_HTML_Processor::COMMENT_AS_HTML_COMMENT:
-							$comment_node_name = $processor->get_token_name();
+							$self['nodeName']  = $processor->get_token_name();
+							$self['nodeValue'] = $processor->get_modifiable_text();
 							break;
 
 						case WP_HTML_Processor::COMMENT_AS_PI_NODE_LOOKALIKE:
-							$comment_node_name = "{$processor->get_token_name()}({$processor->get_comment_type()}: {$processor->get_tag()})";
+							$self['nodeName']   = "{$processor->get_token_name()}({$processor->get_comment_type()})";
+							$self['childNodes'] = array(
+								array(
+									'nodeType'  => self::NODE_TYPE_PROCESSING_INSTRUCTION,
+									'nodeName'  => $processor->get_tag(),
+									'nodeValue' => $processor->get_modifiable_text(),
+								),
+							);
 							break;
 
 						case WP_HTML_Processor::COMMENT_AS_CDATA_LOOKALIKE:
-							$comment_node_name = "{$processor->get_token_name()}({$processor->get_comment_type()})";
+							$self['nodeName']  = "{$processor->get_token_name()}({$processor->get_comment_type()})";
+							$self['nodeValue'] = $processor->get_modifiable_text();
 							break;
 
 						default:
@@ -301,11 +313,6 @@ abstract class HTML_API_Debugger {
 							throw new Exception( "Unhandled comment type for tree construction: {$processor->get_comment_type()}" );
 					}
 
-					$self                    = array(
-						'nodeType'  => self::NODE_TYPE_COMMENT,
-						'nodeName'  => $comment_node_name,
-						'nodeValue' => $processor->get_modifiable_text(),
-					);
 					$current['childNodes'][] = $self;
 					break;
 
