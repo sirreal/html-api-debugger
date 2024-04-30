@@ -31,6 +31,12 @@ abstract class HTML_API_Debugger {
 
 	/** Init */
 	public static function init() {
+		static $done = false;
+		if ( $done ) {
+			return;
+		}
+		$done = true;
+
 		add_action(
 			'rest_api_init',
 			function () {
@@ -45,7 +51,7 @@ abstract class HTML_API_Debugger {
 								$result = self::build_html_tree( $html );
 								return array( 'result' => $result );
 							} catch ( Exception $e ) {
-								return array( 'error' => $e );
+								return array( 'error' => (string) $e );
 							}
 						},
 						'permission_callback' => '__return_true',
@@ -101,28 +107,37 @@ abstract class HTML_API_Debugger {
 		<tbody>
 		<tr>
 			<td>
-				<div id="html-input-note"></div>
+				<h2>Input HTML</h2>
 				<textarea data-wp-on--input="handleChange"></textarea>
+				<p>
+					Note: Because HTML API operates in body at this time, this will be prepended:
+					<br>
+					<code>&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;body&gt;</code>
+				</p>
 			</td>
 			<td>
-				<div>
-					<p>Title: <code data-wp-text="state.DOM.title"></code></p>
-					<p>Rendering mode: <code data-wp-text="state.DOM.renderingMode"></code></p>
-				</div>
+				<h2>Rendered output</h2>
 				<iframe id="rendered_iframe" src="about:blank" data-wp-on--load="onRenderedIframeLoad"></iframe>
 			</td>
 		</tr>
 		<tr>
 			<td>
+				<p>Title:&nbsp;<code data-wp-text="state.DOM.title"></code> Rendering mode:&nbsp;<code data-wp-text="state.DOM.renderingMode"></code></p>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<h2>Interpreted from DOM</h2>
 				<ul id="dom_tree" data-wp-ignore></ul>
 			</td>
 			<td>
+				<h2>Interpreted by HTML API</h2>
 				<div class="hide-on-empty error-holder" data-wp-text="state.htmlapiError"></div>
 				<ul id="html_api_result_holder" class="hide-on-empty" data-wp-ignore></ul>
 			</td>
 		</tr>
 		<tr>
-			<td><pre data-wp-text="state.htmlapiResult"></pre></td>
+			<td><details><summary>debug response</summary><pre data-wp-text="state.htmlapiResult"></pre></details></td>
 		</tr>
 		</tbody>
 		</table>
@@ -138,9 +153,7 @@ abstract class HTML_API_Debugger {
 	private static function build_html_tree( string $html ): array {
 		$processor = WP_HTML_Processor::create_fragment( $html );
 		if ( null === $processor ) {
-			return array(
-				'error' => 'could not process html',
-			);
+			throw new Exception( 'could not process html' );
 		}
 
 		$result = array(
@@ -185,9 +198,6 @@ abstract class HTML_API_Debugger {
 			foreach ( $cursor as $path ) {
 				$current = &$current['childNodes'][ $path ];
 			}
-
-			// var_dump( $cursor, $current, $result );
-			// echo "\n\n";
 
 			switch ( $processor->get_token_type() ) {
 				case '#tag':
@@ -242,25 +252,48 @@ abstract class HTML_API_Debugger {
 					$current['childNodes'][] = $self;
 					break;
 
+				case '#presumptuous-tag':
+					$self                    = array(
+						'nodeType'  => self::NODE_TYPE_COMMENT,
+						'nodeName'  => $processor->get_token_name(),
+						'nodeValue' => $processor->get_modifiable_text(),
+					);
+					$current['childNodes'][] = $self;
+					break;
+
+				case '#funky-comment':
+					$self                    = array(
+						'nodeType'  => self::NODE_TYPE_COMMENT,
+						'nodeName'  => $processor->get_token_name(),
+						'nodeValue' => $processor->get_modifiable_text(),
+					);
+					$current['childNodes'][] = $self;
+					break;
+
 				case '#comment':
 					switch ( $processor->get_comment_type() ) {
 						case WP_HTML_Processor::COMMENT_AS_ABRUPTLY_CLOSED_COMMENT:
 						case WP_HTML_Processor::COMMENT_AS_HTML_COMMENT:
-							$comment_text_content = $processor->get_modifiable_text();
+							$comment_node_name = $processor->get_token_name();
+							break;
+
+						case WP_HTML_Processor::COMMENT_AS_PI_NODE_LOOKALIKE:
+							$comment_node_name = "{$processor->get_token_name()}({$processor->get_comment_type()}: {$processor->get_tag()})";
 							break;
 
 						case WP_HTML_Processor::COMMENT_AS_CDATA_LOOKALIKE:
-							$comment_text_content = "[CDATA[{$processor->get_modifiable_text()}]]";
+							$comment_node_name = "{$processor->get_token_name()}({$processor->get_comment_type()})";
 							break;
 
 						default:
 							// phpcs:ignore
-							throw new Error( "Unhandled comment type for tree construction: {$processor->get_comment_type()}" );
+							throw new Exception( "Unhandled comment type for tree construction: {$processor->get_comment_type()}" );
 					}
 
 					$self                    = array(
-						'nodeType'    => self::NODE_TYPE_COMMENT,
-						'textContent' => $comment_text_content,
+						'nodeType'  => self::NODE_TYPE_COMMENT,
+						'nodeName'  => $comment_node_name,
+						'nodeValue' => $processor->get_modifiable_text(),
 					);
 					$current['childNodes'][] = $self;
 					break;
@@ -269,11 +302,12 @@ abstract class HTML_API_Debugger {
 					// phpcs:ignore
 					$serialized_token_type = var_export( $processor->get_token_type(), true );
 					// phpcs:ignore
-					throw new Error( "Unhandled token type for tree construction: {$serialized_token_type}" );
+					throw new Exception( "Unhandled token type for tree construction: {$serialized_token_type}" );
 			}
 		}
 
 		if ( ! is_null( $processor->get_last_error() ) ) {
+					// phpcs:ignore
 			throw new Exception( $processor->get_last_error() );
 		}
 
@@ -285,4 +319,4 @@ abstract class HTML_API_Debugger {
 	}
 }
 
-HTML_API_Debugger::init();
+add_action( 'init', array( 'HTML_API_Debugger', 'init' ) );

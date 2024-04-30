@@ -14,7 +14,6 @@
   textarea {
     width: 100%;
     min-height: 200px;
-    padding-top: 1.2em;
     font-family: monospace;
   }
 
@@ -33,16 +32,6 @@
     background: #fff;
     padding: 1em;
   }
-}
-
-#html-input-note::before {
-  font-family: monospace;
-  position: relative;
-
-  content: "(implicit <!DOCTYPE html><html><body>)";
-  position: absolute;
-  top: 2px;
-  left: 2px;
 }
 
 #rendered_iframe {
