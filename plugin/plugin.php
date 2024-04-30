@@ -100,7 +100,7 @@ abstract class HTML_API_Debugger {
 					self::SLUG,
 					function () {
 						$html = '';
-						if ( $_GET['html'] && is_string( $_GET['html'] ) ) {
+						if ( isset( $_GET['html'] ) && is_string( $_GET['html'] ) ) {
 							$html = stripslashes( $_GET['html'] );
 						}
 						$htmlapi_response = self::prepare_html_result_object( $html );
