@@ -1,15 +1,17 @@
 <?php
-/*
+/**
  * Plugin Name:       HTML API Debugger
  * Plugin URI:        https://github.com/sirreal/html-api-debugger
  * Description:       Add a page to wp-admin for debugging the HTML API.
  * Version:           0.1
  * Requires at least: 6.5
  * Tested up to:      6.5
- * Author:            jonsurrell
+ * Author:            Jon Surrell
  * Author URI:        https://profiles.wordpress.org/jonsurrell/
  * License:           GPLv2 or later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
+ *
+ * @package HtmlApiDebugger
  */
 
 /**
@@ -17,7 +19,8 @@
  */
 abstract class HTML_API_Debugger {
 
-	const SLUG = 'html-api-debugger';
+	const SLUG    = 'html-api-debugger';
+	const VERSION = '0.1';
 
 	const NODE_TYPE_ELEMENT                = 1;
 	const NODE_TYPE_ATTRIBUTE              = 2;
@@ -40,7 +43,7 @@ abstract class HTML_API_Debugger {
 		}
 		$done = true;
 
-		// WP 6.5 doesn't support script modules or Interactivity API in wp-admin
+		// WP 6.5 doesn't support script modules or Interactivity API in wp-admin.
 		if ( ! has_action( 'admin_footer', array( wp_script_modules(), 'print_import_map' ) ) ) {
 			add_action( 'admin_footer', array( wp_script_modules(), 'print_import_map' ) );
 			add_action( 'admin_footer', array( wp_script_modules(), 'print_enqueued_script_modules' ) );
@@ -76,11 +79,12 @@ abstract class HTML_API_Debugger {
 			function ( $hook_suffix ) {
 				if ( $hook_suffix === 'toplevel_page_' . self::SLUG ) {
 						wp_enqueue_script( 'wp-api-fetch' );
-						wp_enqueue_style( self::SLUG, plugins_url( 'style.css', __FILE__ ), );
+						wp_enqueue_style( self::SLUG, plugins_url( 'style.css', __FILE__ ), self::VERSION );
 						wp_enqueue_script_module(
 							'@htmlapidebugger/view',
 							plugins_url( 'view.js', __FILE__ ),
 							array( '@wordpress/interactivity' ),
+							self::VERSION
 						);
 				}
 			}
