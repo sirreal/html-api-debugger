@@ -3,6 +3,14 @@
 	table-layout: fixed;
 	padding: 20px 20px 0 0;
 
+	/* needs a reset */
+	code {
+		padding: 0;
+		margin: 0;
+		background: none;
+		font-size: inherit;
+	}
+
 	td {
 		vertical-align: top;
 	}
