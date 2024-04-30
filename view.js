@@ -19,9 +19,16 @@ var { state, render } = I.store( NS, {
 	run() {
 		RENDERED_IFRAME = document.getElementById( 'rendered_iframe' );
 		render();
+
+		// browsers "eat" some characters from search params…
+		// newlines seem especially problematic in chrome
+		// lets clean up the URL
+		const u = new URL( document.location.href );
 		if ( state.html ) {
-			const u = new URL( document.location.href );
 			u.searchParams.set( 'html', state.html );
+			history.replaceState( null, '', u );
+		} else if ( u.searchParams.has( 'html' ) ) {
+			u.searchParams.delete( 'html' );
 			history.replaceState( null, '', u );
 		}
 	},
