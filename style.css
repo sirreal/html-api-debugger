@@ -49,6 +49,7 @@
 		display: inline-block;
 		background-color: #ddd;
 		margin: 0;
+		outline: 1px dotted #111;
 	}
 
 	li > code:first-child {

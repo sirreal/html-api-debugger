@@ -62,7 +62,9 @@ abstract class HTML_API_Debugger {
 							$html = $request->get_json_params()['html'] ?: '';
 							return self::prepare_html_result_object( $html );
 						},
-						'permission_callback' => '__return_true',
+						'permission_callback' => function () {
+							return current_user_can( 'edit_posts' );
+						},
 					)
 				);
 			}
