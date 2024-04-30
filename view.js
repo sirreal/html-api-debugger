@@ -11,6 +11,11 @@ const NS = 'html-api-debugger';
 let RENDERED_IFRAME;
 
 var { state, render } = I.store( NS, {
+	state: {
+		get formattedHtmlapiResponse() {
+			return JSON.stringify( state.htmlapiResponse, undefined, 2 );
+		},
+	},
 	run() {
 		RENDERED_IFRAME = document.getElementById( 'rendered_iframe' );
 		render();

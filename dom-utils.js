@@ -26,12 +26,12 @@ export function printDOM( ul, node ) {
 			li.appendChild( span );
 		}
 		if ( node.childNodes[ i ].nodeValue ) {
-			var span = document.createElement( 'span' );
-			span.appendChild(
+			const el = document.createElement( 'pre' );
+			el.className = 'nodeValue';
+			el.appendChild(
 				document.createTextNode( node.childNodes[ i ].nodeValue )
 			);
-			li.appendChild( document.createTextNode( ': ' ) );
-			li.appendChild( span );
+			li.appendChild( el );
 		}
 		if ( node.childNodes[ i ].attributes ) {
 			for (

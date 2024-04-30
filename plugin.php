@@ -92,7 +92,10 @@ abstract class HTML_API_Debugger {
 					'unfiltered_html',
 					self::SLUG,
 					function () {
-						$html             = $_GET['html'] ?: '';
+						$html = '';
+						if ( $_GET['html'] && is_string( $_GET['html'] ) ) {
+							$html = stripslashes( $_GET['html'] );
+						}
 						$htmlapi_response = self::prepare_html_result_object( $html );
 
 						wp_interactivity_state(
@@ -151,7 +154,7 @@ abstract class HTML_API_Debugger {
 			<td>
 				<details>
 					<summary>debug response</summary>
-					<pre data-wp-text="state.htmlapiResponse"></pre>
+					<pre data-wp-text="state.formattedHtmlapiResponse"></pre>
 				</details>
 			</td>
 		</tr>

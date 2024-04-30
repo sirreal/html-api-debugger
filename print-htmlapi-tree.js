@@ -22,12 +22,12 @@ export function printHtmlApiTree( node, ul ) {
 			li.appendChild( span );
 		}
 		if ( node.childNodes[ i ].nodeValue ) {
-			const span = document.createElement( 'span' );
-			span.appendChild(
+			const el = document.createElement( 'pre' );
+			el.className = 'nodeValue';
+			el.appendChild(
 				document.createTextNode( node.childNodes[ i ].nodeValue )
 			);
-			li.appendChild( document.createTextNode( ': ' ) );
-			li.appendChild( span );
+			li.appendChild( el );
 		}
 		if ( node.childNodes[ i ].attributes ) {
 			for (
