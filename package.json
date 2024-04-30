@@ -7,7 +7,8 @@
   "license": "GPL-2.0",
   "devDependencies": {
     "@wordpress/api-fetch": "^6.53.0",
-    "@wordpress/interactivity": "5.5.0",
-    "prettier": "^3.1.1"
+    "@wordpress/interactivity": "^5.5.0",
+    "@wordpress/prettier-config": "^3.13.0",
+    "prettier": "npm:wp-prettier@^3.0.3"
   }
 }

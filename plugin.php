@@ -95,6 +95,7 @@ abstract class HTML_API_Debugger {
 					'unfiltered_html',
 					self::SLUG,
 					function () {
+						$html = $_GET['html'];
 						wp_interactivity_state(
 							self::SLUG,
 							array(
@@ -102,8 +103,8 @@ abstract class HTML_API_Debugger {
 									'renderingMode' => '',
 									'title'         => '',
 								),
-								'htmlapiResult' => "<html>\n  <head>\n  <body>\n",
-								'htmlapiError'  => '',
+								'htmlapiResult' => null,
+								'htmlapiError'  => null,
 							)
 						);
 						ob_start();
@@ -119,11 +120,11 @@ abstract class HTML_API_Debugger {
 		<tr>
 			<td>
 				<h2>Input HTML</h2>
-				<textarea data-wp-on--input="handleChange"></textarea>
+				<textarea id='input_html' data-wp-on--input="handleChange"><?php echo esc_html( $html ); ?></textarea>
 				<p>
 					Note: Because HTML API operates in body at this time, this will be prepended:
 					<br>
-					<code>&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;body&gt;</code>
+					<code><?php echo esc_html( '<!DOCTYPE html><html><body>' ); ?></code>
 				</p>
 			</td>
 			<td>
