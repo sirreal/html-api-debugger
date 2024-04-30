@@ -123,6 +123,10 @@
 		<severity>0</severity>
 	</rule>
 
+	<rule ref="WordPress.PHP.YodaConditions.NotYoda">
+		<severity>0</severity>
+	</rule>
+
 	<!--
 	#############################################################################
 	SELECTIVE EXCLUSIONS
