@@ -79,7 +79,7 @@ abstract class HTML_API_Debugger {
 			function ( $hook_suffix ) {
 				if ( $hook_suffix === 'toplevel_page_' . self::SLUG ) {
 						wp_enqueue_script( 'wp-api-fetch' );
-						wp_enqueue_style( self::SLUG, plugins_url( 'style.css', __FILE__ ), self::VERSION );
+						wp_enqueue_style( self::SLUG, plugins_url( 'style.css', __FILE__ ), array(), self::VERSION );
 						wp_enqueue_script_module(
 							'@htmlapidebugger/view',
 							plugins_url( 'view.js', __FILE__ ),
@@ -100,9 +100,11 @@ abstract class HTML_API_Debugger {
 					self::SLUG,
 					function () {
 						$html = '';
+						// phpcs:disable WordPress.Security.NonceVerification.Recommended
 						if ( isset( $_GET['html'] ) && is_string( $_GET['html'] ) ) {
 							$html = stripslashes( $_GET['html'] );
 						}
+						// phpcs:enable WordPress.Security.NonceVerification.Recommended
 						$htmlapi_response = self::prepare_html_result_object( $html );
 
 						wp_interactivity_state(
@@ -168,6 +170,7 @@ abstract class HTML_API_Debugger {
 	</tbody>
 </table>
 						<?php
+						// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 						echo wp_interactivity_process_directives( ob_get_clean() );
 					},
 					include __DIR__ . '/icon.php'
@@ -329,7 +332,7 @@ abstract class HTML_API_Debugger {
 							break;
 
 						default:
-							// phpcs:ignore
+							// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
 							throw new Exception( "Unhandled comment type for tree construction: {$processor->get_comment_type()}" );
 					}
 
@@ -337,15 +340,14 @@ abstract class HTML_API_Debugger {
 					break;
 
 				default:
-					// phpcs:ignore
 					$serialized_token_type = var_export( $processor->get_token_type(), true );
-					// phpcs:ignore
+					// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
 					throw new Exception( "Unhandled token type for tree construction: {$serialized_token_type}" );
 			}
 		}
 
 		if ( ! is_null( $processor->get_last_error() ) ) {
-					// phpcs:ignore
+			// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
 			throw new Exception( $processor->get_last_error() );
 		}
 
