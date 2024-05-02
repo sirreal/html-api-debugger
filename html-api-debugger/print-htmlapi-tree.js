@@ -14,6 +14,10 @@ export function printHtmlApiTree( node, ul ) {
 			code.appendChild(
 				document.createTextNode( node.childNodes[ i ].nodeName )
 			);
+
+			if ( node.childNodes[ i ].nodeValue ) {
+				code.className = 'hasNodeValue';
+			}
 			li.appendChild( code );
 		} else {
 			const span = document.createElement( 'span' );

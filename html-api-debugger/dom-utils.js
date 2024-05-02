@@ -18,6 +18,9 @@ export function printDOM( ul, node ) {
 			code.appendChild(
 				document.createTextNode( node.childNodes[ i ].nodeName )
 			);
+			if ( node.childNodes[ i ].nodeValue ) {
+				code.className = 'hasNodeValue';
+			}
 			li.appendChild( code );
 		} else {
 			var span = document.createElement( 'span' );

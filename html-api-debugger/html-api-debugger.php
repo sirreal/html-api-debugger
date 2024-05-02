@@ -228,6 +228,9 @@ abstract class HTML_API_Debugger {
 				return null;
 			}
 
+			if ( ( count( $cursor ) + 1 ) > count( $processor->get_breadcrumbs() ) ) {
+				array_pop( $cursor );
+			}
 			$current = &$result;
 			foreach ( $cursor as $path ) {
 				$current = &$current['childNodes'][ $path ];
@@ -236,7 +239,6 @@ abstract class HTML_API_Debugger {
 			switch ( $processor->get_token_type() ) {
 				case '#tag':
 					if ( $processor->is_tag_closer() ) {
-						array_pop( $cursor );
 						break;
 					}
 
