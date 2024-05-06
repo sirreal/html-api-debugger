@@ -62,7 +62,7 @@ var { state, render } = I.store( NS, {
 		}
 
 		printHtmlApiTree(
-			resp.result,
+			resp.result.tree,
 			document.getElementById( 'html_api_result_holder' )
 		);
 	},
@@ -76,9 +76,9 @@ var { state, render } = I.store( NS, {
 		);
 		RENDERED_IFRAME.contentWindow.document.close();
 
-		if ( state.htmlapiResponse.result ) {
+		if ( state.htmlapiResponse.result?.tree ) {
 			printHtmlApiTree(
-				state.htmlapiResponse.result,
+				state.htmlapiResponse.result.tree,
 				document.getElementById( 'html_api_result_holder' )
 			);
 		}

@@ -190,7 +190,7 @@ abstract class HTML_API_Debugger {
 			throw new Exception( 'could not process html' );
 		}
 
-		$result = array(
+		$tree = array(
 			'nodeType'   => self::NODE_TYPE_DOCUMENT,
 			'nodeName'   => '#document',
 			'childNodes' => array(
@@ -225,13 +225,13 @@ abstract class HTML_API_Debugger {
 
 		while ( $processor->next_token() ) {
 			if ( ! is_null( $processor->get_last_error() ) ) {
-				return null;
+				break;
 			}
 
 			if ( ( count( $cursor ) + 1 ) > count( $processor->get_breadcrumbs() ) ) {
 				array_pop( $cursor );
 			}
-			$current = &$result;
+			$current = &$tree;
 			foreach ( $cursor as $path ) {
 				$current = &$current['childNodes'][ $path ];
 			}
@@ -357,7 +357,9 @@ abstract class HTML_API_Debugger {
 			throw new Exception( 'Paused at incomplete token' );
 		}
 
-		return $result;
+		return array(
+			'tree'            => $tree,
+		);
 	}
 
 	/**
@@ -367,7 +369,16 @@ abstract class HTML_API_Debugger {
 	 */
 	private static function prepare_html_result_object( string $html ): array {
 		try {
-			return array( 'result' => self::build_html_tree( $html ) );
+			$result = self::build_html_tree( $html );
+
+			return array(
+				'result' => array_merge(
+					$result,
+					array(
+						'html' => $html,
+					)
+				),
+			);
 		} catch ( Exception $e ) {
 			return array( 'error' => (string) $e );
 		}
