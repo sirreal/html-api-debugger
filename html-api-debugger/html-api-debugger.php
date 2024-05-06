@@ -96,7 +96,7 @@ abstract class HTML_API_Debugger {
 				add_menu_page(
 					'HTML API Debugger',
 					'HTML API Debugger',
-					'unfiltered_html',
+					'edit_posts',
 					self::SLUG,
 					function () {
 						$html = '';
