@@ -44,14 +44,14 @@ abstract class HTML_API_Debugger {
 		$done = true;
 
 		// WP 6.5 doesn't support script modules or Interactivity API in wp-admin.
-		if ( ! has_action( 'admin_footer', array( wp_script_modules(), 'print_import_map' ) ) ) {
-			add_action( 'admin_footer', array( wp_script_modules(), 'print_import_map' ) );
-			add_action( 'admin_footer', array( wp_script_modules(), 'print_enqueued_script_modules' ) );
-				add_action( 'admin_footer', array( wp_script_modules(), 'print_script_module_preloads' ) );
+		if ( ! has_action( 'admin_print_footer_scripts', array( wp_script_modules(), 'print_import_map' ) ) ) {
+			add_action( 'admin_print_footer_scripts', array( wp_script_modules(), 'print_import_map' ) );
+			add_action( 'admin_print_footer_scripts', array( wp_script_modules(), 'print_enqueued_script_modules' ) );
+			add_action( 'admin_print_footer_scripts', array( wp_script_modules(), 'print_script_module_preloads' ) );
 		}
 		if ( ! has_action( 'admin_enqueue_scripts', array( wp_interactivity(), 'register_script_modules' ) ) ) {
 			add_action( 'admin_enqueue_scripts', array( wp_interactivity(), 'register_script_modules' ) );
-			add_action( 'admin_footer', array( wp_interactivity(), 'print_client_interactivity_data' ) );
+			add_action( 'admin_print_footer_scripts', array( wp_interactivity(), 'print_client_interactivity_data' ) );
 		}
 
 		add_action(
