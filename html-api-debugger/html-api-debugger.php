@@ -246,21 +246,23 @@ abstract class HTML_API_Debugger {
 
 					$attributes      = array();
 					$attribute_names = $processor->get_attribute_names_with_prefix( '' );
-					foreach ( $attribute_names as $attribute_name ) {
-						$val = $processor->get_attribute( $attribute_name );
-						/*
-						 * Attributes with no value are `true` with the HTML API,
-						 * We map use the empty string value in the tree structure.
-						 */
-						if ( true === $val ) {
-							$val = '';
+					if ( null !== $attribute_names ) {
+						foreach ( $attribute_names as $attribute_name ) {
+							$val = $processor->get_attribute( $attribute_name );
+							/*
+							 * Attributes with no value are `true` with the HTML API,
+							 * We map use the empty string value in the tree structure.
+							 */
+							if ( true === $val ) {
+								$val = '';
+							}
+							$attributes[] = array(
+								'nodeType'  => self::NODE_TYPE_ATTRIBUTE,
+								'specified' => true,
+								'nodeName'  => $attribute_name,
+								'nodeValue' => $val,
+							);
 						}
-						$attributes[] = array(
-							'nodeType'  => self::NODE_TYPE_ATTRIBUTE,
-							'specified' => true,
-							'nodeName'  => $attribute_name,
-							'nodeValue' => $val,
-						);
 					}
 
 					$self = array(
@@ -359,6 +361,7 @@ abstract class HTML_API_Debugger {
 
 		return array(
 			'tree'            => $tree,
+			'last_error'      => $processor->get_last_error(),
 		);
 	}
 
