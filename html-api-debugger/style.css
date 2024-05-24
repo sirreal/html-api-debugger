@@ -1,200 +1,211 @@
 #html-api-debugger-table {
-	width: 100%;
-	table-layout: fixed;
-	padding: 20px 20px 0 0;
+  width: 100%;
+  table-layout: fixed;
+  padding: 20px 20px 0 0;
 
-	/* needs a reset */
-	code {
-		padding: 0;
-		margin: 0;
-		background: none;
-		font-size: inherit;
-	}
+  /* needs a reset */
+  code {
+    padding: 0;
+    margin: 0;
+    background: none;
+    font-size: inherit;
+  }
 
-	td {
-		vertical-align: top;
-	}
+  td {
+    vertical-align: top;
+  }
 
-	tr:first-child td:first-child {
-		position: relative;
-	}
+  tr:first-child td:first-child {
+    position: relative;
+  }
 
-	textarea {
-		width: 100%;
-		min-height: 200px;
-		font-family: monospace;
-	}
+  textarea {
+    width: 100%;
+    min-height: 200px;
+    font-family: monospace;
+  }
 
-	.hide-on-empty {
-		&:empty {
-			display: none;
-		}
-	}
+  .hide-on-empty {
+    &:empty {
+      display: none;
+    }
+  }
 
-	.error-holder {
-		padding: 1em;
-		background: pink;
+  .error-holder {
+    padding: 1em;
+    background: pink;
 
-		&:not(empty()) + * {
-			visibility: hidden;
-		}
-	}
+    &:not(empty())+* {
+      visibility: hidden;
+    }
+  }
 
-	.result-holder {
-		background: #fff;
-		padding: 1em;
-	}
+  .result-holder {
+    background: #fff;
+    padding: 1em;
+  }
 
-	.hasNodeValue {
-		&::after {
-			content: ": ";
-			color: initial;
-		}
-	}
+  .hasNodeValue {
+    &::after {
+      content: ": ";
+      color: initial;
+    }
+  }
 
-	.nodeValue {
-		display: inline-block;
-		background-color: #ddd;
-		margin: 0;
-		outline: 1px dotted #111;
-		vertical-align: top;
-	}
+  .nodeValue {
+    display: inline-block;
+    background-color: #ddd;
+    margin: 0;
+    outline: 1px dotted #111;
+    vertical-align: top;
+  }
 }
 
 #rendered_iframe {
-	background: #fff;
-	border: 1px solid black;
-	width: 100%;
-	min-height: 200px;
+  background: #fff;
+  border: 1px solid black;
+  width: 100%;
+  min-height: 200px;
+}
+
+.html-text {
+  background: #fff;
+  border: 1px solid black;
+  text-wrap: pretty;
+}
+
+.htmlSpanContainer {
+  display: flex;
+  gap: 0.2em;
+}
+
+.html-text {
+  padding: 0.2em 0.4em;
+}
+
+.html-span:nth-child(2) {
+  box-shadow: 3px 3px 3px hotpink;
 }
 
 #html_api_result_holder,
 #dom_tree {
-	border: inset thin;
-	padding: 0.5em 0.5em 0.5em 1em;
-	color: black;
-	min-height: 5em;
-	font-family: monospace;
-	background: white;
+  border: inset thin;
+  padding: 0.5em 0.5em 0.5em 1em;
+  color: black;
+  min-height: 5em;
+  font-family: monospace;
+  background: white;
 
-	ul {
-		padding: 0 0 0 1em;
-		margin: 0;
-	}
+  ul {
+    padding: 0 0 0 1em;
+    margin: 0;
+  }
 
-	li {
-		padding: 0;
-		margin: 0;
-		list-style: none;
-		position: relative;
-	}
+  li {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+    position: relative;
+  }
 
-	li li {
-		list-style: disc;
-	}
+  .t1 code {
+    color: purple;
+    font-weight: bold;
+  }
 
-	.t1 code {
-		color: purple;
-		font-weight: bold;
-	}
+  .t2 {
+    font-style: normal;
+    font-family: monospace;
+  }
 
-	.t2 {
-		font-style: normal;
-		font-family: monospace;
-	}
+  .t2 .name {
+    color: black;
+    font-weight: bold;
+  }
 
-	.t2 .name {
-		color: black;
-		font-weight: bold;
-	}
+  .t2 .value {
+    color: blue;
+    font-weight: normal;
+  }
 
-	.t2 .value {
-		color: blue;
-		font-weight: normal;
-	}
+  .t3 code,
+  .t4 code,
+  .t5 code {
+    color: gray;
+  }
 
-	.t3 code,
-	.t4 code,
-	.t5 code {
-		color: gray;
-	}
+  .t7 code,
+  .t8 code {
+    color: green;
+  }
 
-	.t7 code,
-	.t8 code {
-		color: green;
-	}
+  span {
+    font-style: italic;
+    font-family: serif;
+  }
 
-	span {
-		font-style: italic;
-		font-family: serif;
-	}
+  .t10 code {
+    color: teal;
+  }
 
-	.t10 code {
-		color: teal;
-	}
+  .misparented,
+  .misparented code {
+    color: red;
+    font-weight: bold;
+  }
 
-	.misparented,
-	.misparented code {
-		color: red;
-		font-weight: bold;
-	}
+  .unnamed {
+    color: red;
+    font-style: italic;
+  }
 
-	.unnamed {
-		color: red;
-		font-style: italic;
-	}
+  .template {
+    padding: 0 0 0 1.5em;
+    background: #eeeeee;
+    color: black;
+    position: relative;
+    overflow: hidden;
+  }
 
-	.template {
-		padding: 0 0 0 1.5em;
-		background: #eeeeee;
-		color: black;
-		position: relative;
-		overflow: hidden;
-	}
+  .template::after {
+    position: absolute;
+    top: 1em;
+    right: -2.6em;
+    content: "TEMPLATE";
+    width: 10em;
+    text-align: center;
+    transform: rotate(30deg);
+    background: black;
+    color: white;
+  }
 
-	.template::after {
-		position: absolute;
-		top: 1em;
-		right: -2.6em;
-		content: "TEMPLATE";
-		width: 10em;
-		text-align: center;
-		transform: rotate(30deg);
-		background: black;
-		color: white;
-	}
+  .hidden {
+    visibility: hidden;
+    margin: 0.5em 0;
+    padding: 0;
+    height: 0;
+    min-height: 0;
+  }
 
-	.hidden {
-		visibility: hidden;
-		margin: 0.5em 0;
-		padding: 0;
-		height: 0;
-		min-height: 0;
-	}
+  li:first-child::before {
+    position: absolute;
+    top: 0;
+    height: 0.7em;
+    left: -0.75em;
+    width: 0.5em;
+    border-style: none none solid solid;
+    content: "";
+    border-width: 0.1em;
+  }
 
-	li li {
-		list-style: none;
-	}
-
-	li:first-child::before {
-		position: absolute;
-		top: 0;
-		height: 0.7em;
-		left: -0.75em;
-		width: 0.5em;
-		border-style: none none solid solid;
-		content: "";
-		border-width: 0.1em;
-	}
-
-	li:not(:last-child)::after {
-		position: absolute;
-		top: 0;
-		bottom: -0.7em;
-		left: -0.75em;
-		width: 0.5em;
-		border-style: none none solid solid;
-		content: "";
-		border-width: 0.1em;
-	}
+  li:not(:last-child)::after {
+    position: absolute;
+    top: 0;
+    bottom: -0.7em;
+    left: -0.75em;
+    width: 0.5em;
+    border-style: none none solid solid;
+    content: "";
+    border-width: 0.1em;
+  }
 }

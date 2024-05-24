@@ -33,6 +33,10 @@ export function printHtmlApiTree( node, ul ) {
 			);
 			li.appendChild( el );
 		}
+		if ( node.childNodes[ i ]._span ) {
+			li.dataset.spanStart = node.childNodes[ i ]._span.start;
+			li.dataset.spanLength = node.childNodes[ i ]._span.length;
+		}
 		if ( node.childNodes[ i ].attributes ) {
 			for (
 				var j = 0;

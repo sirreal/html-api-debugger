@@ -10,10 +10,38 @@ const NS = 'html-api-debugger';
 /** @type {HTMLIFrameElement} */
 let RENDERED_IFRAME;
 
-var { state, render } = I.store( NS, {
+const { clearSpan, state, render } = I.store( NS, {
 	state: {
 		get formattedHtmlapiResponse() {
 			return JSON.stringify( state.htmlapiResponse, undefined, 2 );
+		},
+
+		get hoverSpan() {
+			/** @type {string | undefined} */
+			const html = state.htmlapiResponse.result?.html;
+			if ( ! html ) {
+				return '';
+			}
+			return html;
+		},
+
+		get hoverSpanSplit() {
+			/** @type {string | undefined} */
+			const html = state.htmlapiResponse.result?.html;
+			if ( ! html || ! state.span ) {
+				return [];
+			}
+			const buf = new TextEncoder().encode( html );
+			const decoder = new TextDecoder();
+
+			/** @type {{start: number, length: number }} */
+			const { start: spanStart, length } = state.span;
+			const spanEnd = spanStart + length;
+			return [
+				decoder.decode( buf.slice( 0, spanStart ) ),
+				decoder.decode( buf.slice( spanStart, spanEnd ) ),
+				decoder.decode( buf.slice( spanEnd ) ),
+			];
 		},
 	},
 	run() {
@@ -39,6 +67,9 @@ var { state, render } = I.store( NS, {
 
 		printDOM( document.getElementById( 'dom_tree' ), doc );
 	},
+	clearSpan() {
+		state.span = null;
+	},
 	handleChange: function* ( e ) {
 		const val = e.target.value;
 
@@ -55,6 +86,7 @@ var { state, render } = I.store( NS, {
 		} );
 
 		state.htmlapiResponse = resp;
+		clearSpan();
 
 		if ( resp.error ) {
 			document.getElementById( 'html_api_result_holder' ).innerHTML = '';
@@ -65,6 +97,19 @@ var { state, render } = I.store( NS, {
 			resp.result.tree,
 			document.getElementById( 'html_api_result_holder' )
 		);
+	},
+
+	/** @param {MouseEvent} e */
+	handleSpanClick( e ) {
+		const t = e.target;
+		if ( t && t instanceof HTMLElement ) {
+			const spanEl = t.closest( '[data-span-start]' );
+			if ( spanEl ) {
+				const start = Number( spanEl.dataset.spanStart );
+				const length = Number( spanEl.dataset.spanLength );
+				state.span = { start, length };
+			}
+		}
 	},
 	watch() {
 		render();

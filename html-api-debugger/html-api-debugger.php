@@ -116,6 +116,7 @@ abstract class HTML_API_Debugger {
 								),
 								'html'            => $html,
 								'htmlapiResponse' => $htmlapi_response,
+								'span'            => null,
 							)
 						);
 						ob_start();
@@ -141,10 +142,6 @@ abstract class HTML_API_Debugger {
 			<td>
 				<h2>Rendered output</h2>
 				<iframe id="rendered_iframe" src="about:blank" data-wp-on--load="onRenderedIframeLoad"></iframe>
-			</td>
-		</tr>
-		<tr>
-			<td>
 				<p>Title:&nbsp;<code data-wp-text="state.DOM.title"></code> Rendering mode:&nbsp;<code data-wp-text="state.DOM.renderingMode"></code></p>
 			</td>
 		</tr>
@@ -153,10 +150,28 @@ abstract class HTML_API_Debugger {
 				<h2>Interpreted from DOM</h2>
 				<ul id="dom_tree" data-wp-ignore></ul>
 			</td>
-			<td>
+			<td data-wp-on--click="handleSpanClick">
 				<h2>Interpreted by HTML API</h2>
 				<pre  class="hide-on-empty error-holder" data-wp-text="state.htmlapiResponse.error"></pre>
 				<ul id="html_api_result_holder" class="hide-on-empty" data-wp-ignore></ul>
+				<p>Click a node above to see its span details below.</p>
+			</td>
+		</tr>
+		<tr data-wp-bind--hidden="state.span">
+			<td colspan="2">
+				<h2>Processed HTML</h2>
+				<pre class="html-text" data-wp-text="state.hoverSpan"></pre>
+			</td>
+		</tr>
+		<tr data-wp-bind--hidden="!state.span">
+			<td colspan="2">
+				<h2>Processed HTML selected span</h2>
+				<button data-wp-on--click="clearSpan" type="button">Clear span selection 🧹</button>
+				<div class="htmlSpanContainer">
+					<pre class="html-text html-span" data-wp-text="state.hoverSpanSplit.0"></pre>
+					<pre class="html-text html-span html selected span" data-wp-text="state.hoverSpanSplit.1"></pre>
+					<pre class="html-text html-span" data-wp-text="state.hoverSpanSplit.2"></pre>
+				</div>
 			</td>
 		</tr>
 		<tr>
@@ -186,6 +201,11 @@ abstract class HTML_API_Debugger {
 	 */
 	private static function build_html_tree( string $html ): array {
 		$processor = WP_HTML_Processor::create_fragment( $html );
+
+		$processor_parser_state = new ReflectionProperty( 'WP_HTML_Processor', 'parser_state' );
+		$processor_state        = new ReflectionProperty( 'WP_HTML_Processor', 'state' );
+		$processor_bookmarks    = new ReflectionProperty( 'WP_HTML_Processor', 'bookmarks' );
+
 		if ( null === $processor ) {
 			throw new Exception( 'could not process html' );
 		}
@@ -270,6 +290,7 @@ abstract class HTML_API_Debugger {
 						'nodeName'   => $tag_name,
 						'attributes' => $attributes,
 						'childNodes' => array(),
+						'_span'      => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
 					);
 
 					$current['childNodes'][] = $self;
@@ -285,6 +306,7 @@ abstract class HTML_API_Debugger {
 						'nodeType'  => self::NODE_TYPE_TEXT,
 						'nodeName'  => $processor->get_token_name(),
 						'nodeValue' => $processor->get_modifiable_text(),
+						'_span'     => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
 					);
 
 					$current['childNodes'][] = $self;
@@ -295,6 +317,7 @@ abstract class HTML_API_Debugger {
 						'nodeType'  => self::NODE_TYPE_COMMENT,
 						'nodeName'  => $processor->get_token_name(),
 						'nodeValue' => $processor->get_modifiable_text(),
+						'_span'     => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
 					);
 					$current['childNodes'][] = $self;
 					break;
@@ -304,6 +327,7 @@ abstract class HTML_API_Debugger {
 						'nodeType'  => self::NODE_TYPE_COMMENT,
 						'nodeName'  => $processor->get_token_name(),
 						'nodeValue' => $processor->get_modifiable_text(),
+						'_span'     => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
 					);
 					$current['childNodes'][] = $self;
 					break;
@@ -311,6 +335,7 @@ abstract class HTML_API_Debugger {
 				case '#comment':
 					$self = array(
 						'nodeType' => self::NODE_TYPE_COMMENT,
+						'_span'    => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
 					);
 					switch ( $processor->get_comment_type() ) {
 						case WP_HTML_Processor::COMMENT_AS_ABRUPTLY_CLOSED_COMMENT:
@@ -361,6 +386,9 @@ abstract class HTML_API_Debugger {
 
 		return array(
 			'tree'            => $tree,
+			'last_error'      => $processor->get_last_error(),
+			'parser_state'    => $processor_parser_state->getValue( $processor ),
+			'processor_state' => $processor_state->getValue( $processor ),
 			'last_error'      => $processor->get_last_error(),
 		);
 	}
