@@ -71,6 +71,7 @@
 .html-text {
   background: #fff;
   border: 1px solid black;
+  padding: 0.2em 0.4em;
   text-wrap: pretty;
 }
 
@@ -79,8 +80,8 @@
   gap: 0.2em;
 }
 
-.html-text {
-  padding: 0.2em 0.4em;
+.html-span {
+  flex: 1 0 auto;
 }
 
 .html-span:nth-child(2) {
