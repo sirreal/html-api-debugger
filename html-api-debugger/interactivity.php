@@ -89,6 +89,5 @@ function generate_page() {
 	</tbody>
 </table>
 <?php
-	// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	return wp_interactivity_process_directives( ob_get_clean() );
 }

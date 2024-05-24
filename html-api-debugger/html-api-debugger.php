@@ -88,6 +88,7 @@ function init() {
 				SLUG,
 				function () {
 					require_once __DIR__ . '/interactivity.php';
+					// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 					echo namespace\Interactivity\generate_page();
 				},
 				include __DIR__ . '/icon.php'
