@@ -20,7 +20,6 @@ use WP_REST_Request;
 use Exception;
 
 require_once __DIR__ . '/html-api-integration.php';
-require_once __DIR__ . '/interactivity.php';
 
 const SLUG    = 'html-api-debugger';
 const VERSION = '0.1';
@@ -87,7 +86,10 @@ function init() {
 				'HTML API Debugger',
 				'edit_posts',
 				SLUG,
-				__NAMESPACE__ . '\\Interactivity\\generate_page',
+				function () {
+					require_once __DIR__ . '/interactivity.php';
+					echo namespace\Interactivity\generate_page();
+				},
 				include __DIR__ . '/icon.php'
 			);
 		}

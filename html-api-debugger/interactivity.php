@@ -5,13 +5,13 @@ namespace HTML_API_Debugger\Interactivity;
 function generate_page() {
 	$html = '';
 	// phpcs:disable WordPress.Security.NonceVerification.Recommended
-	if ( isset( $_GET['html'] ) && \is_string( $_GET['html'] ) ) {
-		$html = \stripslashes( $_GET['html'] );
+	if ( isset( $_GET['html'] ) && is_string( $_GET['html'] ) ) {
+		$html = stripslashes( $_GET['html'] );
 	}
 	// phpcs:enable WordPress.Security.NonceVerification.Recommended
 	$htmlapi_response = \HTML_API_Debugger\prepare_html_result_object( $html );
 
-	\wp_interactivity_state(
+	wp_interactivity_state(
 		\HTML_API_Debugger\SLUG,
 		array(
 			'DOM'             => array(
@@ -23,11 +23,11 @@ function generate_page() {
 			'span'            => null,
 		)
 	);
-	\ob_start();
+	ob_start();
 ?>
 <table
 	id="html-api-debugger-table"
-	data-wp-interactive="<?php echo \esc_attr( \HTML_API_Debugger\SLUG ); ?>"
+	data-wp-interactive="<?php echo esc_attr( \HTML_API_Debugger\SLUG ); ?>"
 	data-wp-watch="watch"
 	data-wp-run="run"
 	data-wp-init="state.updateData"
@@ -36,11 +36,11 @@ function generate_page() {
 		<tr>
 			<td>
 				<h2>Input HTML</h2>
-				<textarea id='input_html' data-wp-on--input="handleChange"><?php echo "\n" . \esc_html( $html ); ?></textarea>
+				<textarea id='input_html' data-wp-on--input="handleChange"><?php echo "\n" . esc_html( $html ); ?></textarea>
 				<p>
 					Note: Because HTML API operates in body at this time, this will be prepended:
 					<br>
-					<code><?php echo \esc_html( '<!DOCTYPE html><html><body>' ); ?></code>
+					<code><?php echo esc_html( '<!DOCTYPE html><html><body>' ); ?></code>
 				</p>
 			</td>
 			<td>
@@ -90,5 +90,5 @@ function generate_page() {
 </table>
 <?php
 	// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-	echo \wp_interactivity_process_directives( \ob_get_clean() );
+	return wp_interactivity_process_directives( ob_get_clean() );
 }
