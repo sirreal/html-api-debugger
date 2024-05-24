@@ -203,8 +203,13 @@ abstract class HTML_API_Debugger {
 		$processor = WP_HTML_Processor::create_fragment( $html );
 
 		$processor_parser_state = new ReflectionProperty( 'WP_HTML_Processor', 'parser_state' );
-		$processor_state        = new ReflectionProperty( 'WP_HTML_Processor', 'state' );
-		$processor_bookmarks    = new ReflectionProperty( 'WP_HTML_Processor', 'bookmarks' );
+		$processor_parser_state->setAccessible( true );
+
+		$processor_state = new ReflectionProperty( 'WP_HTML_Processor', 'state' );
+		$processor_state->setAccessible( true );
+
+		$processor_bookmarks = new ReflectionProperty( 'WP_HTML_Processor', 'bookmarks' );
+		$processor_bookmarks->setAccessible( true );
 
 		if ( null === $processor ) {
 			throw new Exception( 'could not process html' );
