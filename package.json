@@ -3,7 +3,9 @@
 	"name": "test-dewp",
 	"version": "1.0.0",
 	"description": "",
-	"scripts": {},
+	"scripts": {
+		"build": "zip -r html-api-debugger html-api-debugger"
+	},
 	"author": "sirreal",
 	"license": "GPL-2.0",
 	"devDependencies": {
