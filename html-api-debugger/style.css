@@ -3,6 +3,12 @@
 	table-layout: fixed;
 	padding: 20px 20px 0 0;
 
+	pre {
+		background-color: #fff;
+		border: inset thin;
+		padding: 0.2em 0.4em;
+	}
+
 	/* needs a reset */
 	code {
 		padding: 0;
@@ -34,15 +40,7 @@
 	.error-holder {
 		padding: 1em;
 		background: pink;
-
-		&:not(empty()) + * {
-			visibility: hidden;
-		}
-	}
-
-	.result-holder {
-		background: #fff;
-		padding: 1em;
+		white-space: pre-wrap;
 	}
 
 	.hasNodeValue {
@@ -53,6 +51,8 @@
 	}
 
 	.nodeValue {
+		border: none;
+		padding: 0;
 		display: inline-block;
 		background-color: #ddd;
 		margin: 0;
@@ -69,9 +69,6 @@
 }
 
 .html-text {
-	background: #fff;
-	border: 1px solid black;
-	padding: 0.2em 0.4em;
 	text-wrap: pretty;
 }
 
