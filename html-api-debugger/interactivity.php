@@ -36,7 +36,7 @@ function generate_page() {
 		<tr>
 			<td>
 				<h2>Input HTML</h2>
-				<textarea id='input_html' data-wp-on--input="handleChange"><?php echo "\n" . esc_html( $html ); ?></textarea>
+				<textarea id='input_html' data-wp-on--input="handleChange"><?php echo "\n" . esc_textarea( $html ); ?></textarea>
 				<p>
 					Note: Because HTML API operates in body at this time, this will be prepended:
 					<br>
