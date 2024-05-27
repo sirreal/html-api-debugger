@@ -88,8 +88,15 @@ function init() {
 				SLUG,
 				function () {
 					require_once __DIR__ . '/interactivity.php';
+
+					$html = '';
+					// phpcs:disable WordPress.Security.NonceVerification.Recommended
+					if ( isset( $_GET['html'] ) && is_string( $_GET['html'] ) ) {
+						$html = stripslashes( $_GET['html'] );
+					}
+
 					// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-					echo namespace\Interactivity\generate_page();
+					echo namespace\Interactivity\generate_page( $html );
 				},
 				include __DIR__ . '/icon.php'
 			);

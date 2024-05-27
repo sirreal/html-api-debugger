@@ -2,12 +2,13 @@
 
 namespace HTML_API_Debugger\Interactivity;
 
-function generate_page() {
-	$html = '';
-	// phpcs:disable WordPress.Security.NonceVerification.Recommended
-	if ( isset( $_GET['html'] ) && is_string( $_GET['html'] ) ) {
-		$html = stripslashes( $_GET['html'] );
-	}
+/**
+ * Generate the WP Admin page HTML.
+ *
+ * @param $html The input html.
+ * @return The page HTML as rendered by the Interactivity API. This is intended to be printed directly to the page with no additional escaping.
+ */
+function generate_page( string $html ): string {
 	// phpcs:enable WordPress.Security.NonceVerification.Recommended
 	$htmlapi_response = \HTML_API_Debugger\prepare_html_result_object( $html );
 
