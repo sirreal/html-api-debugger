@@ -93,7 +93,12 @@ const { clearSpan, state, render } = I.store( NS, {
 				signal: inFlightRequestAbortController.signal,
 			} );
 		} catch ( err ) {
+			// We'd like to get this but won't thanks to `apiFetch
 			if ( err instanceof DOMException ) {
+				return;
+			}
+			// `apiFetch` actually does something like this
+			if ( err && err.code === 'fetch_error' && navigator.onLine ) {
 				return;
 			}
 			throw err;
