@@ -10,6 +10,9 @@ const NS = 'html-api-debugger';
 /** @type {HTMLIFrameElement} */
 let RENDERED_IFRAME;
 
+/** @type {AbortController|null} */
+let inFlightRequestAbortController = null;
+
 const { clearSpan, state, render } = I.store( NS, {
 	state: {
 		get formattedHtmlapiResponse() {
@@ -79,11 +82,22 @@ const { clearSpan, state, render } = I.store( NS, {
 		u.searchParams.set( 'html', val );
 		history.replaceState( null, '', u );
 
-		const resp = yield apiFetch( {
-			path: `${ NS }/v1/htmlapi`,
-			method: 'POST',
-			data: { html: val },
-		} );
+		inFlightRequestAbortController?.abort();
+		inFlightRequestAbortController = new AbortController();
+		let resp;
+		try {
+			resp = yield apiFetch( {
+				path: `${ NS }/v1/htmlapi`,
+				method: 'POST',
+				data: { html: val },
+				signal: inFlightRequestAbortController.signal,
+			} );
+		} catch ( err ) {
+			console.log( err );
+			if ( typeof err !== DOMException ) {
+				throw err;
+			}
+		}
 
 		state.htmlapiResponse = resp;
 		clearSpan();
