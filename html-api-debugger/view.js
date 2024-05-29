@@ -82,7 +82,7 @@ const { clearSpan, state, render } = I.store( NS, {
 		u.searchParams.set( 'html', val );
 		history.replaceState( null, '', u );
 
-		inFlightRequestAbortController?.abort();
+		inFlightRequestAbortController?.abort( 'request superseded' );
 		inFlightRequestAbortController = new AbortController();
 		let resp;
 		try {
@@ -93,10 +93,10 @@ const { clearSpan, state, render } = I.store( NS, {
 				signal: inFlightRequestAbortController.signal,
 			} );
 		} catch ( err ) {
-			console.log( err );
-			if ( typeof err !== DOMException ) {
-				throw err;
+			if ( err instanceof DOMException ) {
+				return;
 			}
+			throw err;
 		}
 
 		state.htmlapiResponse = resp;
