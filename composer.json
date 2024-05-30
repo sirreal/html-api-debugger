@@ -1,12 +1,12 @@
 {
-  "name": "sirreal/plugin-html-api-debugger",
-  "require-dev": {
-    "squizlabs/php_codesniffer": "^3.9",
-    "wp-coding-standards/wpcs": "^3.0"
-  },
-  "config": {
-    "allow-plugins": {
-      "dealerdirect/phpcodesniffer-composer-installer": true
-    }
-  }
+	"name": "sirreal/plugin-html-api-debugger",
+	"require-dev": {
+		"squizlabs/php_codesniffer": "^3.9",
+		"wp-coding-standards/wpcs": "^3.0"
+	},
+	"config": {
+		"allow-plugins": {
+			"dealerdirect/phpcodesniffer-composer-installer": true
+		}
+	}
 }

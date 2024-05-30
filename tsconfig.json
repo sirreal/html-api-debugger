@@ -1,0 +1,12 @@
+{
+	"$schema": "https://json.schemastore.org/tsconfig.json",
+	"extends": ["@tsconfig/strictest/tsconfig"],
+	"compilerOptions": {
+		"checkJs": true,
+		"module": "NodeNext",
+		"rootDir": "html-api-debugger",
+		"lib": ["DOM", "DOM.Iterable", "ESNext"],
+		"noEmit": true
+	},
+	"include": ["html-api-debugger"]
+}
