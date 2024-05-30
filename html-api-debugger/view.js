@@ -6,12 +6,16 @@ import { printHtmlApiTree } from './print-htmlapi-tree.js';
 const apiFetch = window.wp.apiFetch;
 
 const NS = 'html-api-debugger';
+const DEBOUNCE_TIMEOUT = 150;
 
 /** @type {HTMLIFrameElement} */
 let RENDERED_IFRAME;
 
 /** @type {AbortController|null} */
 let inFlightRequestAbortController = null;
+
+/** @type {AbortController|null} */
+let debounceInputAbortController = null;
 
 const { clearSpan, state, render } = I.store( NS, {
 	state: {
@@ -81,6 +85,26 @@ const { clearSpan, state, render } = I.store( NS, {
 		const u = new URL( document.location.href );
 		u.searchParams.set( 'html', val );
 		history.replaceState( null, '', u );
+
+		debounceInputAbortController?.abort( 'debounced' );
+		debounceInputAbortController = new AbortController();
+		try {
+			yield new Promise( ( resolve, reject ) => {
+				const t = setTimeout( resolve, DEBOUNCE_TIMEOUT );
+				debounceInputAbortController.signal.addEventListener(
+					'abort',
+					() => {
+						clearInterval( t );
+						reject( debounceInputAbortController.signal.reason );
+					}
+				);
+			} );
+		} catch ( e ) {
+			if ( e === 'debounced' ) {
+				return;
+			}
+			throw e;
+		}
 
 		inFlightRequestAbortController?.abort( 'request superseded' );
 		inFlightRequestAbortController = new AbortController();
