@@ -121,6 +121,8 @@ function build_html_tree( string $html ): array {
 					'attributes' => $attributes,
 					'childNodes' => array(),
 					'_span'      => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
+					'_bc'        => $processor->get_breadcrumbs(),
+					'_depth'     => $processor->get_current_depth(),
 				);
 
 				$current['childNodes'][] = $self;
@@ -137,6 +139,8 @@ function build_html_tree( string $html ): array {
 					'nodeName'  => $processor->get_token_name(),
 					'nodeValue' => $processor->get_modifiable_text(),
 					'_span'     => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
+					'_bc'       => $processor->get_breadcrumbs(),
+					'_depth'    => $processor->get_current_depth(),
 				);
 
 				$current['childNodes'][] = $self;
@@ -148,6 +152,8 @@ function build_html_tree( string $html ): array {
 					'nodeName'  => $processor->get_token_name(),
 					'nodeValue' => $processor->get_modifiable_text(),
 					'_span'     => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
+					'_bc'       => $processor->get_breadcrumbs(),
+					'_depth'    => $processor->get_current_depth(),
 				);
 				$current['childNodes'][] = $self;
 				break;
@@ -158,6 +164,8 @@ function build_html_tree( string $html ): array {
 					'nodeName'  => $processor->get_token_name(),
 					'nodeValue' => $processor->get_modifiable_text(),
 					'_span'     => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
+					'_bc'       => $processor->get_breadcrumbs(),
+					'_depth'    => $processor->get_current_depth(),
 				);
 				$current['childNodes'][] = $self;
 				break;
@@ -166,6 +174,8 @@ function build_html_tree( string $html ): array {
 				$self = array(
 					'nodeType' => NODE_TYPE_COMMENT,
 					'_span'    => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
+					'_bc'      => $processor->get_breadcrumbs(),
+					'_depth'   => $processor->get_current_depth(),
 				);
 				switch ( $processor->get_comment_type() ) {
 					case WP_HTML_Processor::COMMENT_AS_ABRUPTLY_CLOSED_COMMENT:

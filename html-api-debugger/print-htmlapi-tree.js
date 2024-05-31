@@ -33,6 +33,12 @@ export function printHtmlApiTree(node, ul) {
 			li.dataset.spanStart = node.childNodes[i]._span.start;
 			li.dataset.spanLength = node.childNodes[i]._span.length;
 		}
+		if (node.childNodes[i]._bc?.length) {
+			li.title = node.childNodes[i]._bc.join(' > ');
+		}
+		if (node.childNodes[i]._depth) {
+			li.title = `(${node.childNodes[i]._depth}) ${li.title}`;
+		}
 		if (node.childNodes[i].attributes) {
 			for (var j = 0; j < node.childNodes[i].attributes.length; j += 1) {
 				if (node.childNodes[i].attributes[j].specified) {
