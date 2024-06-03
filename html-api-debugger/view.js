@@ -170,6 +170,11 @@ const { clearSpan, state, render } = store(NS, {
 			}
 		}
 	},
+	/** @param {Event} e */
+	handleShowClosersClick(e) {
+		// @ts-expect-error
+		state.showClosers = e.target.checked;
+	},
 	watch() {
 		render();
 	},
@@ -184,6 +189,7 @@ const { clearSpan, state, render } = store(NS, {
 			printHtmlApiTree(
 				state.htmlapiResponse.result.tree,
 				document.getElementById('html_api_result_holder'),
+				{ showClosers: state.showClosers },
 			);
 		}
 	},

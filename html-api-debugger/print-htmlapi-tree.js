@@ -1,4 +1,14 @@
-export function printHtmlApiTree(node, ul) {
+/**
+ * @typedef Options
+ * @property {boolean} [showClosers]
+ */
+
+/**
+ * @param {any} node
+ * @param {HTMLUListElement} ul
+ * @param {Options} options
+ */
+export function printHtmlApiTree(node, ul, options = {}) {
 	while (ul.firstChild) {
 		ul.removeChild(ul.firstChild);
 	}
@@ -6,12 +16,23 @@ export function printHtmlApiTree(node, ul) {
 	for (var i = 0; i < node.childNodes.length; i += 1) {
 		const li = document.createElement('li');
 		li.className = 't' + node.childNodes[i].nodeType;
-		if (node.childNodes[i].nodeType === 10) {
+		if (node.childNodes[i].nodeType === Node.prototype.DOCUMENT_TYPE_NODE) {
 			li.appendChild(document.createTextNode('DOCTYPE: '));
 		}
 		if (node.childNodes[i].nodeName) {
 			const code = document.createElement('code');
-			code.appendChild(document.createTextNode(node.childNodes[i].nodeName));
+
+			if (node.childNodes[i]._closer) {
+				if (options.showClosers) {
+					code.appendChild(
+						document.createTextNode('/' + node.childNodes[i].nodeName),
+					);
+				} else {
+					continue;
+				}
+			} else {
+				code.appendChild(document.createTextNode(node.childNodes[i].nodeName));
+			}
 
 			if (node.childNodes[i].nodeValue) {
 				code.className = 'hasNodeValue';
@@ -38,6 +59,9 @@ export function printHtmlApiTree(node, ul) {
 		}
 		if (node.childNodes[i]._depth) {
 			li.title = `(${node.childNodes[i]._depth}) ${li.title}`;
+		}
+		if (node.childNodes[i]._closer) {
+			li.classList.add('tag-closer');
 		}
 		if (node.childNodes[i].attributes) {
 			for (var j = 0; j < node.childNodes[i].attributes.length; j += 1) {
@@ -67,13 +91,13 @@ export function printHtmlApiTree(node, ul) {
 		if (node.childNodes[i].childNodes?.length) {
 			const ul2 = document.createElement('ul');
 			li.appendChild(ul2);
-			printHtmlApiTree(node.childNodes[i], ul2);
+			printHtmlApiTree(node.childNodes[i], ul2, options);
 		}
 		if (node.childNodes[i].content) {
 			const ul2 = document.createElement('ul');
 			li.appendChild(ul2);
 			ul2.className = 'template';
-			printHtmlApiTree(node.childNodes[i].content, ul2);
+			printHtmlApiTree(node.childNodes[i].content, ul2, options);
 		}
 
 		ul.appendChild(li);

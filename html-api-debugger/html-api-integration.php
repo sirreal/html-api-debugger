@@ -88,10 +88,6 @@ function build_html_tree( string $html ): array {
 
 		switch ( $processor->get_token_type() ) {
 			case '#tag':
-				if ( $processor->is_tag_closer() ) {
-					break;
-				}
-
 				$tag_name = $processor->get_tag();
 
 				$attributes      = array();
@@ -120,12 +116,17 @@ function build_html_tree( string $html ): array {
 					'nodeName'   => $tag_name,
 					'attributes' => $attributes,
 					'childNodes' => array(),
+					'_closer'    => (bool) $processor->is_tag_closer(),
 					'_span'      => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
 					'_bc'        => $processor->get_breadcrumbs(),
 					'_depth'     => $processor->get_current_depth(),
 				);
 
 				$current['childNodes'][] = $self;
+
+				if ( $processor->is_tag_closer() ) {
+					break;
+				}
 
 				if ( ! WP_HTML_Processor::is_void( $tag_name ) ) {
 					$cursor[] = count( $current['childNodes'] ) - 1;
