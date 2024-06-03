@@ -200,6 +200,11 @@ function build_html_tree( string $html ): array {
 						$self['nodeValue'] = $processor->get_modifiable_text();
 						break;
 
+					case WP_HTML_Processor::COMMENT_AS_INVALID_HTML:
+						$self['nodeName']  = "{$processor->get_token_name()}({$processor->get_comment_type()})";
+						$self['nodeValue'] = $processor->get_modifiable_text();
+						break;
+
 					default:
 						// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
 						throw new Exception( "Unhandled comment type for tree construction: {$processor->get_comment_type()}" );
