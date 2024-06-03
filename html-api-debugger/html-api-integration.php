@@ -74,7 +74,7 @@ function build_html_tree( string $html ): array {
 	$cursor = array( 1, 1 );
 
 	while ( $processor->next_token() ) {
-		if ( ! is_null( $processor->get_last_error() ) ) {
+		if ( $processor->get_last_error() !== null ) {
 			break;
 		}
 
