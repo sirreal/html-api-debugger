@@ -25,16 +25,112 @@ const NODE_TYPE_NOTATION               = 12;
  * @param string $html The HTML.
  */
 function build_html_tree( string $html ): array {
+	$tree   = namespace\get_tree( $html );
+	$tokens = namespace\get_tokens( $html );
+	$tags   = namespace\get_tags( $html );
+
+	return array(
+		'tree'   => $tree,
+		'tokens' => $tokens,
+		'tags'   => $tags,
+	);
+}
+
+function get_tags( string $html ): array {
 	$processor = WP_HTML_Processor::create_fragment( $html );
 
-	$processor_parser_state = new ReflectionProperty( 'WP_HTML_Processor', 'parser_state' );
-	$processor_parser_state->setAccessible( true );
+	if ( null === $processor ) {
+		throw new Exception( 'could not process html' );
+	}
 
+	$tags = array();
+
+	while ( $processor->next_tag( array( 'visit_closers' => true ) ) ) {
+		if ( $processor->get_last_error() !== null ) {
+			break;
+		}
+
+		$tags[] = array(
+			'name'   => $processor->get_tag(),
+			'closer' => $processor->is_tag_closer(),
+		);
+	}
+
+	return $tags;
+}
+
+function get_tokens( string $html ): array {
+	$processor = WP_HTML_Processor::create_fragment( $html );
+
+	if ( null === $processor ) {
+		throw new Exception( 'could not process html' );
+	}
+
+	$tokens = array();
+
+	while ( $processor->next_token() ) {
+		if ( $processor->get_last_error() !== null ) {
+			break;
+		}
+
+		switch ( $processor->get_token_type() ) {
+			case '#tag':
+				$tokens[] = array(
+					'type'   => $processor->get_token_type(),
+					'name'   => $processor->get_tag(),
+					'closer' => $processor->is_tag_closer(),
+				);
+				break;
+
+			case '#text':
+				$tokens[] = array(
+					'type'    => $processor->get_token_type(),
+					'content' => $processor->get_modifiable_text(),
+				);
+				break;
+
+			case '#presumptuous-tag':
+				$tokens[] = array(
+					'type'         => $processor->get_token_type(),
+					'content'      => $processor->get_modifiable_text(),
+					'comment_type' => $processor->get_comment_type(),
+				);
+				break;
+
+			case '#funky-comment':
+				$tokens[] = array(
+					'type'         => $processor->get_token_type(),
+					'content'      => $processor->get_modifiable_text(),
+					'comment_type' => $processor->get_comment_type(),
+				);
+				break;
+
+			case '#comment':
+				$tokens[] = array(
+					'type'         => $processor->get_token_type(),
+					'content'      => $processor->get_modifiable_text(),
+					'comment_type' => $processor->get_comment_type(),
+				);
+				break;
+
+			default:
+				$serialized_token_type = var_export( $processor->get_token_type(), true );
+				// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
+				throw new Exception( "Unhandled token type for tree construction: {$serialized_token_type}" );
+		}
+	}
+
+	return $tokens;
+}
+
+function get_tree( string $html ): array {
 	$processor_state = new ReflectionProperty( 'WP_HTML_Processor', 'state' );
 	$processor_state->setAccessible( true );
 
 	$processor_bookmarks = new ReflectionProperty( 'WP_HTML_Processor', 'bookmarks' );
 	$processor_bookmarks->setAccessible( true );
+
+	$processor = WP_HTML_Processor::create_fragment( $html );
 
 	if ( null === $processor ) {
 		throw new Exception( 'could not process html' );
@@ -230,11 +326,5 @@ function build_html_tree( string $html ): array {
 		throw new Exception( 'Paused at incomplete token' );
 	}
 
-	return array(
-		'tree'            => $tree,
-		'last_error'      => $processor->get_last_error(),
-		'parser_state'    => $processor_parser_state->getValue( $processor ),
-		'processor_state' => $processor_state->getValue( $processor ),
-		'last_error'      => $processor->get_last_error(),
-	);
+	return $tree;
 }
