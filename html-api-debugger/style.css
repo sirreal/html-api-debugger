@@ -58,6 +58,8 @@
 		margin: 0;
 		outline: 1px dotted #111;
 		vertical-align: top;
+		word-break: break-all;
+		text-wrap: pretty;
 	}
 }
 
