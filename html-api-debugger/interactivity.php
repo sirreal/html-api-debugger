@@ -47,7 +47,12 @@ function generate_page( string $html ): string {
 			</td>
 			<td>
 				<h2>Rendered output</h2>
-				<iframe data-wp-on--load="onRenderedIframeLoad" id="rendered_iframe" src="about:blank" referrerpolicy="no-referrer" sandbox="allow-forms allow-modals allow-popups allow-scripts allow-same-origin"></iframe>
+				<iframe
+					data-wp-on--load="onRenderedIframeLoad"
+					data-wp-bind--srcdoc="state.htmlForProcessing"
+					id="rendered_iframe"
+					referrerpolicy="no-referrer"
+					sandbox="allow-forms allow-modals allow-popups allow-scripts allow-same-origin"></iframe>
 				<p>Title:&nbsp;<code data-wp-text="state.DOM.title"></code> Rendering mode:&nbsp;<code data-wp-text="state.DOM.renderingMode"></code></p>
 			</td>
 		</tr>

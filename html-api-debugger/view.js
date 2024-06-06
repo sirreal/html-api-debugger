@@ -37,6 +37,10 @@ const { clearSpan, state, render } = store(NS, {
 			return JSON.stringify(state.htmlapiResponse, undefined, 2);
 		},
 
+		get htmlForProcessing() {
+			return '<!DOCTYPE html>\n<html>\n<body>' + state.html;
+		},
+
 		get hoverSpan() {
 			/** @type {string | undefined} */
 			const html = state.htmlapiResponse.result?.html;
@@ -186,12 +190,6 @@ const { clearSpan, state, render } = store(NS, {
 		render();
 	},
 	render() {
-		RENDERED_IFRAME.contentWindow.document.open();
-		RENDERED_IFRAME.contentWindow.document.write(
-			'<!DOCTYPE html>\n<html>\n<body>' + state.html,
-		);
-		RENDERED_IFRAME.contentWindow.document.close();
-
 		if (state.htmlapiResponse.result?.tree) {
 			printHtmlApiTree(
 				state.htmlapiResponse.result.tree,
