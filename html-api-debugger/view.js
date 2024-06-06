@@ -3,6 +3,7 @@ import { printDOM } from './dom-utils.js';
 import { printHtmlApiTree } from './print-htmlapi-tree.js';
 
 /** @type {typeof import('@wordpress/api-fetch').default} */
+// @ts-expect-error
 const apiFetch = window.wp.apiFetch;
 
 const NS = 'html-api-debugger';
@@ -96,8 +97,9 @@ const { clearSpan, state, render } = store(NS, {
 	clearSpan() {
 		state.span = null;
 	},
+	/** @param {InputEvent} e */
 	handleChange: function* (e) {
-		const val = e.target.value;
+		const val = /** @type {HTMLTextAreaElement} */ (e.target).value;
 
 		state.html = val;
 
@@ -110,9 +112,9 @@ const { clearSpan, state, render } = store(NS, {
 		try {
 			yield new Promise((resolve, reject) => {
 				const t = setTimeout(resolve, DEBOUNCE_TIMEOUT);
-				debounceInputAbortController.signal.addEventListener('abort', () => {
+				debounceInputAbortController?.signal.addEventListener('abort', () => {
 					clearInterval(t);
-					reject(debounceInputAbortController.signal.reason);
+					reject(debounceInputAbortController?.signal.reason);
 				});
 			});
 		} catch (e) {
@@ -148,13 +150,17 @@ const { clearSpan, state, render } = store(NS, {
 		clearSpan();
 
 		if (resp.error) {
-			document.getElementById('html_api_result_holder').innerHTML = '';
+			/** @type {HTMLUListElement} */ (
+				document.getElementById('html_api_result_holder')
+			).innerHTML = '';
 			return;
 		}
 
 		printHtmlApiTree(
 			resp.result.tree,
-			document.getElementById('html_api_result_holder'),
+			/** @type {HTMLUListElement} */ (
+				document.getElementById('html_api_result_holder')
+			),
 		);
 	},
 
@@ -162,10 +168,11 @@ const { clearSpan, state, render } = store(NS, {
 	handleSpanClick(e) {
 		const t = e.target;
 		if (t && t instanceof HTMLElement) {
+			/** @type {HTMLElement|null} */
 			const spanEl = t.closest('[data-span-start]');
 			if (spanEl) {
-				const start = Number(spanEl.dataset.spanStart);
-				const length = Number(spanEl.dataset.spanLength);
+				const start = Number(spanEl.dataset['spanStart']);
+				const length = Number(spanEl.dataset['spanLength']);
 				state.span = { start, length };
 			}
 		}
