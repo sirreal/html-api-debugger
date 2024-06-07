@@ -1,6 +1,7 @@
 /**
  * @typedef Options
  * @property {boolean} [showClosers]
+ * @property {boolean} [showInvisible]
  */
 
 /**
@@ -47,12 +48,18 @@ export function printHtmlApiTree(node, ul, options = {}) {
 		if (node.childNodes[i].nodeValue) {
 			const el = document.createElement('pre');
 			el.className = 'nodeValue';
-			el.appendChild(document.createTextNode(node.childNodes[i].nodeValue));
+			el.appendChild(
+				document.createTextNode(
+					options.showInvisible
+						? replaceInvisible(node.childNodes[i].nodeValue)
+						: node.childNodes[i].nodeValue,
+				),
+			);
 			li.appendChild(el);
 		}
 		if (node.childNodes[i]._span) {
-			li.dataset.spanStart = node.childNodes[i]._span.start;
-			li.dataset.spanLength = node.childNodes[i]._span.length;
+			li.dataset['spanStart'] = node.childNodes[i]._span.start;
+			li.dataset['spanLength'] = node.childNodes[i]._span.length;
 		}
 		if (node.childNodes[i]._bc?.length) {
 			li.title = node.childNodes[i]._bc.join(' > ');
@@ -102,4 +109,26 @@ export function printHtmlApiTree(node, ul, options = {}) {
 
 		ul.appendChild(li);
 	}
+}
+
+/**
+ * @param {string} s
+ * @return {string}
+ */
+function replaceInvisible(s) {
+	return s.replace(/[\x00-\x1f\x7f}]/gu, (c) => {
+		const charCode = c.charCodeAt(0);
+		switch (charCode) {
+			// U+007F DELETE -> U+2421 SYMBOL FOR DELETE
+			case 0x7f:
+				return '\u{2421}';
+
+			// Include a newline with newline replacement
+			case 0x0a:
+				return '\u{240A}\n';
+		}
+
+		// There's a nice Control Pictures Block at 0x2400 offset for the matched range
+		return String.fromCharCode(charCode + 0x2400);
+	});
 }

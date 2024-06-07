@@ -1,5 +1,4 @@
 import * as I from '@wordpress/interactivity';
-import { printDOM } from './dom-utils.js';
 import { printHtmlApiTree } from './print-htmlapi-tree.js';
 
 /** @type {typeof import('@wordpress/api-fetch').default} */
@@ -18,16 +17,21 @@ let debounceInputAbortController = null;
 /**
  * @typedef State
  * @property {string} formattedHtmlapiResponse
- *
- *
+ * @property {boolean} showClosers
+ * @property {boolean} showInvisible
+ */
+
+/**
  * @typedef Store
  * @property {State} state
  * @property {()=>void} clearSpan
+ * @property {()=>void} render
  */
 
 /** @type {typeof I.store<Store>} */
 const store = I.store;
 
+/** @type {Store} */
 const { clearSpan, state, render } = store(NS, {
 	state: {
 		get formattedHtmlapiResponse() {
@@ -88,10 +92,14 @@ const { clearSpan, state, render } = store(NS, {
 		state.DOM.renderingMode = doc.compatMode;
 		state.DOM.title = doc.title || '[document has no title]';
 
-		printDOM(
+		printHtmlApiTree(
+			doc,
 			// @ts-expect-error
 			document.getElementById('dom_tree'),
-			doc,
+			{
+				showClosers: state.showClosers,
+				showInvisible: state.showInvisible,
+			},
 		);
 	},
 	clearSpan() {
@@ -171,6 +179,11 @@ const { clearSpan, state, render } = store(NS, {
 		}
 	},
 	/** @param {Event} e */
+	handleShowInvisibleClick(e) {
+		// @ts-expect-error
+		state.showInvisible = e.target.checked;
+	},
+	/** @param {Event} e */
 	handleShowClosersClick(e) {
 		// @ts-expect-error
 		state.showClosers = e.target.checked;
@@ -178,13 +191,32 @@ const { clearSpan, state, render } = store(NS, {
 	watch() {
 		render();
 	},
+
+	watchDom() {
+		const doc =
+			// @ts-expect-error
+			document.getElementById('rendered_iframe').contentWindow.document;
+		printHtmlApiTree(
+			doc,
+			// @ts-expect-error
+			document.getElementById('dom_tree'),
+			{
+				showClosers: state.showClosers,
+				showInvisible: state.showInvisible,
+			},
+		);
+	},
+
 	render() {
 		if (state.htmlapiResponse.result?.tree) {
 			printHtmlApiTree(
 				state.htmlapiResponse.result.tree,
 				// @ts-expect-error
 				document.getElementById('html_api_result_holder'),
-				{ showClosers: state.showClosers },
+				{
+					showClosers: state.showClosers,
+					showInvisible: state.showInvisible,
+				},
 			);
 		}
 	},

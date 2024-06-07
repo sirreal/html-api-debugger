@@ -22,6 +22,7 @@ function generate_page( string $html ): string {
 			'html'            => $html,
 			'htmlapiResponse' => $htmlapi_response,
 			'showClosers'     => false,
+			'showInvisible'   => false,
 			'span'            => null,
 		)
 	);
@@ -30,7 +31,8 @@ function generate_page( string $html ): string {
 <table
 	id="html-api-debugger-table"
 	data-wp-interactive="<?php echo esc_attr( \HTML_API_Debugger\SLUG ); ?>"
-	data-wp-watch="watch"
+	data-wp-watch--a="watch"
+	data-wp-watch--b="watchDom"
 	data-wp-run="run"
 	data-wp-init="state.updateData"
 >
@@ -57,16 +59,19 @@ function generate_page( string $html ): string {
 			</td>
 		</tr>
 		<tr>
-			<td>
-				<h2>Interpreted from DOM</h2>
-				<ul id="dom_tree" data-wp-ignore></ul>
-			</td>
 			<td data-wp-on--click="handleSpanClick" data-wp-class--showClosers="state.showClosers">
 				<h2>Interpreted by HTML API</h2>
 				<pre  class="hide-on-empty error-holder" data-wp-text="state.htmlapiResponse.error"></pre>
 				<ul id="html_api_result_holder" class="hide-on-empty" data-wp-ignore></ul>
 				<p>Click a node above to see its span details below.</p>
-				<p><label>Show closers <input type="checkbox" data-wp-bind--checked="state.showClosers" data-wp-on--click="handleShowClosersClick"></label></p>
+				<p>
+					<label>Show closers <input type="checkbox" data-wp-bind--checked="state.showClosers" data-wp-on--click="handleShowClosersClick"></label>
+					<label>Show invisible <input type="checkbox" data-wp-bind--checked="state.showInvisible" data-wp-on--click="handleShowInvisibleClick"></label>
+				</p>
+			</td>
+			<td>
+				<h2>Interpreted from DOM</h2>
+				<ul id="dom_tree" data-wp-ignore></ul>
 			</td>
 		</tr>
 		<tr data-wp-bind--hidden="state.span">
