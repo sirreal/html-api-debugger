@@ -132,6 +132,14 @@ function get_tree( string $html ): array {
 
 	$processor = WP_HTML_Processor::create_fragment( $html );
 
+	$get_current_depth = method_exists( WP_HTML_Processor::class, 'get_current_depth' )
+		? function () use ( $processor ) {
+			return $processor->get_current_depth();
+		}
+		: function () use ( $processor ) {
+			return count( $processor->get_breadcrumbs() );
+		};
+
 	if ( null === $processor ) {
 		throw new Exception( 'could not process html' );
 	}
@@ -174,7 +182,7 @@ function get_tree( string $html ): array {
 			break;
 		}
 
-		if ( ( count( $cursor ) + 1 ) > count( $processor->get_breadcrumbs() ) ) {
+		if ( ( count( $cursor ) + 1 ) > $get_current_depth() ) {
 			array_pop( $cursor );
 		}
 		$current = &$tree;
@@ -215,7 +223,7 @@ function get_tree( string $html ): array {
 					'_closer'    => (bool) $processor->is_tag_closer(),
 					'_span'      => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
 					'_bc'        => $processor->get_breadcrumbs(),
-					'_depth'     => $processor->get_current_depth(),
+					'_depth'     => $get_current_depth(),
 				);
 
 				$current['childNodes'][] = $self;
@@ -237,7 +245,7 @@ function get_tree( string $html ): array {
 					'nodeValue' => $processor->get_modifiable_text(),
 					'_span'     => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
 					'_bc'       => $processor->get_breadcrumbs(),
-					'_depth'    => $processor->get_current_depth(),
+					'_depth'    => $get_current_depth(),
 				);
 
 				$current['childNodes'][] = $self;
@@ -250,7 +258,7 @@ function get_tree( string $html ): array {
 					'nodeValue' => $processor->get_modifiable_text(),
 					'_span'     => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
 					'_bc'       => $processor->get_breadcrumbs(),
-					'_depth'    => $processor->get_current_depth(),
+					'_depth'    => $get_current_depth(),
 				);
 				$current['childNodes'][] = $self;
 				break;
@@ -262,7 +270,7 @@ function get_tree( string $html ): array {
 					'nodeValue' => $processor->get_modifiable_text(),
 					'_span'     => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
 					'_bc'       => $processor->get_breadcrumbs(),
-					'_depth'    => $processor->get_current_depth(),
+					'_depth'    => $get_current_depth(),
 				);
 				$current['childNodes'][] = $self;
 				break;
@@ -272,7 +280,7 @@ function get_tree( string $html ): array {
 					'nodeType' => NODE_TYPE_COMMENT,
 					'_span'    => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
 					'_bc'      => $processor->get_breadcrumbs(),
-					'_depth'   => $processor->get_current_depth(),
+					'_depth'   => $get_current_depth(),
 				);
 				switch ( $processor->get_comment_type() ) {
 					case WP_HTML_Processor::COMMENT_AS_ABRUPTLY_CLOSED_COMMENT:
