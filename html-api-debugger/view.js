@@ -155,13 +155,6 @@ const { clearSpan, state, render } = store(NS, {
 			).innerHTML = '';
 			return;
 		}
-
-		printHtmlApiTree(
-			resp.result.tree,
-			/** @type {HTMLUListElement} */ (
-				document.getElementById('html_api_result_holder')
-			),
-		);
 	},
 
 	/** @param {MouseEvent} e */
