@@ -9,9 +9,6 @@ const apiFetch = window.wp.apiFetch;
 const NS = 'html-api-debugger';
 const DEBOUNCE_TIMEOUT = 150;
 
-/** @type {HTMLIFrameElement} */
-let RENDERED_IFRAME;
-
 /** @type {AbortController|null} */
 let inFlightRequestAbortController = null;
 
@@ -70,7 +67,6 @@ const { clearSpan, state, render } = store(NS, {
 		},
 	},
 	run() {
-		RENDERED_IFRAME = document.getElementById('rendered_iframe');
 		render();
 
 		// browsers "eat" some characters from search params…
