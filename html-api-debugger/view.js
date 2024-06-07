@@ -182,6 +182,7 @@ const { clearSpan, state, render } = store(NS, {
 		if (state.htmlapiResponse.result?.tree) {
 			printHtmlApiTree(
 				state.htmlapiResponse.result.tree,
+				// @ts-expect-error
 				document.getElementById('html_api_result_holder'),
 				{ showClosers: state.showClosers },
 			);
