@@ -38,6 +38,20 @@ const { clearSpan, state, render } = store(NS, {
 			return JSON.stringify(state.htmlapiResponse, undefined, 2);
 		},
 
+		get playgroundLink() {
+			// We'll embed a path in a URL.
+			const searchParams = new URLSearchParams({ page: NS });
+			if (state.html) {
+				searchParams.set('html', state.html);
+			}
+			const base = '/wp-admin/admin.php';
+			const u = new URL(
+				'https://playground.wordpress.net/?plugin=html-api-debugger',
+			);
+			u.searchParams.set('url', `${base}?${searchParams.toString()}`);
+			return u.href;
+		},
+
 		get htmlForProcessing() {
 			return '<!DOCTYPE html>\n<html>\n<body>' + state.html;
 		},
@@ -165,7 +179,12 @@ const { clearSpan, state, render } = store(NS, {
 		}
 	},
 
-	/** @param {MouseEvent} e */
+	/** @param {Event} e */
+	handleCopyClick: function* (e) {
+		yield navigator.clipboard.writeText(state.playgroundLink);
+	},
+
+	/** @param {Event} e */
 	handleSpanClick(e) {
 		const t = e.target;
 		if (t && t instanceof HTMLElement) {
@@ -178,6 +197,7 @@ const { clearSpan, state, render } = store(NS, {
 			}
 		}
 	},
+
 	/** @param {Event} e */
 	handleShowInvisibleClick(e) {
 		// @ts-expect-error

@@ -93,6 +93,9 @@ function generate_page( string $html ): string {
 		</tr>
 		<tr>
 			<td>
+				<p>
+					<button data-wp-on--click="handleCopyClick" type="button">Copy shareable playground link<button>
+				</p>
 				<details>
 					<summary>debug response</summary>
 					<pre data-wp-text="state.formattedHtmlapiResponse"></pre>
