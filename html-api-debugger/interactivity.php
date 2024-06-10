@@ -94,7 +94,7 @@ function generate_page( string $html ): string {
 		<tr>
 			<td>
 				<p>
-					<button data-wp-on--click="handleCopyClick" type="button">Copy shareable playground link<button>
+					<button data-wp-on--click="handleCopyClick" type="button">Copy shareable playground link</button>
 				</p>
 				<details>
 					<summary>debug response</summary>
