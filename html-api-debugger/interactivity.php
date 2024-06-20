@@ -23,6 +23,7 @@ function generate_page( string $html ): string {
 			'htmlapiResponse' => $htmlapi_response,
 			'showClosers'     => false,
 			'showInvisible'   => false,
+			'showVirtual'     => false,
 			'span'            => null,
 		)
 	);
@@ -67,6 +68,7 @@ function generate_page( string $html ): string {
 				<p>
 					<label>Show closers <input type="checkbox" data-wp-bind--checked="state.showClosers" data-wp-on--click="handleShowClosersClick"></label>
 					<label>Show invisible <input type="checkbox" data-wp-bind--checked="state.showInvisible" data-wp-on--click="handleShowInvisibleClick"></label>
+					<label>Show virtual <input type="checkbox" data-wp-bind--checked="state.showVirtual" data-wp-on--click="handleShowVirtualClick"></label>
 				</p>
 			</td>
 			<td>

@@ -2,6 +2,7 @@
  * @typedef Options
  * @property {boolean} [showClosers]
  * @property {boolean} [showInvisible]
+ * @property {boolean} [showVirtual]
  */
 
 /**
@@ -63,6 +64,12 @@ export function printHtmlApiTree(node, ul, options = {}) {
 		}
 		if (node.childNodes[i]._bc?.length) {
 			li.title = node.childNodes[i]._bc.join(' > ');
+		}
+		if (
+			options.showVirtual &&
+			typeof node.childNodes[i]._virtual === 'boolean'
+		) {
+			li.classList.add(node.childNodes[i]._virtual ? 'is-virtual' : 'is-real');
 		}
 		if (node.childNodes[i]._depth) {
 			li.title = `(${node.childNodes[i]._depth}) ${li.title}`;

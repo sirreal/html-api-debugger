@@ -2,9 +2,11 @@
 
 namespace HTML_API_Debugger\HTML_API_Integration;
 
-use WP_HTML_Processor;
-use ReflectionProperty;
 use Exception;
+use ReflectionClass;
+use ReflectionMethod;
+use ReflectionProperty;
+use WP_HTML_Processor;
 
 const NODE_TYPE_ELEMENT                = 1;
 const NODE_TYPE_ATTRIBUTE              = 2;
@@ -132,6 +134,14 @@ function get_tree( string $html ): array {
 
 	$processor = WP_HTML_Processor::create_fragment( $html );
 
+	$rc = new ReflectionClass( WP_HTML_Processor::class );
+
+	$processor_is_virtual = null;
+	if ( $rc->hasMethod( 'is_virtual' ) ) {
+		$processor_is_virtual = new ReflectionMethod( 'WP_HTML_Processor', 'is_virtual' );
+		$processor_is_virtual->setAccessible( true );
+	}
+
 	$get_current_depth = method_exists( WP_HTML_Processor::class, 'get_current_depth' )
 		? function () use ( $processor ) {
 			return $processor->get_current_depth();
@@ -223,6 +233,7 @@ function get_tree( string $html ): array {
 					'_closer'    => (bool) $processor->is_tag_closer(),
 					'_span'      => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
 					'_bc'        => $processor->get_breadcrumbs(),
+					'_virtual'   => $processor_is_virtual && $processor_is_virtual->invoke( $processor ),
 					'_depth'     => $get_current_depth(),
 				);
 
@@ -245,6 +256,7 @@ function get_tree( string $html ): array {
 					'nodeValue' => $processor->get_modifiable_text(),
 					'_span'     => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
 					'_bc'       => $processor->get_breadcrumbs(),
+					'_virtual'  => $processor_is_virtual && $processor_is_virtual->invoke( $processor ),
 					'_depth'    => $get_current_depth(),
 				);
 
@@ -258,6 +270,7 @@ function get_tree( string $html ): array {
 					'nodeValue' => $processor->get_modifiable_text(),
 					'_span'     => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
 					'_bc'       => $processor->get_breadcrumbs(),
+					'_virtual'  => $processor_is_virtual && $processor_is_virtual->invoke( $processor ),
 					'_depth'    => $get_current_depth(),
 				);
 				$current['childNodes'][] = $self;
@@ -270,6 +283,7 @@ function get_tree( string $html ): array {
 					'nodeValue' => $processor->get_modifiable_text(),
 					'_span'     => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
 					'_bc'       => $processor->get_breadcrumbs(),
+					'_virtual'  => $processor_is_virtual && $processor_is_virtual->invoke( $processor ),
 					'_depth'    => $get_current_depth(),
 				);
 				$current['childNodes'][] = $self;
@@ -280,6 +294,7 @@ function get_tree( string $html ): array {
 					'nodeType' => NODE_TYPE_COMMENT,
 					'_span'    => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
 					'_bc'      => $processor->get_breadcrumbs(),
+					'_virtual' => $processor_is_virtual && $processor_is_virtual->invoke( $processor ),
 					'_depth'   => $get_current_depth(),
 				);
 				switch ( $processor->get_comment_type() ) {

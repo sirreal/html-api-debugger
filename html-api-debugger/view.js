@@ -19,6 +19,7 @@ let debounceInputAbortController = null;
  * @property {string} formattedHtmlapiResponse
  * @property {boolean} showClosers
  * @property {boolean} showInvisible
+ * @property {boolean} showVirtual
  */
 
 /**
@@ -34,6 +35,10 @@ const store = I.store;
 /** @type {Store} */
 const { clearSpan, state, render } = store(NS, {
 	state: {
+		showClosers: Boolean(localStorage.getItem(`${NS}-showClosers`)),
+		showInvisible: Boolean(localStorage.getItem(`${NS}-showInvisible`)),
+		showVirtual: Boolean(localStorage.getItem(`${NS}-showVirtual`)),
+
 		get formattedHtmlapiResponse() {
 			return JSON.stringify(state.htmlapiResponse, undefined, 2);
 		},
@@ -201,12 +206,35 @@ const { clearSpan, state, render } = store(NS, {
 	/** @param {Event} e */
 	handleShowInvisibleClick(e) {
 		// @ts-expect-error
-		state.showInvisible = e.target.checked;
+		if (e.target.checked) {
+			state.showInvisible = true;
+			localStorage.setItem(`${NS}-showInvisible`, '1');
+		} else {
+			state.showInvisible = false;
+			localStorage.removeItem(`${NS}-showInvisible`);
+		}
 	},
 	/** @param {Event} e */
 	handleShowClosersClick(e) {
 		// @ts-expect-error
-		state.showClosers = e.target.checked;
+		if (e.target.checked) {
+			state.showClosers = true;
+			localStorage.setItem(`${NS}-showClosers`, '1');
+		} else {
+			state.showClosers = false;
+			localStorage.removeItem(`${NS}-showClosers`);
+		}
+	},
+	/** @param {Event} e */
+	handleShowVirtualClick(e) {
+		// @ts-expect-error
+		if (e.target.checked) {
+			state.showVirtual = true;
+			localStorage.setItem(`${NS}-showVirtual`, '1');
+		} else {
+			state.showVirtual = false;
+			localStorage.removeItem(`${NS}-showVirtual`);
+		}
 	},
 	watch() {
 		render();
@@ -223,6 +251,7 @@ const { clearSpan, state, render } = store(NS, {
 			{
 				showClosers: state.showClosers,
 				showInvisible: state.showInvisible,
+				showVirtual: state.showVirtual,
 			},
 		);
 	},
@@ -236,6 +265,7 @@ const { clearSpan, state, render } = store(NS, {
 				{
 					showClosers: state.showClosers,
 					showInvisible: state.showInvisible,
+					showVirtual: state.showVirtual,
 				},
 			);
 		}
