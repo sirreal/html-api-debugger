@@ -31,10 +31,16 @@ function build_html_tree( string $html ): array {
 	$tokens = namespace\get_tokens( $html );
 	$tags   = namespace\get_tags( $html );
 
+	$rc       = new ReflectionClass( WP_HTML_Processor::class );
+	$supports = array(
+		'is_virtual' => $rc->hasMethod( 'is_virtual' ),
+	);
+
 	return array(
-		'tree'   => $tree,
-		'tokens' => $tokens,
-		'tags'   => $tags,
+		'tree'     => $tree,
+		'tokens'   => $tokens,
+		'tags'     => $tags,
+		'supports' => $supports,
 	);
 }
 
@@ -126,20 +132,26 @@ function get_tokens( string $html ): array {
 }
 
 function get_tree( string $html ): array {
-	$processor_state = new ReflectionProperty( 'WP_HTML_Processor', 'state' );
+	$processor_state = new ReflectionProperty( WP_HTML_Processor::class, 'state' );
 	$processor_state->setAccessible( true );
 
-	$processor_bookmarks = new ReflectionProperty( 'WP_HTML_Processor', 'bookmarks' );
+	$processor_bookmarks = new ReflectionProperty( WP_HTML_Processor::class, 'bookmarks' );
 	$processor_bookmarks->setAccessible( true );
 
 	$processor = WP_HTML_Processor::create_fragment( $html );
 
 	$rc = new ReflectionClass( WP_HTML_Processor::class );
 
-	$processor_is_virtual = null;
+	$is_virtual = function () {
+		return null;
+	};
+
 	if ( $rc->hasMethod( 'is_virtual' ) ) {
-		$processor_is_virtual = new ReflectionMethod( 'WP_HTML_Processor', 'is_virtual' );
+		$processor_is_virtual = new ReflectionMethod( WP_HTML_Processor::class, 'is_virtual' );
 		$processor_is_virtual->setAccessible( true );
+		$is_virtual = function () use ( $processor_is_virtual, $processor ) {
+			return $processor_is_virtual->invoke( $processor );
+		};
 	}
 
 	$get_current_depth = method_exists( WP_HTML_Processor::class, 'get_current_depth' )
@@ -233,7 +245,7 @@ function get_tree( string $html ): array {
 					'_closer'    => (bool) $processor->is_tag_closer(),
 					'_span'      => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
 					'_bc'        => $processor->get_breadcrumbs(),
-					'_virtual'   => $processor_is_virtual && $processor_is_virtual->invoke( $processor ),
+					'_virtual'   => $is_virtual(),
 					'_depth'     => $get_current_depth(),
 				);
 
@@ -256,7 +268,7 @@ function get_tree( string $html ): array {
 					'nodeValue' => $processor->get_modifiable_text(),
 					'_span'     => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
 					'_bc'       => $processor->get_breadcrumbs(),
-					'_virtual'  => $processor_is_virtual && $processor_is_virtual->invoke( $processor ),
+					'_virtual'  => $is_virtual(),
 					'_depth'    => $get_current_depth(),
 				);
 
@@ -270,7 +282,7 @@ function get_tree( string $html ): array {
 					'nodeValue' => $processor->get_modifiable_text(),
 					'_span'     => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
 					'_bc'       => $processor->get_breadcrumbs(),
-					'_virtual'  => $processor_is_virtual && $processor_is_virtual->invoke( $processor ),
+					'_virtual'  => $is_virtual(),
 					'_depth'    => $get_current_depth(),
 				);
 				$current['childNodes'][] = $self;
@@ -283,7 +295,7 @@ function get_tree( string $html ): array {
 					'nodeValue' => $processor->get_modifiable_text(),
 					'_span'     => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
 					'_bc'       => $processor->get_breadcrumbs(),
-					'_virtual'  => $processor_is_virtual && $processor_is_virtual->invoke( $processor ),
+					'_virtual'  => $is_virtual(),
 					'_depth'    => $get_current_depth(),
 				);
 				$current['childNodes'][] = $self;
@@ -294,7 +306,7 @@ function get_tree( string $html ): array {
 					'nodeType' => NODE_TYPE_COMMENT,
 					'_span'    => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
 					'_bc'      => $processor->get_breadcrumbs(),
-					'_virtual' => $processor_is_virtual && $processor_is_virtual->invoke( $processor ),
+					'_virtual' => $is_virtual(),
 					'_depth'   => $get_current_depth(),
 				);
 				switch ( $processor->get_comment_type() ) {
