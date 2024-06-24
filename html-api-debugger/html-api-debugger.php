@@ -115,13 +115,17 @@ function prepare_html_result_object( string $html ): array {
 		$result = HTML_API_Integration\build_html_tree( $html );
 
 		return array(
+			'error'  => null,
 			'result' => array_merge(
 				$result,
 				array( 'html' => $html )
 			),
 		);
 	} catch ( Exception $e ) {
-		return array( 'error' => (string) $e );
+		return array(
+			'error'  => (string) $e,
+			'result' => null,
+		);
 	}
 }
 
