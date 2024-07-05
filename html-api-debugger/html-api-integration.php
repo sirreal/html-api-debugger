@@ -249,6 +249,20 @@ function get_tree( string $html ): array {
 					'_depth'     => $get_current_depth(),
 				);
 
+				// Self-contained tags contain their inner contents as modifiable text.
+				$modifiable_text = $processor->get_modifiable_text();
+				if ( '' !== $modifiable_text ) {
+					$self['childNodes'][] = array(
+						'nodeType'  => NODE_TYPE_TEXT,
+						'nodeName'  => '#text',
+						'nodeValue' => $modifiable_text,
+						'_span'     => null, // $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
+						'_bc'       => array_merge( $processor->get_breadcrumbs(), array( '#text' ) ),
+						'_virtual'  => $is_virtual(),
+						'_depth'    => $get_current_depth() + 1,
+					);
+				}
+
 				$current['childNodes'][] = $self;
 
 				if ( $processor->is_tag_closer() ) {
