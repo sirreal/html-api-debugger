@@ -1,0 +1,22 @@
+{
+	"landingPage": "/wp-admin/admin.php?page=html-api-debugger&html=<h1>Hello world!</h1>",
+	"preferredVersions": {
+		"php": "8.0",
+		"wp": "latest"
+	},
+	"phpExtensionBundles": ["kitchen-sink"],
+	"steps": [
+		{
+			"step": "login",
+			"username": "admin",
+			"password": "password"
+		},
+		{
+			"step": "installPlugin",
+			"pluginZipFile": {
+				"resource": "wordpress.org/plugins",
+				"slug": "html-api-debugger"
+			}
+		}
+	]
+}
