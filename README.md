@@ -2,4 +2,4 @@
 
 This is a WordPress plugin to help debug the behavior of the HTML API.
 
-![screenshot](./html-api-debugger/screenshot-1.png)
+![screenshot](./screenshot-1.png)
