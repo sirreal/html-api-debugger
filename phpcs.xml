@@ -10,8 +10,9 @@
 	#############################################################################
 	-->
 
-	<file>./plugin</file>
+	<file>./html-api-debugger</file>
 	<exclude-pattern>\.m?js$</exclude-pattern>
+	<exclude-pattern>\.css$</exclude-pattern>
 
 	<!-- Exclude WP Core folders and files from being checked. -->
 	<exclude-pattern>/docroot/wp-admin/*</exclude-pattern>
