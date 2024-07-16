@@ -63,7 +63,7 @@ const { clearSpan, state, render } = store(NS, {
 
 		get hoverSpan() {
 			/** @type {string | undefined} */
-			const html = state.htmlapiResponse.result?.html;
+			const html = state.htmlapiResponse.html;
 			if (!html) {
 				return '';
 			}
@@ -72,7 +72,7 @@ const { clearSpan, state, render } = store(NS, {
 
 		get hoverSpanSplit() {
 			/** @type {string | undefined} */
-			const html = state.htmlapiResponse.result?.html;
+			const html = state.htmlapiResponse.html;
 			if (!html || !state.span) {
 				return [];
 			}

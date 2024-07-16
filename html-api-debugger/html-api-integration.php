@@ -21,21 +21,10 @@ const NODE_TYPE_DOCUMENT_TYPE          = 10;
 const NODE_TYPE_DOCUMENT_FRAGMENT      = 11;
 const NODE_TYPE_NOTATION               = 12;
 
-/**
- * Build the HTML API tree.
- *
- * @param string $html The HTML.
- */
-function build_html_tree( string $html ): array {
-	$tree     = namespace\get_tree( $html );
-	$rc       = new ReflectionClass( WP_HTML_Processor::class );
-	$supports = array(
-		'is_virtual' => $rc->hasMethod( 'is_virtual' ),
-	);
-
+function get_supports(): array {
+	$rc = new ReflectionClass( WP_HTML_Processor::class );
 	return array(
-		'tree'     => $tree,
-		'supports' => $supports,
+		'is_virtual' => $rc->hasMethod( 'is_virtual' ),
 	);
 }
 

@@ -111,22 +111,20 @@ function init() {
  * @param string $html The HTML.
  */
 function prepare_html_result_object( string $html ): array {
-	try {
-		$result = HTML_API_Integration\build_html_tree( $html );
+	$response = array(
+		'supports' => HTML_API_Integration\get_supports(),
+		'html'     => $html,
+		'error'    => null,
+		'result'   => null,
+	);
 
-		return array(
-			'error'  => null,
-			'result' => array_merge(
-				$result,
-				array( 'html' => $html )
-			),
-		);
+	try {
+		$response['result'] = array( 'tree' => HTML_API_Integration\get_tree( $html ) );
 	} catch ( Exception $e ) {
-		return array(
-			'error'  => (string) $e,
-			'result' => null,
-		);
+		$response['error'] = (string) $e;
 	}
+
+	return $response;
 }
 
 add_action( 'init', __NAMESPACE__ . '\\init' );
