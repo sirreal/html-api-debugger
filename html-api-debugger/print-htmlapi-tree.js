@@ -62,8 +62,12 @@ export function printHtmlApiTree(node, ul, options = {}) {
 			li.dataset['spanStart'] = node.childNodes[i]._span.start;
 			li.dataset['spanLength'] = node.childNodes[i]._span.length;
 		}
+		if (node.childNodes[i]._mode) {
+			li.dataset['mode'] = node.childNodes[i]._mode;
+		}
 		if (node.childNodes[i]._bc?.length) {
-			li.title = node.childNodes[i]._bc.join(' > ');
+			li.dataset['breadcrumbs'] = node.childNodes[i]._bc.join(' > ');
+			li.title = /** @type {string} */ (li.dataset['breadcrumbs']);
 		}
 		if (
 			options.showVirtual &&
@@ -72,7 +76,8 @@ export function printHtmlApiTree(node, ul, options = {}) {
 			li.classList.add(node.childNodes[i]._virtual ? 'is-virtual' : 'is-real');
 		}
 		if (node.childNodes[i]._depth) {
-			li.title = `(${node.childNodes[i]._depth}) ${li.title}`;
+			li.dataset['depth'] = node.childNodes[i]._depth;
+			li.title = `(${li.dataset['depth']}) ${li.title}`;
 		}
 		if (node.childNodes[i]._closer) {
 			li.classList.add('tag-closer');
