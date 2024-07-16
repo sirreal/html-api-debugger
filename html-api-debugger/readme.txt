@@ -3,7 +3,7 @@ Contributors: jonsurrell
 Tags: HTML API, development, debug
 Requires at least: 6.5
 Tested up to: 6.6
-Stable tag: 0.6
+Stable tag: 0.7
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -32,3 +32,6 @@ Add a page to wp-admin for debugging the HTML API.
 
 = 0.6 =
 * Add better unsupported error messages when possible. (WordPress >= 6.7)
+
+= 0.7 =
+* Fix some issues where parsing errors could crash the client.
