@@ -275,8 +275,12 @@ function get_tree( string $html ): array {
 	}
 
 	if ( null !== $processor->get_last_error() ) {
-		// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
-		throw new Exception( $processor->get_last_error() );
+		if ( method_exists( WP_HTML_Processor::class, 'get_unsupported_exception' ) && $processor->get_unsupported_exception() ) {
+			throw $processor->get_unsupported_exception();
+		} else {
+			// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
+			throw new Exception( $processor->get_last_error() );
+		}
 	}
 
 	if ( $processor->paused_at_incomplete_token() ) {
