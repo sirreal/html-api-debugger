@@ -38,3 +38,4 @@ Add a page to wp-admin for debugging the HTML API.
 
 = 0.8 =
 * Show invisible characters in processed HTML spans.
+* Fix null-byte rendering in the initial page render.

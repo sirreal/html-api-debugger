@@ -93,6 +93,14 @@ const { clearSpan, state, render } = store(NS, {
 		},
 	},
 	run() {
+		// The HTML parser will replace null bytes from the HTML.
+		// Force print them if we have null bytes.
+		if (state.html.includes('\0')) {
+			/** @type {HTMLTextAreaElement} */ (
+				document.getElementById('input_html')
+			).value = state.html;
+		}
+
 		render();
 
 		// browsers "eat" some characters from search params…
