@@ -1,3 +1,5 @@
+import { replaceInvisible } from './replace-invisible-chars.js';
+
 /**
  * @typedef Options
  * @property {boolean} [showClosers]
@@ -112,6 +114,7 @@ export function printHtmlApiTree(node, ul, options = {}) {
 			li.appendChild(ul2);
 			printHtmlApiTree(node.childNodes[i], ul2, options);
 		}
+
 		if (node.childNodes[i].content) {
 			const ul2 = document.createElement('ul');
 			li.appendChild(ul2);
@@ -121,26 +124,4 @@ export function printHtmlApiTree(node, ul, options = {}) {
 
 		ul.appendChild(li);
 	}
-}
-
-/**
- * @param {string} s
- * @return {string}
- */
-function replaceInvisible(s) {
-	return s.replace(/[\x00-\x1f\x7f}]/gu, (c) => {
-		const charCode = c.charCodeAt(0);
-		switch (charCode) {
-			// U+007F DELETE -> U+2421 SYMBOL FOR DELETE
-			case 0x7f:
-				return '\u{2421}';
-
-			// Include a newline with newline replacement
-			case 0x0a:
-				return '\u{240A}\n';
-		}
-
-		// There's a nice Control Pictures Block at 0x2400 offset for the matched range
-		return String.fromCharCode(charCode + 0x2400);
-	});
 }

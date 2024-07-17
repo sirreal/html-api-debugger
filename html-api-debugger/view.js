@@ -1,5 +1,6 @@
 import * as I from '@wordpress/interactivity';
 import { printHtmlApiTree } from './print-htmlapi-tree.js';
+import { replaceInvisible } from './replace-invisible-chars.js';
 
 /** @type {typeof import('@wordpress/api-fetch').default} */
 // @ts-expect-error
@@ -67,7 +68,7 @@ const { clearSpan, state, render } = store(NS, {
 			if (!html) {
 				return '';
 			}
-			return html;
+			return state.showInvisible ? replaceInvisible(html) : html;
 		},
 
 		get hoverSpanSplit() {
@@ -82,11 +83,13 @@ const { clearSpan, state, render } = store(NS, {
 			/** @type {{start: number, length: number }} */
 			const { start: spanStart, length } = state.span;
 			const spanEnd = spanStart + length;
-			return [
+			const split = [
 				decoder.decode(buf.slice(0, spanStart)),
 				decoder.decode(buf.slice(spanStart, spanEnd)),
 				decoder.decode(buf.slice(spanEnd)),
 			];
+
+			return state.showInvisible ? split.map(replaceInvisible) : split;
 		},
 	},
 	run() {
