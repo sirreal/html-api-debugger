@@ -35,7 +35,6 @@ function generate_page( string $html ): string {
 	data-wp-watch--a="watch"
 	data-wp-watch--b="watchDom"
 	data-wp-run="run"
-	data-wp-init="state.updateData"
 >
 	<tbody>
 		<tr>
