@@ -8,6 +8,9 @@ const apiFetch = window.wp.apiFetch;
 
 const NS = 'html-api-debugger';
 const DEBOUNCE_TIMEOUT = 150;
+const RENDERED_IFRAME = /** @type {HTMLIFrameElement} */ (
+	document.getElementById('rendered_iframe')
+);
 
 /** @type {AbortController|null} */
 let inFlightRequestAbortController = null;
@@ -21,6 +24,7 @@ let debounceInputAbortController = null;
  * @property {boolean} showClosers
  * @property {boolean} showInvisible
  * @property {boolean} showVirtual
+ * @property {boolean} quirksMode
  */
 
 /**
@@ -39,6 +43,7 @@ const { clearSpan, state, render } = store(NS, {
 		showClosers: Boolean(localStorage.getItem(`${NS}-showClosers`)),
 		showInvisible: Boolean(localStorage.getItem(`${NS}-showInvisible`)),
 		showVirtual: Boolean(localStorage.getItem(`${NS}-showVirtual`)),
+		quirksMode: Boolean(localStorage.getItem(`${NS}-quirksMode`)),
 
 		get formattedHtmlapiResponse() {
 			return JSON.stringify(state.htmlapiResponse, undefined, 2);
@@ -59,7 +64,8 @@ const { clearSpan, state, render } = store(NS, {
 		},
 
 		get htmlForProcessing() {
-			return '<!DOCTYPE html>\n<html>\n<body>' + state.html;
+			const doctype = `<!DOCTYPE${state.quirksMode ? '' : ' html'}>`;
+			return `${doctype}\n<html>\n<body>` + state.html;
 		},
 
 		get hoverSpan() {
@@ -195,8 +201,7 @@ const { clearSpan, state, render } = store(NS, {
 		}
 	},
 
-	/** @param {Event} e */
-	handleCopyClick: function* (e) {
+	handleCopyClick: function* () {
 		yield navigator.clipboard.writeText(state.playgroundLink);
 	},
 
@@ -214,39 +219,11 @@ const { clearSpan, state, render } = store(NS, {
 		}
 	},
 
-	/** @param {Event} e */
-	handleShowInvisibleClick(e) {
-		// @ts-expect-error
-		if (e.target.checked) {
-			state.showInvisible = true;
-			localStorage.setItem(`${NS}-showInvisible`, '1');
-		} else {
-			state.showInvisible = false;
-			localStorage.removeItem(`${NS}-showInvisible`);
-		}
-	},
-	/** @param {Event} e */
-	handleShowClosersClick(e) {
-		// @ts-expect-error
-		if (e.target.checked) {
-			state.showClosers = true;
-			localStorage.setItem(`${NS}-showClosers`, '1');
-		} else {
-			state.showClosers = false;
-			localStorage.removeItem(`${NS}-showClosers`);
-		}
-	},
-	/** @param {Event} e */
-	handleShowVirtualClick(e) {
-		// @ts-expect-error
-		if (e.target.checked) {
-			state.showVirtual = true;
-			localStorage.setItem(`${NS}-showVirtual`, '1');
-		} else {
-			state.showVirtual = false;
-			localStorage.removeItem(`${NS}-showVirtual`);
-		}
-	},
+	handleShowInvisibleClick: getToggleHandler('showInvisible'),
+	handleShowClosersClick: getToggleHandler('showClosers'),
+	handleShowVirtualClick: getToggleHandler('showVirtual'),
+	handleQuirksModeClick: getToggleHandler('quirksMode'),
+
 	watch() {
 		render();
 	},
@@ -268,6 +245,10 @@ const { clearSpan, state, render } = store(NS, {
 	},
 
 	render() {
+		RENDERED_IFRAME.contentWindow.document.open();
+		RENDERED_IFRAME.contentWindow.document.write(state.htmlForProcessing);
+		RENDERED_IFRAME.contentWindow.document.close();
+
 		if (state.htmlapiResponse.result?.tree) {
 			printHtmlApiTree(
 				state.htmlapiResponse.result.tree,
@@ -282,3 +263,18 @@ const { clearSpan, state, render } = store(NS, {
 		}
 	},
 });
+
+/** @param {string} stateKey */
+function getToggleHandler(stateKey) {
+	/** @param {Event} e */
+	return (e) => {
+		// @ts-expect-error
+		if (e.target.checked) {
+			state[stateKey] = true;
+			localStorage.setItem(`${NS}-${stateKey}`, '1');
+		} else {
+			state[stateKey] = false;
+			localStorage.removeItem(`${NS}-${stateKey}`);
+		}
+	};
+}

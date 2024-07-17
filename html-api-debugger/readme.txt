@@ -42,3 +42,4 @@ Add a page to wp-admin for debugging the HTML API.
 
 = 0.9 =
 * Fix a bug where "}" was replaced as an invisible character.
+* Add a quirks mode toggle that allows changing the doctype used.

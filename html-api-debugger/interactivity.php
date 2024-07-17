@@ -21,10 +21,12 @@ function generate_page( string $html ): string {
 			),
 			'html'            => $html,
 			'htmlapiResponse' => $htmlapi_response,
+			'span'            => null,
+
 			'showClosers'     => false,
 			'showInvisible'   => false,
 			'showVirtual'     => false,
-			'span'            => null,
+			'quirksMode'      => false,
 		)
 	);
 	ob_start();
@@ -51,7 +53,7 @@ function generate_page( string $html ): string {
 				<h2>Rendered output</h2>
 				<iframe
 					data-wp-on--load="onRenderedIframeLoad"
-					data-wp-bind--srcdoc="state.htmlForProcessing"
+					src="about:blank"
 					id="rendered_iframe"
 					referrerpolicy="no-referrer"
 					sandbox="allow-forms allow-modals allow-popups allow-scripts allow-same-origin"></iframe>
@@ -68,6 +70,7 @@ function generate_page( string $html ): string {
 					<label>Show closers <input type="checkbox" data-wp-bind--checked="state.showClosers" data-wp-on--click="handleShowClosersClick"></label>
 					<label>Show invisible <input type="checkbox" data-wp-bind--checked="state.showInvisible" data-wp-on--click="handleShowInvisibleClick"></label>
 					<span data-wp-bind--hidden="!state.htmlapiResponse.supports.is_virtual"><label>Show virtual <input type="checkbox" data-wp-bind--checked="state.showVirtual" data-wp-on--click="handleShowVirtualClick"></label></span>
+					<label>Quirks mode <input type="checkbox" data-wp-bind--checked="state.quirksMode" data-wp-on--click="handleQuirksModeClick"></label>
 				</p>
 			</td>
 			<td>
