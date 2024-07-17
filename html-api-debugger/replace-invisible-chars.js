@@ -3,7 +3,7 @@
  * @return {string}
  */
 export function replaceInvisible(s) {
-	return s.replace(/[\x00-\x1f\x7f}]/gu, (c) => {
+	return s.replace(/[\x00-\x1f\x7f]/gu, (c) => {
 		const charCode = c.charCodeAt(0);
 		switch (charCode) {
 			// U+007F DELETE -> U+2421 SYMBOL FOR DELETE
