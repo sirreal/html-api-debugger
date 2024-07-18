@@ -16,6 +16,6 @@
 	},
 	"formatter": {},
 	"files": {
-		"ignore": ["vendor"]
+		"ignore": ["vendor", "plugin-repo"]
 	}
 }
