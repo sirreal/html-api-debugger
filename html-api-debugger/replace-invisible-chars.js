@@ -16,6 +16,6 @@ export function replaceInvisible(s) {
 		}
 
 		// There's a nice Control Pictures Block at 0x2400 offset for the matched range
-		return String.fromCharCode(charCode + 0x2400);
+		return String.fromCodePoint(charCode + 0x2400);
 	});
 }
