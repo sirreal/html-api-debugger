@@ -45,3 +45,4 @@ Add a page to wp-admin for debugging the HTML API.
 * Add a quirks mode toggle that allows changing the doctype used.
 
 = 1.0 =
+* Prevent flash of "�" replacing null-byte in input on initial render.

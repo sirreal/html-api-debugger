@@ -42,7 +42,7 @@ function generate_page( string $html ): string {
 		<tr>
 			<td>
 				<h2>Input HTML</h2>
-				<textarea id='input_html' data-wp-on--input="handleChange"><?php echo "\n" . esc_textarea( $html ); ?></textarea>
+				<textarea id='input_html' data-wp-on--input="handleChange"><?php echo "\n" . esc_textarea( str_replace( "\0", '', $html ) ); ?></textarea>
 				<p>
 					Note: Because HTML API operates in body at this time, this will be prepended:
 					<br>
