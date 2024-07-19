@@ -3,9 +3,9 @@
  * @return {string}
  */
 export function replaceInvisible(s) {
-	return s.replace(/[\x00-\x1f\x7f]/gu, (c) => {
-		const charCode = c.charCodeAt(0);
-		switch (charCode) {
+	return s.replace(/[\x00-\x1F\x7F]/gu, (c) => {
+		const codePoint = /** @type {number} */ (c.codePointAt(0));
+		switch (codePoint) {
 			// U+007F DELETE -> U+2421 SYMBOL FOR DELETE
 			case 0x7f:
 				return '\u{2421}';
@@ -16,6 +16,6 @@ export function replaceInvisible(s) {
 		}
 
 		// There's a nice Control Pictures Block at 0x2400 offset for the matched range
-		return String.fromCodePoint(charCode + 0x2400);
+		return String.fromCodePoint(codePoint + 0x2400);
 	});
 }
