@@ -50,7 +50,7 @@ let debounceInputAbortController = null;
  * @property {State} state
  * @property {()=>void} clearSpan
  * @property {()=>void} render
- * @property {()=>Generator} callAPI
+ * @property {()=>Promise<void>} callAPI
  * @property {(e: Event)=>void} _handleQuirksModeClick
  */
 
@@ -193,7 +193,7 @@ const store = createStore(NS, {
 			throw e;
 		}
 
-		yield* store.callAPI();
+		yield store.callAPI();
 	},
 
 	handleCopyClick: function* () {
@@ -221,7 +221,7 @@ const store = createStore(NS, {
 	/** @param {Event} e */
 	handleQuirksModeClick: function* (e) {
 		store._handleQuirksModeClick(e);
-		yield* store.callAPI();
+		yield store.callAPI();
 	},
 
 	watch() {
