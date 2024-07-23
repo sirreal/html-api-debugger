@@ -19,12 +19,30 @@ let inFlightRequestAbortController = null;
 let debounceInputAbortController = null;
 
 /**
+ * @typedef DOM
+ * @property {string} renderingMode
+ * @property {string} title
+ *
+ *
+ * @typedef HTMLAPISpan
+ * @property {number} start
+ * @property {number} length
+ *
+ *
  * @typedef State
  * @property {string} formattedHtmlapiResponse
+ * @property {any} htmlapiResponse
+ * @property {string} playgroundLink
+ * @property {string} html
+ * @property {string} htmlForProcessing
  * @property {boolean} showClosers
  * @property {boolean} showInvisible
  * @property {boolean} showVirtual
  * @property {boolean} quirksMode
+ * @property {DOM} DOM
+ * @property {HTMLAPISpan|null} span
+ * @property {string} hoverSpan
+ * @property {readonly []|readonly [string,string,string]} hoverSpanSplit
  */
 
 /**
@@ -32,13 +50,16 @@ let debounceInputAbortController = null;
  * @property {State} state
  * @property {()=>void} clearSpan
  * @property {()=>void} render
+ * @property {()=>Generator} callAPI
+ * @property {(e: Event)=>void} _handleQuirksModeClick
  */
 
 /** @type {typeof I.store<Store>} */
-const store = I.store;
+const createStore = I.store;
 
 /** @type {Store} */
-const { clearSpan, state, render } = store(NS, {
+const store = createStore(NS, {
+	// @ts-expect-error This does not define all the server-merged properties.
 	state: {
 		showClosers: Boolean(localStorage.getItem(`${NS}-showClosers`)),
 		showInvisible: Boolean(localStorage.getItem(`${NS}-showInvisible`)),
@@ -46,14 +67,14 @@ const { clearSpan, state, render } = store(NS, {
 		quirksMode: Boolean(localStorage.getItem(`${NS}-quirksMode`)),
 
 		get formattedHtmlapiResponse() {
-			return JSON.stringify(state.htmlapiResponse, undefined, 2);
+			return JSON.stringify(store.state.htmlapiResponse, undefined, 2);
 		},
 
 		get playgroundLink() {
 			// We'll embed a path in a URL.
 			const searchParams = new URLSearchParams({ page: NS });
-			if (state.html) {
-				searchParams.set('html', state.html);
+			if (store.state.html) {
+				searchParams.set('html', store.state.html);
 			}
 			const base = '/wp-admin/admin.php';
 			const u = new URL(
@@ -64,88 +85,92 @@ const { clearSpan, state, render } = store(NS, {
 		},
 
 		get htmlForProcessing() {
-			const doctype = `<!DOCTYPE${state.quirksMode ? '' : ' html'}>`;
-			return `${doctype}\n<html>\n<body>` + state.html;
+			const doctype = `<!DOCTYPE${store.state.quirksMode ? '' : ' html'}>`;
+			return `${doctype}\n<html>\n<body>` + store.state.html;
 		},
 
 		get hoverSpan() {
 			/** @type {string | undefined} */
-			const html = state.htmlapiResponse.html;
+			const html = store.state.htmlapiResponse.html;
 			if (!html) {
 				return '';
 			}
-			return state.showInvisible ? replaceInvisible(html) : html;
+			return store.state.showInvisible ? replaceInvisible(html) : html;
 		},
 
 		get hoverSpanSplit() {
 			/** @type {string | undefined} */
-			const html = state.htmlapiResponse.html;
-			if (!html || !state.span) {
-				return [];
+			const html = store.state.htmlapiResponse.html;
+			if (!html || !store.state.span) {
+				return /** @type {const} */ ([]);
 			}
 			const buf = new TextEncoder().encode(html);
 			const decoder = new TextDecoder();
 
-			/** @type {{start: number, length: number }} */
-			const { start: spanStart, length } = state.span;
+			const { start: spanStart, length } = store.state.span;
 			const spanEnd = spanStart + length;
-			const split = [
+			const split = /** @type {const} */ ([
 				decoder.decode(buf.slice(0, spanStart)),
 				decoder.decode(buf.slice(spanStart, spanEnd)),
 				decoder.decode(buf.slice(spanEnd)),
-			];
+			]);
 
-			return state.showInvisible ? split.map(replaceInvisible) : split;
+			return store.state.showInvisible
+				? // @ts-expect-error It's fine, really.
+					/** @type {typeof split} */ (split.map(replaceInvisible))
+				: split;
 		},
 	},
 	run() {
 		// The HTML parser will replace null bytes from the HTML.
 		// Force print them if we have null bytes.
-		if (state.html.includes('\0')) {
+		if (store.state.html.includes('\0')) {
 			/** @type {HTMLTextAreaElement} */ (
 				document.getElementById('input_html')
-			).value = state.html;
+			).value = store.state.html;
 		}
 
-		render();
+		store.render();
 
 		// browsers "eat" some characters from search params…
 		// newlines seem especially problematic in chrome
 		// lets clean up the URL
 		const u = new URL(document.location.href);
-		if (state.html) {
-			u.searchParams.set('html', state.html);
+		if (store.state.html) {
+			u.searchParams.set('html', store.state.html);
 			history.replaceState(null, '', u);
 		} else if (u.searchParams.has('html')) {
 			u.searchParams.delete('html');
 			history.replaceState(null, '', u);
 		}
 	},
+
 	/** @param {Event} e */
 	onRenderedIframeLoad(e) {
 		// @ts-expect-error
 		const doc = e.target.contentWindow.document;
-		state.DOM.renderingMode = doc.compatMode;
-		state.DOM.title = doc.title || '[document has no title]';
+		store.state.DOM.renderingMode = doc.compatMode;
+		store.state.DOM.title = doc.title || '[document has no title]';
 
 		printHtmlApiTree(
 			doc,
 			// @ts-expect-error
 			document.getElementById('dom_tree'),
 			{
-				showClosers: state.showClosers,
-				showInvisible: state.showInvisible,
+				showClosers: store.state.showClosers,
+				showInvisible: store.state.showInvisible,
 			},
 		);
 	},
 	clearSpan() {
-		state.span = null;
+		store.state.span = null;
 	},
+
 	/** @param {InputEvent} e */
 	handleChange: function* (e) {
 		const val = /** @type {HTMLTextAreaElement} */ (e.target).value;
 
-		state.html = val;
+		store.state.html = val;
 
 		const u = new URL(document.location.href);
 		u.searchParams.set('html', val);
@@ -168,41 +193,11 @@ const { clearSpan, state, render } = store(NS, {
 			throw e;
 		}
 
-		inFlightRequestAbortController?.abort('request superseded');
-		inFlightRequestAbortController = new AbortController();
-		let resp;
-		try {
-			resp = yield apiFetch({
-				path: `${NS}/v1/htmlapi`,
-				method: 'POST',
-				data: { html: val },
-				signal: inFlightRequestAbortController.signal,
-			});
-		} catch (err) {
-			// We'd like to get this but won't thanks to `apiFetch` hiding the real error.
-			if (err instanceof DOMException) {
-				return;
-			}
-			// `apiFetch` actually does something like this.
-			if (err && err.code === 'fetch_error' && navigator.onLine) {
-				return;
-			}
-			throw err;
-		}
-
-		state.htmlapiResponse = resp;
-		clearSpan();
-
-		if (resp.error) {
-			/** @type {HTMLUListElement} */ (
-				document.getElementById('html_api_result_holder')
-			).innerHTML = '';
-			return;
-		}
+		yield* store.callAPI();
 	},
 
 	handleCopyClick: function* () {
-		yield navigator.clipboard.writeText(state.playgroundLink);
+		yield navigator.clipboard.writeText(store.state.playgroundLink);
 	},
 
 	/** @param {Event} e */
@@ -214,7 +209,7 @@ const { clearSpan, state, render } = store(NS, {
 			if (spanEl) {
 				const start = Number(spanEl.dataset['spanStart']);
 				const length = Number(spanEl.dataset['spanLength']);
-				state.span = { start, length };
+				store.state.span = { start, length };
 			}
 		}
 	},
@@ -222,10 +217,49 @@ const { clearSpan, state, render } = store(NS, {
 	handleShowInvisibleClick: getToggleHandler('showInvisible'),
 	handleShowClosersClick: getToggleHandler('showClosers'),
 	handleShowVirtualClick: getToggleHandler('showVirtual'),
-	handleQuirksModeClick: getToggleHandler('quirksMode'),
+	_handleQuirksModeClick: getToggleHandler('quirksMode'),
+	/** @param {Event} e */
+	handleQuirksModeClick: function* (e) {
+		store._handleQuirksModeClick(e);
+		yield* store.callAPI();
+	},
 
 	watch() {
-		render();
+		store.render();
+	},
+
+	callAPI: function* () {
+		inFlightRequestAbortController?.abort('request superseded');
+		inFlightRequestAbortController = new AbortController();
+		let resp;
+		try {
+			resp = yield apiFetch({
+				path: `${NS}/v1/htmlapi`,
+				method: 'POST',
+				data: { html: store.state.html, quirksMode: store.state.quirksMode },
+				signal: inFlightRequestAbortController.signal,
+			});
+		} catch (/** @type {any} */ err) {
+			// We'd like to get this but won't thanks to `apiFetch` hiding the real error.
+			if (err instanceof DOMException) {
+				return;
+			}
+			// `apiFetch` actually does something like this.
+			if (err && err.code === 'fetch_error' && navigator.onLine) {
+				return;
+			}
+			throw err;
+		}
+
+		store.state.htmlapiResponse = resp;
+		store.clearSpan();
+
+		if (resp.error) {
+			/** @type {HTMLUListElement} */ (
+				document.getElementById('html_api_result_holder')
+			).innerHTML = '';
+			return;
+		}
 	},
 
 	watchDom() {
@@ -237,43 +271,50 @@ const { clearSpan, state, render } = store(NS, {
 			// @ts-expect-error
 			document.getElementById('dom_tree'),
 			{
-				showClosers: state.showClosers,
-				showInvisible: state.showInvisible,
-				showVirtual: state.showVirtual,
+				showClosers: store.state.showClosers,
+				showInvisible: store.state.showInvisible,
+				showVirtual: store.state.showVirtual,
 			},
 		);
 	},
 
 	render() {
-		RENDERED_IFRAME.contentWindow.document.open();
-		RENDERED_IFRAME.contentWindow.document.write(state.htmlForProcessing);
-		RENDERED_IFRAME.contentWindow.document.close();
+		// @ts-expect-error This should not be null.
+		const iframeDocument = RENDERED_IFRAME.contentWindow.document;
+		iframeDocument.open();
+		iframeDocument.write(store.state.htmlForProcessing);
+		iframeDocument.close();
 
-		if (state.htmlapiResponse.result?.tree) {
+		if (store.state.htmlapiResponse.result?.tree) {
 			printHtmlApiTree(
-				state.htmlapiResponse.result.tree,
+				store.state.htmlapiResponse.result.tree,
 				// @ts-expect-error
 				document.getElementById('html_api_result_holder'),
 				{
-					showClosers: state.showClosers,
-					showInvisible: state.showInvisible,
-					showVirtual: state.showVirtual,
+					showClosers: store.state.showClosers,
+					showInvisible: store.state.showInvisible,
+					showVirtual: store.state.showVirtual,
 				},
 			);
 		}
 	},
 });
 
-/** @param {string} stateKey */
+/** @param {keyof State} stateKey */
 function getToggleHandler(stateKey) {
-	/** @param {Event} e */
+	/**
+	 * @param {Event} e
+	 * @returns {void}
+	 */
 	return (e) => {
 		// @ts-expect-error
 		if (e.target.checked) {
-			state[stateKey] = true;
+			// @ts-expect-error
+			store.state[stateKey] = true;
 			localStorage.setItem(`${NS}-${stateKey}`, '1');
 		} else {
-			state[stateKey] = false;
+			// @ts-expect-error
+			store.state[stateKey] = false;
 			localStorage.removeItem(`${NS}-${stateKey}`);
 		}
 	};
