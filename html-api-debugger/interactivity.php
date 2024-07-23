@@ -8,9 +8,9 @@ namespace HTML_API_Debugger\Interactivity;
  * @param $html The input html.
  * @return The page HTML as rendered by the Interactivity API. This is intended to be printed directly to the page with no additional escaping.
  */
-function generate_page( string $html ): string {
+function generate_page( string $html, bool $quirks_mode = false ): string {
 	// phpcs:enable WordPress.Security.NonceVerification.Recommended
-	$htmlapi_response = \HTML_API_Debugger\prepare_html_result_object( $html );
+	$htmlapi_response = \HTML_API_Debugger\prepare_html_result_object( $html, $quirks_mode );
 
 	wp_interactivity_state(
 		\HTML_API_Debugger\SLUG,
@@ -70,7 +70,7 @@ function generate_page( string $html ): string {
 					<label>Show closers <input type="checkbox" data-wp-bind--checked="state.showClosers" data-wp-on--click="handleShowClosersClick"></label>
 					<label>Show invisible <input type="checkbox" data-wp-bind--checked="state.showInvisible" data-wp-on--click="handleShowInvisibleClick"></label>
 					<span data-wp-bind--hidden="!state.htmlapiResponse.supports.is_virtual"><label>Show virtual <input type="checkbox" data-wp-bind--checked="state.showVirtual" data-wp-on--click="handleShowVirtualClick"></label></span>
-					<label>Quirks mode <input type="checkbox" data-wp-bind--checked="state.quirksMode" data-wp-on--click="handleQuirksModeClick"></label>
+					<span data-wp-bind--hidden="!state.htmlapiResponse.supports.quirks_mode"><label>Quirks mode <input type="checkbox" data-wp-bind--checked="state.quirksMode" data-wp-on--click="handleQuirksModeClick"></label></span>
 				</p>
 			</td>
 			<td>

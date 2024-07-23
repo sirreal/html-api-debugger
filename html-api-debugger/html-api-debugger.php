@@ -52,7 +52,8 @@ function init() {
 					'methods'             => 'POST',
 					'callback'            => function ( WP_REST_Request $request ) {
 						$html = $request->get_json_params()['html'] ?: '';
-						return prepare_html_result_object( $html );
+						$quirks_mode = $request->get_json_params()['quirksMode'] ?? false;
+						return prepare_html_result_object( $html, $quirks_mode );
 					},
 					'permission_callback' => function () {
 						return current_user_can( 'edit_posts' );
@@ -110,7 +111,7 @@ function init() {
  *
  * @param string $html The HTML.
  */
-function prepare_html_result_object( string $html ): array {
+function prepare_html_result_object( string $html, bool $quirks_mode ): array {
 	$response = array(
 		'supports' => HTML_API_Integration\get_supports(),
 		'html'     => $html,
@@ -119,7 +120,7 @@ function prepare_html_result_object( string $html ): array {
 	);
 
 	try {
-		$response['result'] = array( 'tree' => HTML_API_Integration\get_tree( $html ) );
+		$response['result'] = array( 'tree' => HTML_API_Integration\get_tree( $html, $quirks_mode ) );
 	} catch ( Exception $e ) {
 		$response['error'] = (string) $e;
 	}

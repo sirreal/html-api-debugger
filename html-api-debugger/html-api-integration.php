@@ -7,6 +7,7 @@ use ReflectionClass;
 use ReflectionMethod;
 use ReflectionProperty;
 use WP_HTML_Processor;
+use WP_HTML_Processor_State;
 
 const NODE_TYPE_ELEMENT                = 1;
 const NODE_TYPE_ATTRIBUTE              = 2;
@@ -22,13 +23,16 @@ const NODE_TYPE_DOCUMENT_FRAGMENT      = 11;
 const NODE_TYPE_NOTATION               = 12;
 
 function get_supports(): array {
-	$rc = new ReflectionClass( WP_HTML_Processor::class );
+	$html_processor_rc = new ReflectionClass( WP_HTML_Processor::class );
+	$html_processor_state_rc = new ReflectionClass( WP_HTML_Processor_State::class );
+
 	return array(
-		'is_virtual' => $rc->hasMethod( 'is_virtual' ),
+		'is_virtual' => $html_processor_rc->hasMethod( 'is_virtual' ),
+		'quirks_mode' => $html_processor_state_rc->hasProperty( 'document_mode' ),
 	);
 }
 
-function get_tree( string $html ): array {
+function get_tree( string $html, bool $quirks_mode ): array {
 	$processor_state = new ReflectionProperty( WP_HTML_Processor::class, 'state' );
 	$processor_state->setAccessible( true );
 
@@ -36,6 +40,13 @@ function get_tree( string $html ): array {
 	$processor_bookmarks->setAccessible( true );
 
 	$processor = WP_HTML_Processor::create_fragment( $html );
+	if (
+		$quirks_mode &&
+		property_exists( WP_HTML_Processor_State::class, 'document_mode' ) &&
+		defined( WP_HTML_Processor_State::class . '::QUIRKS_MODE' )
+	) {
+		$processor_state->getValue( $processor )->document_mode = WP_HTML_Processor_State::QUIRKS_MODE;
+	}
 
 	$rc = new ReflectionClass( WP_HTML_Processor::class );
 
