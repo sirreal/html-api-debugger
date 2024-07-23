@@ -46,3 +46,4 @@ Add a page to wp-admin for debugging the HTML API.
 
 = 1.0 =
 * Prevent flash of "�" replacing null-byte in input on initial render.
+* Support HTML API quirks mode.
