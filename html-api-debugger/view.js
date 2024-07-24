@@ -29,9 +29,22 @@ let debounceInputAbortController = null;
  * @property {number} length
  *
  *
+ * @typedef Supports
+ * @property {boolean} is_virtual
+ * @property {boolean} quirks_mode
+ *
+ *
+ * @typedef HtmlApiResponse
+ * @property {any} error
+ * @property {Supports} supports
+ * @property {{tree: any}|undefined} result
+ * @property {string} html
+ *
+ *
  * @typedef State
+ * @property {string} htmlPreambleForProcessing
  * @property {string} formattedHtmlapiResponse
- * @property {any} htmlapiResponse
+ * @property {HtmlApiResponse} htmlapiResponse
  * @property {string} playgroundLink
  * @property {string} html
  * @property {string} htmlForProcessing
@@ -59,7 +72,7 @@ const createStore = I.store;
 
 /** @type {Store} */
 const store = createStore(NS, {
-	// @ts-expect-error This does not define all the server-merged properties.
+	// @ts-expect-error Server provided state is not included here.
 	state: {
 		showClosers: Boolean(localStorage.getItem(`${NS}-showClosers`)),
 		showInvisible: Boolean(localStorage.getItem(`${NS}-showInvisible`)),
@@ -84,9 +97,18 @@ const store = createStore(NS, {
 			return u.href;
 		},
 
+		get htmlPreambleForProcessing() {
+			const doctype = `<!DOCTYPE${
+				store.state.htmlapiResponse.supports.quirks_mode &&
+				store.state.quirksMode
+					? ''
+					: ' html'
+			}>`;
+			return `${doctype}\n<html>\n<body>`;
+		},
+
 		get htmlForProcessing() {
-			const doctype = `<!DOCTYPE${store.state.quirksMode ? '' : ' html'}>`;
-			return `${doctype}\n<html>\n<body>` + store.state.html;
+			return store.state.htmlPreambleForProcessing + store.state.html;
 		},
 
 		get hoverSpan() {
@@ -228,6 +250,8 @@ const store = createStore(NS, {
 		store.render();
 	},
 
+	// @ts-expect-error This will be transformed by the Interactivity API runtime when called through the store.
+	/** @returns {Promise<void>} */
 	callAPI: function* () {
 		inFlightRequestAbortController?.abort('request superseded');
 		inFlightRequestAbortController = new AbortController();

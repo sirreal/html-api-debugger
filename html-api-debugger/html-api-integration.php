@@ -39,6 +39,8 @@ function get_tree( string $html, bool $quirks_mode ): array {
 	$processor_bookmarks = new ReflectionProperty( WP_HTML_Processor::class, 'bookmarks' );
 	$processor_bookmarks->setAccessible( true );
 
+	$doctype_value = 'html';
+
 	$processor = WP_HTML_Processor::create_fragment( $html );
 	if (
 		$quirks_mode &&
@@ -46,6 +48,7 @@ function get_tree( string $html, bool $quirks_mode ): array {
 		defined( WP_HTML_Processor_State::class . '::QUIRKS_MODE' )
 	) {
 		$processor_state->getValue( $processor )->document_mode = WP_HTML_Processor_State::QUIRKS_MODE;
+		$doctype_value = '';
 	}
 
 	$rc = new ReflectionClass( WP_HTML_Processor::class );
@@ -80,7 +83,7 @@ function get_tree( string $html, bool $quirks_mode ): array {
 		'childNodes' => array(
 			array(
 				'nodeType'  => NODE_TYPE_DOCUMENT_TYPE,
-				'nodeName'  => 'html',
+				'nodeName'  => $doctype_value,
 				'nodeValue' => '',
 			),
 			array(
