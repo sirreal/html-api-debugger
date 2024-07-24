@@ -46,7 +46,7 @@ function generate_page( string $html, bool $quirks_mode = false ): string {
 				<p>
 					Note: Because HTML API operates in body at this time, this will be prepended:
 					<br>
-					<code><?php echo esc_html( '<!DOCTYPE html><html><body>' ); ?></code>
+					<code data-wp-text="state.htmlPreambleForProcessing"></code>
 				</p>
 			</td>
 			<td>

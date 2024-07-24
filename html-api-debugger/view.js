@@ -104,7 +104,7 @@ const store = createStore(NS, {
 					? ''
 					: ' html'
 			}>`;
-			return `${doctype}\n<html>\n<body>`;
+			return `${doctype}<html><body>`;
 		},
 
 		get htmlForProcessing() {
