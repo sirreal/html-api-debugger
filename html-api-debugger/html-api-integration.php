@@ -28,22 +28,29 @@ function get_supports(): array {
 
 	return array(
 		'is_virtual' => $html_processor_rc->hasMethod( 'is_virtual' ),
+		'full_parser' => method_exists( WP_HTML_Processor::class, 'create_full_parser' ),
 		'quirks_mode' => $html_processor_state_rc->hasProperty( 'document_mode' ),
 	);
 }
 
-function get_tree( string $html, bool $quirks_mode ): array {
+function get_tree( string $html, array $options ): array {
 	$processor_state = new ReflectionProperty( WP_HTML_Processor::class, 'state' );
 	$processor_state->setAccessible( true );
 
 	$processor_bookmarks = new ReflectionProperty( WP_HTML_Processor::class, 'bookmarks' );
 	$processor_bookmarks->setAccessible( true );
 
-	$doctype_value = 'html';
 
-	$processor = WP_HTML_Processor::create_fragment( $html );
+	$use_full_parser = method_exists( WP_HTML_Processor::class, 'create_full_parser' ) && ( $options['full_parser'] ?? false );
+
+	$processor = $use_full_parser
+		? WP_HTML_Processor::create_full_parser( $html )
+		: WP_HTML_Processor::create_fragment( $html );
+
+	$doctype_value = $use_full_parser ? '' : 'html';
 	if (
-		$quirks_mode &&
+		! $use_full_parser &&
+		( $options['quirks_mode'] ?? false ) &&
 		property_exists( WP_HTML_Processor_State::class, 'document_mode' ) &&
 		defined( WP_HTML_Processor_State::class . '::QUIRKS_MODE' )
 	) {
@@ -81,34 +88,37 @@ function get_tree( string $html, bool $quirks_mode ): array {
 		'nodeType'   => NODE_TYPE_DOCUMENT,
 		'nodeName'   => '#document',
 		'childNodes' => array(
-			array(
-				'nodeType'  => NODE_TYPE_DOCUMENT_TYPE,
-				'nodeName'  => $doctype_value,
-				'nodeValue' => '',
-			),
-			array(
-				'nodeType'   => NODE_TYPE_ELEMENT,
-				'nodeName'   => 'HTML',
-				'attributes' => array(),
-				'childNodes' => array(
-					array(
-						'nodeType'   => NODE_TYPE_ELEMENT,
-						'nodeName'   => 'HEAD',
-						'attributes' => array(),
-						'childNodes' => array(),
-					),
-					array(
-						'nodeType'   => NODE_TYPE_ELEMENT,
-						'nodeName'   => 'BODY',
-						'attributes' => array(),
-						'childNodes' => array(),
-					),
-				),
-			),
 		),
 	);
 
-	$cursor = array( 1, 1 );
+	$cursor = array( 0 );
+	if ( ! $use_full_parser ) {
+		$tree['childNodes'][] = array(
+			'nodeType'  => NODE_TYPE_DOCUMENT_TYPE,
+			'nodeName'  => $doctype_value,
+			'nodeValue' => '',
+		);
+		$tree['childNodes'][] = array(
+			'nodeType'   => NODE_TYPE_ELEMENT,
+			'nodeName'   => 'HTML',
+			'attributes' => array(),
+			'childNodes' => array(
+				array(
+					'nodeType'   => NODE_TYPE_ELEMENT,
+					'nodeName'   => 'HEAD',
+					'attributes' => array(),
+					'childNodes' => array(),
+				),
+				array(
+					'nodeType'   => NODE_TYPE_ELEMENT,
+					'nodeName'   => 'BODY',
+					'attributes' => array(),
+					'childNodes' => array(),
+				),
+			),
+		);
+		$cursor = array( 1, 1 );
+	}
 
 	while ( $processor->next_token() ) {
 		if ( $processor->get_last_error() !== null ) {

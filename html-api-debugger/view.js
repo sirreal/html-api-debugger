@@ -32,6 +32,7 @@ let debounceInputAbortController = null;
  * @typedef Supports
  * @property {boolean} is_virtual
  * @property {boolean} quirks_mode
+ * @property {boolean} full_parser
  *
  *
  * @typedef HtmlApiResponse
@@ -52,6 +53,7 @@ let debounceInputAbortController = null;
  * @property {boolean} showInvisible
  * @property {boolean} showVirtual
  * @property {boolean} quirksMode
+ * @property {boolean} fullParser
  * @property {DOM} DOM
  * @property {HTMLAPISpan|null} span
  * @property {string} hoverSpan
@@ -78,6 +80,7 @@ const store = createStore(NS, {
 		showInvisible: Boolean(localStorage.getItem(`${NS}-showInvisible`)),
 		showVirtual: Boolean(localStorage.getItem(`${NS}-showVirtual`)),
 		quirksMode: Boolean(localStorage.getItem(`${NS}-quirksMode`)),
+		fullParser: Boolean(localStorage.getItem(`${NS}-fullParser`)),
 
 		get formattedHtmlapiResponse() {
 			return JSON.stringify(store.state.htmlapiResponse, undefined, 2);
@@ -98,6 +101,9 @@ const store = createStore(NS, {
 		},
 
 		get htmlPreambleForProcessing() {
+			if (store.state.fullParser) {
+				return '';
+			}
 			const doctype = `<!DOCTYPE${
 				store.state.htmlapiResponse.supports.quirks_mode &&
 				store.state.quirksMode
@@ -239,12 +245,8 @@ const store = createStore(NS, {
 	handleShowInvisibleClick: getToggleHandler('showInvisible'),
 	handleShowClosersClick: getToggleHandler('showClosers'),
 	handleShowVirtualClick: getToggleHandler('showVirtual'),
-	_handleQuirksModeClick: getToggleHandler('quirksMode'),
-	/** @param {Event} e */
-	handleQuirksModeClick: function* (e) {
-		store._handleQuirksModeClick(e);
-		yield store.callAPI();
-	},
+	handleQuirksModeClick: getToggleHandlerWithRefetch('quirksMode'),
+	handleFullParserClick: getToggleHandlerWithRefetch('fullParser'),
 
 	watch() {
 		store.render();
@@ -260,7 +262,11 @@ const store = createStore(NS, {
 			resp = yield apiFetch({
 				path: `${NS}/v1/htmlapi`,
 				method: 'POST',
-				data: { html: store.state.html, quirksMode: store.state.quirksMode },
+				data: {
+					html: store.state.html,
+					quirksMode: store.state.quirksMode,
+					fullParser: store.state.fullParser,
+				},
 				signal: inFlightRequestAbortController.signal,
 			});
 		} catch (/** @type {any} */ err) {
@@ -341,5 +347,22 @@ function getToggleHandler(stateKey) {
 			store.state[stateKey] = false;
 			localStorage.removeItem(`${NS}-${stateKey}`);
 		}
+	};
+}
+
+/**
+ * @param {keyof State} stateKey
+ * @return {(e: Event) => Promise<void>}
+ */
+function getToggleHandlerWithRefetch(stateKey) {
+	const f1 = getToggleHandler(stateKey);
+
+	/**
+	 * @param {Event} e
+	 */
+	// @ts-expect-error The iAPI runtime transforms the generator to an async function.
+	return function* (e) {
+		f1(e);
+		yield store.callAPI();
 	};
 }

@@ -8,9 +8,9 @@ namespace HTML_API_Debugger\Interactivity;
  * @param $html The input html.
  * @return The page HTML as rendered by the Interactivity API. This is intended to be printed directly to the page with no additional escaping.
  */
-function generate_page( string $html, bool $quirks_mode = false ): string {
+function generate_page( string $html, array $options ): string {
 	// phpcs:enable WordPress.Security.NonceVerification.Recommended
-	$htmlapi_response = \HTML_API_Debugger\prepare_html_result_object( $html, $quirks_mode );
+	$htmlapi_response = \HTML_API_Debugger\prepare_html_result_object( $html, $options );
 
 	wp_interactivity_state(
 		\HTML_API_Debugger\SLUG,
@@ -27,6 +27,7 @@ function generate_page( string $html, bool $quirks_mode = false ): string {
 			'showInvisible'   => false,
 			'showVirtual'     => false,
 			'quirksMode'      => false,
+			'fullParser'      => false,
 		)
 	);
 	ob_start();
@@ -43,7 +44,7 @@ function generate_page( string $html, bool $quirks_mode = false ): string {
 			<td>
 				<h2>Input HTML</h2>
 				<textarea id='input_html' data-wp-on--input="handleChange"><?php echo "\n" . esc_textarea( str_replace( "\0", '', $html ) ); ?></textarea>
-				<p>
+				<p data-wp-bind--hidden="!state.htmlPreambleForProcessing">
 					Note: Because HTML API operates in body at this time, this will be prepended:
 					<br>
 					<code data-wp-text="state.htmlPreambleForProcessing"></code>
@@ -66,16 +67,21 @@ function generate_page( string $html, bool $quirks_mode = false ): string {
 				<pre  class="hide-on-empty error-holder" data-wp-text="state.htmlapiResponse.error"></pre>
 				<ul id="html_api_result_holder" class="hide-on-empty" data-wp-ignore></ul>
 				<p>Click a node above to see its span details below.</p>
+			</td>
+			<td>
+				<h2>Interpreted from DOM</h2>
+				<ul id="dom_tree" data-wp-ignore></ul>
+			</td>
+		</tr>
+		<tr>
+			<td colspan="2">
 				<p>
 					<label>Show closers <input type="checkbox" data-wp-bind--checked="state.showClosers" data-wp-on--click="handleShowClosersClick"></label>
 					<label>Show invisible <input type="checkbox" data-wp-bind--checked="state.showInvisible" data-wp-on--click="handleShowInvisibleClick"></label>
 					<span data-wp-bind--hidden="!state.htmlapiResponse.supports.is_virtual"><label>Show virtual <input type="checkbox" data-wp-bind--checked="state.showVirtual" data-wp-on--click="handleShowVirtualClick"></label></span>
 					<span data-wp-bind--hidden="!state.htmlapiResponse.supports.quirks_mode"><label>Quirks mode <input type="checkbox" data-wp-bind--checked="state.quirksMode" data-wp-on--click="handleQuirksModeClick"></label></span>
+					<span data-wp-bind--hidden="!state.htmlapiResponse.supports.full_parser"><label>Full parser <input type="checkbox" data-wp-bind--checked="state.fullParser" data-wp-on--click="handleFullParserClick"></label></span>
 				</p>
-			</td>
-			<td>
-				<h2>Interpreted from DOM</h2>
-				<ul id="dom_tree" data-wp-ignore></ul>
 			</td>
 		</tr>
 		<tr data-wp-bind--hidden="state.span">

@@ -52,8 +52,11 @@ function init() {
 					'methods'             => 'POST',
 					'callback'            => function ( WP_REST_Request $request ) {
 						$html = $request->get_json_params()['html'] ?: '';
-						$quirks_mode = $request->get_json_params()['quirksMode'] ?? false;
-						return prepare_html_result_object( $html, $quirks_mode );
+						$options = array(
+							'quirks_mode' => $request->get_json_params()['quirksMode'] ?? false,
+							'full_parser' => $request->get_json_params()['fullParser'] ?? false,
+						);
+						return prepare_html_result_object( $html, $options );
 					},
 					'permission_callback' => function () {
 						return current_user_can( 'edit_posts' );
@@ -96,8 +99,11 @@ function init() {
 						$html = stripslashes( $_GET['html'] );
 					}
 
+					$options = array();
+					// @todo Add query args for other options
+
 					// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-					echo namespace\Interactivity\generate_page( $html );
+					echo namespace\Interactivity\generate_page( $html, $options );
 				},
 				include __DIR__ . '/icon.php'
 			);
@@ -111,7 +117,7 @@ function init() {
  *
  * @param string $html The HTML.
  */
-function prepare_html_result_object( string $html, bool $quirks_mode ): array {
+function prepare_html_result_object( string $html, array $options = null ): array {
 	$response = array(
 		'supports' => HTML_API_Integration\get_supports(),
 		'html'     => $html,
@@ -120,7 +126,7 @@ function prepare_html_result_object( string $html, bool $quirks_mode ): array {
 	);
 
 	try {
-		$response['result'] = array( 'tree' => HTML_API_Integration\get_tree( $html, $quirks_mode ) );
+		$response['result'] = array( 'tree' => HTML_API_Integration\get_tree( $html, $options ) );
 	} catch ( Exception $e ) {
 		$response['error'] = (string) $e;
 	}
