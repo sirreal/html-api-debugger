@@ -40,7 +40,6 @@ function get_tree( string $html, array $options ): array {
 	$processor_bookmarks = new ReflectionProperty( WP_HTML_Processor::class, 'bookmarks' );
 	$processor_bookmarks->setAccessible( true );
 
-
 	$use_full_parser = method_exists( WP_HTML_Processor::class, 'create_full_parser' ) && ( $options['full_parser'] ?? false );
 
 	$processor = $use_full_parser
@@ -169,6 +168,7 @@ function get_tree( string $html, array $options ): array {
 					'_bc'        => $processor->get_breadcrumbs(),
 					'_virtual'   => $is_virtual(),
 					'_depth'     => $get_current_depth(),
+					'_namespace' => method_exists( WP_HTML_Processor::class, 'get_namespace' ) ? $processor->get_namespace() : 'html',
 				);
 
 				// Self-contained tags contain their inner contents as modifiable text.

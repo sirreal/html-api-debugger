@@ -36,7 +36,30 @@ export function printHtmlApiTree(node, ul, options = {}) {
 					continue;
 				}
 			} else {
-				code.appendChild(document.createTextNode(node.childNodes[i].nodeName));
+				if (
+					node.childNodes[i]._namespace &&
+					node.childNodes[i]._namespace !== 'html'
+				) {
+					code.appendChild(
+						document.createTextNode(
+							`${node.childNodes[i]._namespace}:${node.childNodes[i].nodeName}`,
+						),
+					);
+				} else if (
+					node.childNodes[i].namespaceURI &&
+					node.childNodes[i].namespaceURI !== 'http://www.w3.org/1999/xhtml'
+				) {
+					const nsSuffix = node.childNodes[i].namespaceURI.split('/').at(-1);
+					const ns =
+						nsSuffix === 'svg' ? 'svg' : nsSuffix === 'MathML' ? 'math' : ns;
+					code.appendChild(
+						document.createTextNode(`${ns}:${node.childNodes[i].nodeName}`),
+					);
+				} else {
+					code.appendChild(
+						document.createTextNode(node.childNodes[i].nodeName),
+					);
+				}
 			}
 
 			if (node.childNodes[i].nodeValue) {
