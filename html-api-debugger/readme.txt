@@ -48,3 +48,4 @@ Add a page to wp-admin for debugging the HTML API.
 * Prevent flash of "�" replacing null-byte in input on initial render.
 * Support HTML API quirks mode.
 * Support for full HTML processor.
+* Configurable hover information on nodes: depth and breadcrumbs or insertion mode.

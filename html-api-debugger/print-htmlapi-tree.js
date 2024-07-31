@@ -5,6 +5,7 @@ import { replaceInvisible } from './replace-invisible-chars.js';
  * @property {boolean} [showClosers]
  * @property {boolean} [showInvisible]
  * @property {boolean} [showVirtual]
+ * @property {'breadcrumbs'|'insertionMode'} [hoverInfo]
  */
 
 /**
@@ -60,26 +61,35 @@ export function printHtmlApiTree(node, ul, options = {}) {
 			);
 			li.appendChild(el);
 		}
+
 		if (node.childNodes[i]._span) {
 			li.dataset['spanStart'] = node.childNodes[i]._span.start;
 			li.dataset['spanLength'] = node.childNodes[i]._span.length;
 		}
 		if (node.childNodes[i]._mode) {
 			li.dataset['mode'] = node.childNodes[i]._mode;
+			if (options.hoverInfo === 'insertionMode') {
+				li.title = /** @type {string} */ (li.dataset['mode']);
+			}
+		}
+		if (node.childNodes[i]._depth) {
+			li.dataset['depth'] = node.childNodes[i]._depth;
 		}
 		if (node.childNodes[i]._bc?.length) {
 			li.dataset['breadcrumbs'] = node.childNodes[i]._bc.join(' > ');
-			li.title = /** @type {string} */ (li.dataset['breadcrumbs']);
+			if (options.hoverInfo === 'breadcrumbs') {
+				li.title = /** @type {string} */ (li.dataset['breadcrumbs']);
+				if (li.dataset['depth']) {
+					li.title = `(${li.dataset['depth']}) ${li.title}`;
+				}
+			}
 		}
+
 		if (
 			options.showVirtual &&
 			typeof node.childNodes[i]._virtual === 'boolean'
 		) {
 			li.classList.add(node.childNodes[i]._virtual ? 'is-virtual' : 'is-real');
-		}
-		if (node.childNodes[i]._depth) {
-			li.dataset['depth'] = node.childNodes[i]._depth;
-			li.title = `(${li.dataset['depth']}) ${li.title}`;
 		}
 		if (node.childNodes[i]._closer) {
 			li.classList.add('tag-closer');

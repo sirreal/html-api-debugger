@@ -54,6 +54,11 @@ let debounceInputAbortController = null;
  * @property {boolean} showVirtual
  * @property {boolean} quirksMode
  * @property {boolean} fullParser
+ *
+ * @property {'breadcrumbs'|'insertionMode'} hoverInfo
+ * @property {boolean} hoverBreadcrumbs
+ * @property {boolean} hoverInsertion
+ *
  * @property {DOM} DOM
  * @property {HTMLAPISpan|null} span
  * @property {string} hoverSpan
@@ -66,15 +71,20 @@ let debounceInputAbortController = null;
  * @property {()=>void} clearSpan
  * @property {()=>void} render
  * @property {()=>Promise<void>} callAPI
- * @property {(e: Event)=>void} _handleQuirksModeClick
+ *
+ * @property {()=>void} handleShowInvisibleClick
+ * @property {()=>void} handleShowClosersClick
+ * @property {()=>void} handleShowVirtualClick
+ * @property {()=>Promise<void>} handleQuirksModeClick
+ * @property {()=>Promise<void>} handleFullParserClick
  */
 
 /** @type {typeof I.store<Store>} */
 const createStore = I.store;
 
 /** @type {Store} */
+// @ts-expect-error Server provided state is not included here.
 const store = createStore(NS, {
-	// @ts-expect-error Server provided state is not included here.
 	state: {
 		showClosers: Boolean(localStorage.getItem(`${NS}-showClosers`)),
 		showInvisible: Boolean(localStorage.getItem(`${NS}-showInvisible`)),
@@ -82,8 +92,18 @@ const store = createStore(NS, {
 		quirksMode: Boolean(localStorage.getItem(`${NS}-quirksMode`)),
 		fullParser: Boolean(localStorage.getItem(`${NS}-fullParser`)),
 
+		hoverInfo: localStorage.getItem(`${NS}-hoverInfo`),
+
 		get formattedHtmlapiResponse() {
 			return JSON.stringify(store.state.htmlapiResponse, undefined, 2);
+		},
+
+		get hoverBreadcrumbs() {
+			return store.state.hoverInfo === 'breadcrumbs';
+		},
+
+		get hoverInsertion() {
+			return store.state.hoverInfo === 'insertionMode';
 		},
 
 		get playgroundLink() {
@@ -187,6 +207,8 @@ const store = createStore(NS, {
 			{
 				showClosers: store.state.showClosers,
 				showInvisible: store.state.showInvisible,
+				showVirtual: store.state.showVirtual,
+				hoverInfo: store.state.hoverInfo,
 			},
 		);
 	},
@@ -248,6 +270,13 @@ const store = createStore(NS, {
 	handleQuirksModeClick: getToggleHandlerWithRefetch('quirksMode'),
 	handleFullParserClick: getToggleHandlerWithRefetch('fullParser'),
 
+	/** @param {Event} e */
+	hoverInfoChange: (e) => {
+		// @ts-expect-error
+		store.state.hoverInfo = e.target.value;
+		localStorage.setItem(`${NS}-hoverInfo`, store.state.hoverInfo);
+	},
+
 	watch() {
 		store.render();
 	},
@@ -304,6 +333,7 @@ const store = createStore(NS, {
 				showClosers: store.state.showClosers,
 				showInvisible: store.state.showInvisible,
 				showVirtual: store.state.showVirtual,
+				hoverInfo: store.state.hoverInfo,
 			},
 		);
 	},
@@ -324,6 +354,7 @@ const store = createStore(NS, {
 					showClosers: store.state.showClosers,
 					showInvisible: store.state.showInvisible,
 					showVirtual: store.state.showVirtual,
+					hoverInfo: store.state.hoverInfo,
 				},
 			);
 		}

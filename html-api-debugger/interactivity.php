@@ -28,6 +28,10 @@ function generate_page( string $html, array $options ): string {
 			'showVirtual'     => false,
 			'quirksMode'      => false,
 			'fullParser'      => false,
+
+			'hoverInfo'       => 'breadcrumbs',
+			'hoverBreadcrumbs' => true,
+			'hoverInsertion' => false
 		)
 	);
 	ob_start();
@@ -75,13 +79,22 @@ function generate_page( string $html, array $options ): string {
 		</tr>
 		<tr>
 			<td colspan="2">
-				<p>
+				<div>
 					<label>Show closers <input type="checkbox" data-wp-bind--checked="state.showClosers" data-wp-on--click="handleShowClosersClick"></label>
 					<label>Show invisible <input type="checkbox" data-wp-bind--checked="state.showInvisible" data-wp-on--click="handleShowInvisibleClick"></label>
 					<span data-wp-bind--hidden="!state.htmlapiResponse.supports.is_virtual"><label>Show virtual <input type="checkbox" data-wp-bind--checked="state.showVirtual" data-wp-on--click="handleShowVirtualClick"></label></span>
 					<span data-wp-bind--hidden="!state.htmlapiResponse.supports.quirks_mode"><label>Quirks mode <input type="checkbox" data-wp-bind--checked="state.quirksMode" data-wp-on--click="handleQuirksModeClick"></label></span>
 					<span data-wp-bind--hidden="!state.htmlapiResponse.supports.full_parser"><label>Full parser <input type="checkbox" data-wp-bind--checked="state.fullParser" data-wp-on--click="handleFullParserClick"></label></span>
-				</p>
+				</div>
+				<div>
+					<label>
+						Hover information
+						<select data-wp-on--change="hoverInfoChange">
+							<option data-wp-bind--selected="state.hoverBreadcrumbs" value="breadcrumbs">(depth) Breadcrumbs…</option>
+							<option data-wp-bind--selected="state.hoverInsertion" value="insertionMode">Insertion mode</option>
+						</select>
+					</label>
+				</div>
 			</td>
 		</tr>
 		<tr data-wp-bind--hidden="state.span">
