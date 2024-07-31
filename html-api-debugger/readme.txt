@@ -3,7 +3,7 @@ Contributors: jonsurrell
 Tags: HTML API, development, debug
 Requires at least: 6.5
 Tested up to: 6.6
-Stable tag: 1.0
+Stable tag: 1.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -49,3 +49,6 @@ Add a page to wp-admin for debugging the HTML API.
 * Support HTML API quirks mode.
 * Support for full HTML processor.
 * Configurable hover information on nodes: depth and breadcrumbs or insertion mode.
+
+= 1.1 =
+* Print tag namespaces.
