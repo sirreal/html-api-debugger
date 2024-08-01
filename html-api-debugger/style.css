@@ -3,6 +3,15 @@
   table-layout: fixed;
   padding: 20px 20px 0 0;
 
+  .col-wrapper {
+    display: flex;
+    column-gap: 0.2em;
+  }
+
+  .col {
+    flex: 1 0 50%;
+  }
+
   pre {
     background-color: #fff;
     border: inset thin;
@@ -92,9 +101,10 @@
   border: inset thin;
   padding: 0.5em 0.5em 0.5em 1em;
   color: black;
-  min-height: 5em;
+  min-height: 100%;
   font-family: monospace;
   background: white;
+  margin: 0;
 
   ul {
     padding: 0 0 0 1em;

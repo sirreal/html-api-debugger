@@ -66,16 +66,24 @@ function generate_page( string $html, array $options ): string {
 			</td>
 		</tr>
 		<tr>
-			<td data-wp-on--click="handleSpanClick" data-wp-class--showClosers="state.showClosers">
-				<h2>Interpreted by HTML API</h2>
-				<pre  class="hide-on-empty error-holder" data-wp-text="state.htmlapiResponse.error"></pre>
-				<ul id="html_api_result_holder" class="hide-on-empty" data-wp-ignore></ul>
-				<p>Click a node above to see its span details below.</p>
+			<td><h2>Interpreted by HTML API</h2></td>
+			<td><h2>Interpreted from DOM</h2></td>
+		</tr>
+		<tr>
+			<td colspan="2">
+				<div class="col-wrapper">
+					<div class="col" data-wp-on--click="handleSpanClick" data-wp-class--showClosers="state.showClosers">
+						<pre class="hide-on-empty error-holder" data-wp-text="state.htmlapiResponse.error"></pre>
+						<ul id="html_api_result_holder" class="hide-on-empty" data-wp-ignore></ul>
+					</div>
+					<div class="col">
+						<ul id="dom_tree" data-wp-ignore></ul>
+					</div>
+				</div>
 			</td>
-			<td>
-				<h2>Interpreted from DOM</h2>
-				<ul id="dom_tree" data-wp-ignore></ul>
-			</td>
+		</tr>
+		<tr>
+			<td><p>Click a node above to see its span details below.</p></td>
 		</tr>
 		<tr>
 			<td colspan="2">
