@@ -1,6 +1,6 @@
+import { printHtmlApiTree } from '@html-api-debugger/print-html-tree';
+import { replaceInvisible } from '@html-api-debugger/replace-invisible-chars';
 import * as I from '@wordpress/interactivity';
-import { printHtmlApiTree } from './print-htmlapi-tree.js';
-import { replaceInvisible } from './replace-invisible-chars.js';
 
 /** @type {typeof import('@wordpress/api-fetch').default} */
 // @ts-expect-error

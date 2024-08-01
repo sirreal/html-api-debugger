@@ -1,4 +1,4 @@
-import { replaceInvisible } from './replace-invisible-chars.js';
+import { replaceInvisible } from '@html-api-debugger/replace-invisible-chars';
 
 /**
  * @typedef Options

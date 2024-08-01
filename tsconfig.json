@@ -6,7 +6,15 @@
 		"module": "NodeNext",
 		"rootDir": "html-api-debugger",
 		"lib": ["DOM", "DOM.Iterable", "ESNext"],
-		"noEmit": true
+		"noEmit": true,
+		"paths": {
+			"@html-api-debugger/print-html-tree": [
+				"html-api-debugger/print-html-tree.js"
+			],
+			"@html-api-debugger/replace-invisible-chars": [
+				"html-api-debugger/replace-invisible-chars.js"
+			]
+		}
 	},
 	"include": ["html-api-debugger"]
 }

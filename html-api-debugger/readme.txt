@@ -55,3 +55,4 @@ Add a page to wp-admin for debugging the HTML API.
 
 = 1.2 =
 * Handle CDATA sections.
+* Use WordPress Script Modules API for all modules.
