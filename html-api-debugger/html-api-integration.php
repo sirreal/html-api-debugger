@@ -213,6 +213,21 @@ function get_tree( string $html, array $options ): array {
 				$current['childNodes'][] = $self;
 				break;
 
+			case '#cdata-section':
+				$self = array(
+					'nodeType'  => NODE_TYPE_CDATA_SECTION,
+					'nodeName'  => $processor->get_token_name(),
+					'nodeValue' => $processor->get_modifiable_text(),
+					'_span'     => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
+					'_mode'     => $processor_state->getValue( $processor )->insertion_mode,
+					'_bc'       => $processor->get_breadcrumbs(),
+					'_virtual'  => $is_virtual(),
+					'_depth'    => $get_current_depth(),
+				);
+
+				$current['childNodes'][] = $self;
+				break;
+
 			case '#presumptuous-tag':
 				$self                    = array(
 					'nodeType'  => NODE_TYPE_COMMENT,
