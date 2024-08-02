@@ -24,6 +24,7 @@ require_once __DIR__ . '/html-api-integration.php';
 const SLUG    = 'html-api-debugger';
 const VERSION = '1.2';
 
+/** Set up the plugin. */
 function init() {
 	static $done = false;
 	if ( $done ) {
@@ -51,6 +52,7 @@ function init() {
 				array(
 					'methods'             => 'POST',
 					'callback'            => function ( WP_REST_Request $request ) {
+						// phpcs:ignore Universal.Operators.DisallowShortTernary.Found
 						$html = $request->get_json_params()['html'] ?: '';
 						$options = array(
 							'quirks_mode' => $request->get_json_params()['quirksMode'] ?? false,
@@ -85,7 +87,10 @@ function init() {
 						'@html-api-debugger/print-html-tree',
 						plugins_url( 'print-html-tree.js', __FILE__ ),
 						array(
-							array( 'id' => '@html-api-debugger/replace-invisible-chars', 'import' => 'dynamic' ),
+							array(
+								'id'     => '@html-api-debugger/replace-invisible-chars',
+								'import' => 'dynamic',
+							),
 						),
 						VERSION
 					);
@@ -96,7 +101,10 @@ function init() {
 						array(
 							'@wordpress/interactivity',
 							'@html-api-debugger/print-html-tree',
-							array( 'id' => '@html-api-debugger/replace-invisible-chars', 'import' => 'dynamic' ),
+							array(
+								'id'     => '@html-api-debugger/replace-invisible-chars',
+								'import' => 'dynamic',
+							),
 						),
 						VERSION
 					);
@@ -133,11 +141,11 @@ function init() {
 	);
 }
 
-
 /**
  * Prepare a result object.
  *
  * @param string $html The HTML.
+ * @param array  $options Options.
  */
 function prepare_html_result_object( string $html, array $options = null ): array {
 	$response = array(

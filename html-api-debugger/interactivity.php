@@ -15,23 +15,23 @@ function generate_page( string $html, array $options ): string {
 	wp_interactivity_state(
 		\HTML_API_Debugger\SLUG,
 		array(
-			'DOM'             => array(
+			'DOM'              => array(
 				'renderingMode' => '',
 				'title'         => '',
 			),
-			'html'            => $html,
-			'htmlapiResponse' => $htmlapi_response,
-			'span'            => null,
+			'html'             => $html,
+			'htmlapiResponse'  => $htmlapi_response,
+			'span'             => null,
 
-			'showClosers'     => false,
-			'showInvisible'   => false,
-			'showVirtual'     => false,
-			'quirksMode'      => false,
-			'fullParser'      => false,
+			'showClosers'      => false,
+			'showInvisible'    => false,
+			'showVirtual'      => false,
+			'quirksMode'       => false,
+			'fullParser'       => false,
 
-			'hoverInfo'       => 'breadcrumbs',
+			'hoverInfo'        => 'breadcrumbs',
 			'hoverBreadcrumbs' => true,
-			'hoverInsertion' => false
+			'hoverInsertion'   => false,
 		)
 	);
 	ob_start();
