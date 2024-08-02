@@ -2,15 +2,15 @@ import { printHtmlApiTree } from '@html-api-debugger/print-html-tree';
 import { replaceInvisible } from '@html-api-debugger/replace-invisible-chars';
 import * as I from '@wordpress/interactivity';
 
-/** @type {typeof import('@wordpress/api-fetch').default} */
-// @ts-expect-error
-const apiFetch = window.wp.apiFetch;
-
 const NS = 'html-api-debugger';
+
 const DEBOUNCE_TIMEOUT = 150;
 const RENDERED_IFRAME = /** @type {HTMLIFrameElement} */ (
 	document.getElementById('rendered_iframe')
 );
+
+const cfg = I.getConfig(NS);
+let { nonce } = cfg;
 
 /** @type {AbortController|null} */
 let inFlightRequestAbortController = null;
@@ -286,34 +286,40 @@ const store = createStore(NS, {
 	callAPI: function* () {
 		inFlightRequestAbortController?.abort('request superseded');
 		inFlightRequestAbortController = new AbortController();
-		let resp;
+		let data;
 		try {
-			resp = yield apiFetch({
-				path: `${NS}/v1/htmlapi`,
+			/** @type {Response} */
+			const response = yield fetch(cfg.restEndpoint, {
 				method: 'POST',
-				data: {
+				body: JSON.stringify({
 					html: store.state.html,
 					quirksMode: store.state.quirksMode,
 					fullParser: store.state.fullParser,
+				}),
+				headers: {
+					'Content-Type': 'application/json',
+					'X-WP-Nonce': nonce,
 				},
 				signal: inFlightRequestAbortController.signal,
 			});
-		} catch (/** @type {any} */ err) {
-			// We'd like to get this but won't thanks to `apiFetch` hiding the real error.
-			if (err instanceof DOMException) {
-				return;
+			if (response.headers.has('X-WP-Nonce')) {
+				nonce = response.headers.get('X-WP-Nonce');
 			}
-			// `apiFetch` actually does something like this.
-			if (err && err.code === 'fetch_error' && navigator.onLine) {
+			if (!response.ok) {
+				throw new Error(response);
+			}
+			data = yield response.json();
+		} catch (/** @type {any} */ err) {
+			if (err instanceof DOMException) {
 				return;
 			}
 			throw err;
 		}
 
-		store.state.htmlapiResponse = resp;
+		store.state.htmlapiResponse = data;
 		store.clearSpan();
 
-		if (resp.error) {
+		if (data.error) {
 			/** @type {HTMLUListElement} */ (
 				document.getElementById('html_api_result_holder')
 			).innerHTML = '';

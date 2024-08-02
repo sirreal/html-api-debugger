@@ -12,6 +12,13 @@ function generate_page( string $html, array $options ): string {
 	// phpcs:enable WordPress.Security.NonceVerification.Recommended
 	$htmlapi_response = \HTML_API_Debugger\prepare_html_result_object( $html, $options );
 
+	wp_interactivity_config(
+		\HTML_API_Debugger\SLUG,
+		array(
+			'restEndpoint' => rest_url( 'html-api-debugger/v1/htmlapi' ),
+			'nonce'        => wp_create_nonce( 'wp_rest' ),
+		)
+	);
 	wp_interactivity_state(
 		\HTML_API_Debugger\SLUG,
 		array(

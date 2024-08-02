@@ -72,8 +72,6 @@ function init() {
 		'admin_enqueue_scripts',
 		function ( $hook_suffix ) {
 			if ( $hook_suffix === 'toplevel_page_' . SLUG ) {
-					wp_enqueue_script( 'wp-api-fetch' );
-
 					wp_enqueue_style( SLUG, plugins_url( 'style.css', __FILE__ ), array(), VERSION );
 
 					wp_register_script_module(
