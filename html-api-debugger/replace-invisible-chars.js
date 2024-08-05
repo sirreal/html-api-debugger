@@ -3,6 +3,7 @@
  * @return {string}
  */
 export function replaceInvisible(s) {
+	// biome-ignore lint/suspicious/noControlCharactersInRegex: These are exactly the characters we're looking for 🤪
 	return s.replace(/[\x00-\x1F\x7F]/gu, (c) => {
 		const codePoint = /** @type {number} */ (c.codePointAt(0));
 		switch (codePoint) {
