@@ -20,7 +20,7 @@ export function printHtmlApiTree(node, ul, options = {}) {
 
 	for (let i = 0; i < node.childNodes.length; i += 1) {
 		const li = document.createElement('li');
-		li.className = 't' + node.childNodes[i].nodeType;
+		li.className = `t${node.childNodes[i].nodeType}`;
 		if (node.childNodes[i].nodeType === Node.prototype.DOCUMENT_TYPE_NODE) {
 			li.appendChild(document.createTextNode('DOCTYPE: '));
 		}
@@ -30,7 +30,7 @@ export function printHtmlApiTree(node, ul, options = {}) {
 			if (node.childNodes[i]._closer) {
 				if (options.showClosers) {
 					code.appendChild(
-						document.createTextNode('/' + node.childNodes[i].nodeName),
+						document.createTextNode(`/${node.childNodes[i].nodeName}`),
 					);
 				} else {
 					continue;
