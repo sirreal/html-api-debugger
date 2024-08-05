@@ -38,7 +38,7 @@ let debounceInputAbortController = null;
  * @typedef HtmlApiResponse
  * @property {any} error
  * @property {Supports} supports
- * @property {{tree: any}|undefined} result
+ * @property {{tree: any}|null} result
  * @property {string} html
  *
  *
@@ -302,15 +302,50 @@ const store = createStore(NS, {
 				},
 				signal: inFlightRequestAbortController.signal,
 			});
+
 			if (response.headers.has('X-WP-Nonce')) {
 				nonce = response.headers.get('X-WP-Nonce');
 			}
 			if (!response.ok) {
-				throw new Error(response);
+				throw response;
 			}
 			data = yield response.json();
 		} catch (/** @type {any} */ err) {
-			if (err instanceof DOMException) {
+			if (err === 'request superseded' || err instanceof DOMException) {
+				return;
+			}
+
+			store.state.htmlapiResponse.result = null;
+
+			if (err instanceof Response) {
+				yield err
+					.json()
+					.then((j) => {
+						let msg = '';
+						if (j?.code) {
+							msg = j.code;
+						}
+						if (j?.data?.error) {
+							if (msg) {
+								msg += ': ';
+							}
+							msg += `${j.data.error.message} in ${j.data.error.file}:${j.data.error.line}`;
+						}
+						if (msg) {
+							store.state.htmlapiResponse.error = msg;
+						} else {
+							// Fallback to catch
+							throw 'no msg';
+						}
+					})
+					.catch(() =>
+						err.text().then((t) => {
+							store.state.htmlapiResponse.error = t;
+						}),
+					)
+					.catch(() => {
+						store.state.htmlapiResponse.error = 'unknown error';
+					});
 				return;
 			}
 			throw err;
