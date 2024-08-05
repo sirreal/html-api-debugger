@@ -3,7 +3,7 @@ Contributors: jonsurrell
 Tags: HTML API, development, debug
 Requires at least: 6.5
 Tested up to: 6.6
-Stable tag: 1.2
+Stable tag: 1.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -56,3 +56,7 @@ Add a page to wp-admin for debugging the HTML API.
 = 1.2 =
 * Handle CDATA sections.
 * Use WordPress Script Modules API for all modules.
+
+= 1.3 =
+* Replace wp-api-fetch script dependency with native fetch.
+* Improve error messages.
