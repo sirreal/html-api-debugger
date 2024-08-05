@@ -51,7 +51,11 @@ export function printHtmlApiTree(node, ul, options = {}) {
 				) {
 					const nsSuffix = node.childNodes[i].namespaceURI.split('/').at(-1);
 					const ns =
-						nsSuffix === 'svg' ? 'svg' : nsSuffix === 'MathML' ? 'math' : ns;
+						nsSuffix === 'svg'
+							? 'svg'
+							: nsSuffix === 'MathML'
+								? 'math'
+								: nsSuffix;
 					code.appendChild(
 						document.createTextNode(`${ns}:${node.childNodes[i].nodeName}`),
 					);
