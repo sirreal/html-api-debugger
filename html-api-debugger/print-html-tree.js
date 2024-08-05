@@ -18,7 +18,7 @@ export function printHtmlApiTree(node, ul, options = {}) {
 		ul.removeChild(ul.firstChild);
 	}
 
-	for (var i = 0; i < node.childNodes.length; i += 1) {
+	for (let i = 0; i < node.childNodes.length; i += 1) {
 		const li = document.createElement('li');
 		li.className = 't' + node.childNodes[i].nodeType;
 		if (node.childNodes[i].nodeType === Node.prototype.DOCUMENT_TYPE_NODE) {
@@ -118,7 +118,7 @@ export function printHtmlApiTree(node, ul, options = {}) {
 			li.classList.add('tag-closer');
 		}
 		if (node.childNodes[i].attributes) {
-			for (var j = 0; j < node.childNodes[i].attributes.length; j += 1) {
+			for (let j = 0; j < node.childNodes[i].attributes.length; j += 1) {
 				if (node.childNodes[i].attributes[j].specified) {
 					const attName = document.createElement('code');
 					attName.appendChild(
