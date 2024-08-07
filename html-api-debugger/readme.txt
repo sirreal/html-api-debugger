@@ -60,3 +60,4 @@ Add a page to wp-admin for debugging the HTML API.
 = 1.3 =
 * Replace wp-api-fetch script dependency with native fetch.
 * Improve error messages.
+* Display templates consistently between DOM and HTML API trees.

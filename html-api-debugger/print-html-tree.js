@@ -146,17 +146,18 @@ export function printHtmlApiTree(node, ul, options = {}) {
 			}
 		}
 
-		if (node.childNodes[i].childNodes?.length) {
-			const ul2 = document.createElement('ul');
-			li.appendChild(ul2);
-			printHtmlApiTree(node.childNodes[i], ul2, options);
-		}
+		if (node.childNodes[i].childNodes?.length || node.childNodes[i].content) {
+			const next = node.childNodes[i].childNodes?.length
+				? node.childNodes[i]
+				: node.childNodes[i].content;
 
-		if (node.childNodes[i].content) {
 			const ul2 = document.createElement('ul');
+			if (node.childNodes[i].nodeName === 'TEMPLATE') {
+				ul2.className = 'template';
+			}
+
 			li.appendChild(ul2);
-			ul2.className = 'template';
-			printHtmlApiTree(node.childNodes[i].content, ul2, options);
+			printHtmlApiTree(next, ul2, options);
 		}
 
 		ul.appendChild(li);
