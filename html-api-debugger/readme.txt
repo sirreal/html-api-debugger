@@ -61,3 +61,4 @@ Add a page to wp-admin for debugging the HTML API.
 * Replace wp-api-fetch script dependency with native fetch.
 * Improve error messages.
 * Display templates consistently between DOM and HTML API trees.
+* Use "qualified" names. SVG and MathML tags and attributes have some specialized casing.

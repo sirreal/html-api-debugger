@@ -72,11 +72,27 @@ function get_tree( string $html, array $options ): array {
 	}
 
 	$get_current_depth = method_exists( WP_HTML_Processor::class, 'get_current_depth' )
-		? function () use ( $processor ) {
+		? function () use ( $processor ): int {
 			return $processor->get_current_depth();
 		}
-		: function () use ( $processor ) {
+		: function () use ( $processor ): int {
 			return count( $processor->get_breadcrumbs() );
+		};
+
+	$get_tag_name = method_exists( WP_HTML_Processor::class, 'get_qualified_tag_name' )
+		? function () use ( $processor ): string {
+			return $processor->get_qualified_tag_name();
+		}
+		: function () use ( $processor ): string {
+			return $processor->get_tag();
+		};
+
+	$get_attribute_name = method_exists( WP_HTML_Processor::class, 'get_qualified_attribute_name' )
+		? function ( string $attribute_name ) use ( $processor ): string {
+			return $processor->get_qualified_attribute_name( $attribute_name );
+		}
+		: function ( string $attribute_name ): string {
+			return $attribute_name;
 		};
 
 	if ( null === $processor ) {
@@ -134,7 +150,7 @@ function get_tree( string $html, array $options ): array {
 
 		switch ( $processor->get_token_type() ) {
 			case '#tag':
-				$tag_name = $processor->get_tag();
+				$tag_name = $get_tag_name();
 
 				$attributes      = array();
 				$attribute_names = $processor->get_attribute_names_with_prefix( '' );
@@ -151,7 +167,7 @@ function get_tree( string $html, array $options ): array {
 						$attributes[] = array(
 							'nodeType'  => NODE_TYPE_ATTRIBUTE,
 							'specified' => true,
-							'nodeName'  => $attribute_name,
+							'nodeName'  => $get_attribute_name( $attribute_name ),
 							'nodeValue' => $val,
 						);
 					}
