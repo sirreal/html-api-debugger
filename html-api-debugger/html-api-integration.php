@@ -23,11 +23,11 @@ const NODE_TYPE_DOCUMENT_FRAGMENT      = 11;
 const NODE_TYPE_NOTATION               = 12;
 
 function get_supports(): array {
-	$html_processor_rc = new ReflectionClass( WP_HTML_Processor::class );
+	$html_processor_rc       = new ReflectionClass( WP_HTML_Processor::class );
 	$html_processor_state_rc = new ReflectionClass( WP_HTML_Processor_State::class );
 
 	return array(
-		'is_virtual' => $html_processor_rc->hasMethod( 'is_virtual' ),
+		'is_virtual'  => $html_processor_rc->hasMethod( 'is_virtual' ),
 		'full_parser' => method_exists( WP_HTML_Processor::class, 'create_full_parser' ),
 		'quirks_mode' => $html_processor_state_rc->hasProperty( 'document_mode' ),
 	);
@@ -102,8 +102,7 @@ function get_tree( string $html, array $options ): array {
 	$tree = array(
 		'nodeType'   => NODE_TYPE_DOCUMENT,
 		'nodeName'   => '#document',
-		'childNodes' => array(
-		),
+		'childNodes' => array(),
 	);
 
 	$cursor = array( 0 );
@@ -132,7 +131,7 @@ function get_tree( string $html, array $options ): array {
 				),
 			),
 		);
-		$cursor = array( 1, 1 );
+		$cursor               = array( 1, 1 );
 	}
 
 	while ( $processor->next_token() ) {

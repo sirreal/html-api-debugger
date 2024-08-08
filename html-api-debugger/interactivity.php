@@ -42,7 +42,7 @@ function generate_page( string $html, array $options ): string {
 		)
 	);
 	ob_start();
-?>
+	?>
 <table
 	id="html-api-debugger-table"
 	data-wp-interactive="<?php echo esc_attr( \HTML_API_Debugger\SLUG ); ?>"
@@ -142,6 +142,6 @@ function generate_page( string $html, array $options ): string {
 		</tr>
 	</tbody>
 </table>
-<?php
+	<?php
 	return wp_interactivity_process_directives( ob_get_clean() );
 }
