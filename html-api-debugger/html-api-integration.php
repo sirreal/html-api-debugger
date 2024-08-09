@@ -147,7 +147,9 @@ function get_tree( string $html, array $options ): array {
 			$current = &$current['childNodes'][ $path ];
 		}
 
-		switch ( $processor->get_token_type() ) {
+		$token_type = $processor->get_token_type();
+
+		switch ( $token_type ) {
 			case '#tag':
 				$tag_name = $get_tag_name();
 
@@ -156,6 +158,7 @@ function get_tree( string $html, array $options ): array {
 				if ( null !== $attribute_names ) {
 					foreach ( $attribute_names as $attribute_name ) {
 						$val = $processor->get_attribute( $attribute_name );
+
 						/*
 						 * Attributes with no value are `true` with the HTML API,
 						 * We map use the empty string value in the tree structure.
@@ -317,7 +320,8 @@ function get_tree( string $html, array $options ): array {
 				break;
 
 			default:
-				$serialized_token_type = var_export( $processor->get_token_type(), true );
+				// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export
+				$serialized_token_type = var_export( $token_type, true );
 				// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
 				throw new Exception( "Unhandled token type for tree construction: {$serialized_token_type}" );
 		}
