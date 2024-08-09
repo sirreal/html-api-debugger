@@ -3,7 +3,7 @@ Contributors: jonsurrell
 Tags: HTML API, development, debug
 Requires at least: 6.5
 Tested up to: 6.6
-Stable tag: 1.3
+Stable tag: 1.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,3 +62,5 @@ Add a page to wp-admin for debugging the HTML API.
 * Improve error messages.
 * Display templates consistently between DOM and HTML API trees.
 * Use "qualified" names. SVG and MathML tags and attributes have some specialized casing.
+
+= 1.4 =
