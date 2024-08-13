@@ -30,7 +30,13 @@ export function printHtmlApiTree(node, ul, options = {}) {
 			if (node.childNodes[i]._closer) {
 				if (options.showClosers) {
 					code.appendChild(
-						document.createTextNode(`/${node.childNodes[i].nodeName}`),
+						document.createTextNode(
+							`/${
+								options.showInvisible
+									? replaceInvisible(node.childNodes[i].nodeName)
+									: node.childNodes[i].nodeName
+							}`,
+						),
 					);
 				} else {
 					continue;
@@ -40,9 +46,10 @@ export function printHtmlApiTree(node, ul, options = {}) {
 					node.childNodes[i]._namespace &&
 					node.childNodes[i]._namespace !== 'html'
 				) {
+					const nodeText = `${node.childNodes[i]._namespace}:${node.childNodes[i].nodeName}`;
 					code.appendChild(
 						document.createTextNode(
-							`${node.childNodes[i]._namespace}:${node.childNodes[i].nodeName}`,
+							options.showInvisible ? replaceInvisible(nodeText) : nodeText,
 						),
 					);
 				} else if (
@@ -56,12 +63,19 @@ export function printHtmlApiTree(node, ul, options = {}) {
 							: nsSuffix === 'MathML'
 								? 'math'
 								: nsSuffix;
+					const nodeText = `${ns}:${node.childNodes[i].nodeName}`;
 					code.appendChild(
-						document.createTextNode(`${ns}:${node.childNodes[i].nodeName}`),
+						document.createTextNode(
+							options.showInvisible ? replaceInvisible(nodeText) : nodeText,
+						),
 					);
 				} else {
 					code.appendChild(
-						document.createTextNode(node.childNodes[i].nodeName),
+						document.createTextNode(
+							options.showInvisible
+								? replaceInvisible(node.childNodes[i].nodeName)
+								: node.childNodes[i].nodeName,
+						),
 					);
 				}
 			}
@@ -103,7 +117,11 @@ export function printHtmlApiTree(node, ul, options = {}) {
 			li.dataset['depth'] = node.childNodes[i]._depth;
 		}
 		if (node.childNodes[i]._bc?.length) {
-			li.dataset['breadcrumbs'] = node.childNodes[i]._bc.join(' > ');
+			li.dataset['breadcrumbs'] = (
+				options.showInvisible
+					? node.childNodes[i]._bc.map(replaceInvisible)
+					: node.childNodes[i]._bc
+			).join(' > ');
 			if (options.hoverInfo === 'breadcrumbs') {
 				li.title = /** @type {string} */ (li.dataset['breadcrumbs']);
 				if (li.dataset['depth']) {
@@ -126,12 +144,20 @@ export function printHtmlApiTree(node, ul, options = {}) {
 				if (node.childNodes[i].attributes[j].specified) {
 					const attName = document.createElement('code');
 					attName.appendChild(
-						document.createTextNode(node.childNodes[i].attributes[j].nodeName),
+						document.createTextNode(
+							options.showInvisible
+								? replaceInvisible(node.childNodes[i].attributes[j].nodeName)
+								: node.childNodes[i].attributes[j].nodeName,
+						),
 					);
 					attName.className = 'attribute name';
 					const attValue = document.createElement('code');
 					attValue.appendChild(
-						document.createTextNode(node.childNodes[i].attributes[j].nodeValue),
+						document.createTextNode(
+							options.showInvisible
+								? replaceInvisible(node.childNodes[i].attributes[j].nodeValue)
+								: node.childNodes[i].attributes[j].nodeValue,
+						),
 					);
 					attValue.className = 'attribute value';
 					const att = document.createElement('span');

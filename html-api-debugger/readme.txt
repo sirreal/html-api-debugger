@@ -64,3 +64,4 @@ Add a page to wp-admin for debugging the HTML API.
 * Use "qualified" names. SVG and MathML tags and attributes have some specialized casing.
 
 = 1.4 =
+* Show invisible characters in the tree in attribute names, values, and tag names.
