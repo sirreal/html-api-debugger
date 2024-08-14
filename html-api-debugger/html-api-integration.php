@@ -150,6 +150,17 @@ function get_tree( string $html, array $options ): array {
 		$token_type = $processor->get_token_type();
 
 		switch ( $token_type ) {
+			case '#doctype':
+				$current['childNodes'][] = array(
+					'nodeType' => NODE_TYPE_DOCUMENT_TYPE,
+					'nodeName' => $processor->get_modifiable_text(),
+					'_span'    => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
+					'_mode'    => $processor_state->getValue( $processor )->insertion_mode,
+					'_bc'      => $processor->get_breadcrumbs(),
+					'_depth'   => $get_current_depth(),
+				);
+				break;
+
 			case '#tag':
 				$tag_name = $get_tag_name();
 

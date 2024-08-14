@@ -65,3 +65,4 @@ Add a page to wp-admin for debugging the HTML API.
 
 = 1.4 =
 * Show invisible characters in the tree in attribute names, values, and tag names.
+* Handle DOCTYPE nodes.
