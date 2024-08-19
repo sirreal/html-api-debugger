@@ -2,6 +2,16 @@
 
 namespace HTML_API_Debugger\Interactivity;
 
+function wp_on_directive( string $on, string $directive ): void {
+	static $supports_async_on = null;
+	if ( null === $supports_async_on ) {
+		$supports_async_on = version_compare( get_bloginfo( 'version' ), '6.6', '>=' );
+	}
+	echo $supports_async_on ?
+		"data-wp-on-async--{$on}=\"{$directive}\"" :
+		"data-wp-on--{$on}=\"{$directive}\"";
+}
+
 /**
  * Generate the WP Admin page HTML.
  *
@@ -54,7 +64,11 @@ function generate_page( string $html, array $options ): string {
 		<tr>
 			<td>
 				<h2>Input HTML</h2>
-				<textarea id='input_html' data-wp-on--input="handleChange" wrap="off"><?php echo "\n" . esc_textarea( str_replace( "\0", '', $html ) ); ?></textarea>
+				<textarea
+					id='input_html'
+					wrap="off"
+					<?php wp_on_directive( 'input', 'handleChange' ); ?>
+				><?php echo "\n" . esc_textarea( str_replace( "\0", '', $html ) ); ?></textarea>
 				<p data-wp-bind--hidden="!state.htmlPreambleForProcessing">
 					Note: Because HTML API operates in body at this time, this will be prepended:
 					<br>
@@ -64,7 +78,7 @@ function generate_page( string $html, array $options ): string {
 			<td>
 				<h2>Rendered output</h2>
 				<iframe
-					data-wp-on--load="onRenderedIframeLoad"
+					<?php wp_on_directive( 'load', 'onRenderedIframeLoad' ); ?>
 					src="about:blank"
 					id="rendered_iframe"
 					referrerpolicy="no-referrer"
@@ -79,7 +93,11 @@ function generate_page( string $html, array $options ): string {
 		<tr>
 			<td colspan="2">
 				<div class="col-wrapper">
-					<div class="col" data-wp-on--click="handleSpanClick" data-wp-class--showClosers="state.showClosers">
+					<div
+						class="col"
+						data-wp-class--showClosers="state.showClosers"
+						<?php wp_on_directive( 'click', 'handleSpanClick' ); ?>
+					>
 						<pre class="hide-on-empty error-holder" data-wp-text="state.htmlapiResponse.error"></pre>
 						<ul id="html_api_result_holder" class="hide-on-empty" data-wp-ignore></ul>
 					</div>
@@ -95,16 +113,16 @@ function generate_page( string $html, array $options ): string {
 		<tr>
 			<td colspan="2">
 				<div>
-					<label>Show closers <input type="checkbox" data-wp-bind--checked="state.showClosers" data-wp-on--click="handleShowClosersClick"></label>
-					<label>Show invisible <input type="checkbox" data-wp-bind--checked="state.showInvisible" data-wp-on--click="handleShowInvisibleClick"></label>
-					<span data-wp-bind--hidden="!state.htmlapiResponse.supports.is_virtual"><label>Show virtual <input type="checkbox" data-wp-bind--checked="state.showVirtual" data-wp-on--click="handleShowVirtualClick"></label></span>
-					<span data-wp-bind--hidden="!state.htmlapiResponse.supports.quirks_mode"><label>Quirks mode <input type="checkbox" data-wp-bind--checked="state.quirksMode" data-wp-on--click="handleQuirksModeClick"></label></span>
-					<span data-wp-bind--hidden="!state.htmlapiResponse.supports.full_parser"><label>Full parser <input type="checkbox" data-wp-bind--checked="state.fullParser" data-wp-on--click="handleFullParserClick"></label></span>
+					<label>Show closers <input type="checkbox" data-wp-bind--checked="state.showClosers" <?php wp_on_directive( 'input', 'handleShowClosersClick' ); ?>></label>
+					<label>Show invisible <input type="checkbox" data-wp-bind--checked="state.showInvisible" <?php wp_on_directive( 'input', 'handleShowInvisibleClick' ); ?>></label>
+					<span data-wp-bind--hidden="!state.htmlapiResponse.supports.is_virtual"><label>Show virtual <input type="checkbox" data-wp-bind--checked="state.showVirtual" <?php wp_on_directive( 'input', 'handleShowVirtualClick' ); ?>></label></span>
+					<span data-wp-bind--hidden="!state.htmlapiResponse.supports.quirks_mode"><label>Quirks mode <input type="checkbox" data-wp-bind--checked="state.quirksMode" <?php wp_on_directive( 'input', 'handleQuirksModeClick' ); ?>></label></span>
+					<span data-wp-bind--hidden="!state.htmlapiResponse.supports.full_parser"><label>Full parser <input type="checkbox" data-wp-bind--checked="state.fullParser" <?php wp_on_directive( 'input', 'handleFullParserClick' ); ?>></label></span>
 				</div>
 				<div>
 					<label>
 						Hover information
-						<select data-wp-on--change="hoverInfoChange">
+						<select <?php wp_on_directive( 'change', 'hoverInfoChange' ); ?>>
 							<option data-wp-bind--selected="state.hoverBreadcrumbs" value="breadcrumbs">(depth) Breadcrumbs…</option>
 							<option data-wp-bind--selected="state.hoverInsertion" value="insertionMode">Insertion mode</option>
 						</select>
@@ -121,7 +139,7 @@ function generate_page( string $html, array $options ): string {
 		<tr data-wp-bind--hidden="!state.span">
 			<td colspan="2">
 				<h2>Processed HTML selected span</h2>
-				<button data-wp-on--click="clearSpan" type="button">Clear span selection 🧹</button>
+				<button <?php wp_on_directive( 'click', 'clearSpan' ); ?> type="button">Clear span selection 🧹</button>
 				<div class="htmlSpanContainer">
 					<pre class="html-text html-span" data-wp-text="state.hoverSpanSplit.0"></pre>
 					<pre class="html-text html-span html selected span" data-wp-text="state.hoverSpanSplit.1"></pre>
@@ -132,7 +150,7 @@ function generate_page( string $html, array $options ): string {
 		<tr>
 			<td>
 				<p>
-					<button data-wp-on--click="handleCopyClick" type="button">Copy shareable playground link</button>
+					<button <?php wp_on_directive( 'click', 'handleCopyClick' ); ?> type="button">Copy shareable playground link</button>
 				</p>
 				<details>
 					<summary>debug response</summary>

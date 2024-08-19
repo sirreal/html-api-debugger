@@ -194,9 +194,10 @@ const store = createStore(NS, {
 	},
 
 	/** @param {Event} e */
-	onRenderedIframeLoad(e) {
-		// @ts-expect-error
-		const doc = e.target.contentWindow.document;
+	onRenderedIframeLoad() {
+		// @ts-expect-error It better be defined!
+		const doc = RENDERED_IFRAME.contentWindow.document;
+
 		store.state.DOM.renderingMode = doc.compatMode;
 		store.state.DOM.title = doc.title || '[document has no title]';
 
