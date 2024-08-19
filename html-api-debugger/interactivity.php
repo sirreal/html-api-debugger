@@ -66,6 +66,9 @@ function generate_page( string $html, array $options ): string {
 				<h2>Input HTML</h2>
 				<textarea
 					id='input_html'
+					autocapitalize="off"
+					autocomplete="off"
+					spellcheck="false"
 					wrap="off"
 					<?php wp_on_directive( 'input', 'handleChange' ); ?>
 				><?php echo "\n" . esc_textarea( str_replace( "\0", '', $html ) ); ?></textarea>
