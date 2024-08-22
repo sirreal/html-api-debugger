@@ -1,6 +1,6 @@
 <?php
 
-namespace HTML_API_Debugger\Interactivity;
+namespace XML_API_Debugger\Interactivity;
 
 function wp_on_directive( string $on, string $directive ): void {
 	static $supports_async_on = null;
@@ -13,38 +13,36 @@ function wp_on_directive( string $on, string $directive ): void {
 }
 
 /**
- * Generate the WP Admin page HTML.
+ * Generate the WP Admin page XML.
  *
- * @param $html The input html.
- * @return The page HTML as rendered by the Interactivity API. This is intended to be printed directly to the page with no additional escaping.
+ * @param $xml The input XML.
+ * @return The page XML as rendered by the Interactivity API. This is intended to be printed directly to the page with no additional escaping.
  */
-function generate_page( string $html, array $options ): string {
+function generate_page( string $xml, array $options ): string {
 	// phpcs:enable WordPress.Security.NonceVerification.Recommended
-	$htmlapi_response = \HTML_API_Debugger\prepare_html_result_object( $html, $options );
+	$xmlapi_response = \XML_API_Debugger\prepare_xml_result_object( $xml, $options );
 
 	wp_interactivity_config(
-		\HTML_API_Debugger\SLUG,
+		\XML_API_Debugger\SLUG,
 		array(
-			'restEndpoint' => rest_url( 'html-api-debugger/v1/htmlapi' ),
+			'restEndpoint' => rest_url( 'xml-api-debugger/v1/xmlapi' ),
 			'nonce'        => wp_create_nonce( 'wp_rest' ),
 		)
 	);
 	wp_interactivity_state(
-		\HTML_API_Debugger\SLUG,
+		\XML_API_Debugger\SLUG,
 		array(
 			'DOM'              => array(
 				'renderingMode' => '',
 				'title'         => '',
 			),
-			'html'             => $html,
-			'htmlapiResponse'  => $htmlapi_response,
+			'xml'              => $xml,
+			'xmlapiResponse'   => $xmlapi_response,
 			'span'             => null,
 
 			'showClosers'      => false,
 			'showInvisible'    => false,
 			'showVirtual'      => false,
-			'quirksMode'       => false,
-			'fullParser'       => false,
 
 			'hoverInfo'        => 'breadcrumbs',
 			'hoverBreadcrumbs' => true,
@@ -54,8 +52,8 @@ function generate_page( string $html, array $options ): string {
 	ob_start();
 	?>
 <table
-	id="html-api-debugger-table"
-	data-wp-interactive="<?php echo esc_attr( \HTML_API_Debugger\SLUG ); ?>"
+	id="xml-api-debugger-table"
+	data-wp-interactive="<?php echo esc_attr( \XML_API_Debugger\SLUG ); ?>"
 	data-wp-watch--a="watch"
 	data-wp-watch--b="watchDom"
 	data-wp-run="run"
@@ -63,20 +61,15 @@ function generate_page( string $html, array $options ): string {
 	<tbody>
 		<tr>
 			<td>
-				<h2>Input HTML</h2>
+				<h2>Input XML</h2>
 				<textarea
-					id='input_html'
+					id='input_xml'
 					autocapitalize="off"
 					autocomplete="off"
 					spellcheck="false"
 					wrap="off"
 					<?php wp_on_directive( 'input', 'handleChange' ); ?>
-				><?php echo "\n" . esc_textarea( str_replace( "\0", '', $html ) ); ?></textarea>
-				<p data-wp-bind--hidden="!state.htmlPreambleForProcessing">
-					Note: Because HTML API operates in body at this time, this will be prepended:
-					<br>
-					<code data-wp-text="state.htmlPreambleForProcessing"></code>
-				</p>
+				><?php echo "\n" . esc_textarea( str_replace( "\0", '', $xml ) ); ?></textarea>
 			</td>
 			<td>
 				<h2>Rendered output</h2>
@@ -90,7 +83,7 @@ function generate_page( string $html, array $options ): string {
 			</td>
 		</tr>
 		<tr>
-			<td><h2>Interpreted by HTML API</h2></td>
+			<td><h2>Interpreted by XML API</h2></td>
 			<td><h2>Interpreted from DOM</h2></td>
 		</tr>
 		<tr>
@@ -101,8 +94,8 @@ function generate_page( string $html, array $options ): string {
 						data-wp-class--showClosers="state.showClosers"
 						<?php wp_on_directive( 'click', 'handleSpanClick' ); ?>
 					>
-						<pre class="hide-on-empty error-holder" data-wp-text="state.htmlapiResponse.error"></pre>
-						<ul id="html_api_result_holder" class="hide-on-empty" data-wp-ignore></ul>
+						<pre class="hide-on-empty error-holder" data-wp-text="state.xmlapiResponse.error"></pre>
+						<ul id="xml_api_result_holder" class="hide-on-empty" data-wp-ignore></ul>
 					</div>
 					<div class="col">
 						<ul id="dom_tree" data-wp-ignore></ul>
@@ -118,9 +111,9 @@ function generate_page( string $html, array $options ): string {
 				<div>
 					<label>Show closers <input type="checkbox" data-wp-bind--checked="state.showClosers" <?php wp_on_directive( 'input', 'handleShowClosersClick' ); ?>></label>
 					<label>Show invisible <input type="checkbox" data-wp-bind--checked="state.showInvisible" <?php wp_on_directive( 'input', 'handleShowInvisibleClick' ); ?>></label>
-					<span data-wp-bind--hidden="!state.htmlapiResponse.supports.is_virtual"><label>Show virtual <input type="checkbox" data-wp-bind--checked="state.showVirtual" <?php wp_on_directive( 'input', 'handleShowVirtualClick' ); ?>></label></span>
-					<span data-wp-bind--hidden="!state.htmlapiResponse.supports.quirks_mode"><label>Quirks mode <input type="checkbox" data-wp-bind--checked="state.quirksMode" <?php wp_on_directive( 'input', 'handleQuirksModeClick' ); ?>></label></span>
-					<span data-wp-bind--hidden="!state.htmlapiResponse.supports.full_parser"><label>Full parser <input type="checkbox" data-wp-bind--checked="state.fullParser" <?php wp_on_directive( 'input', 'handleFullParserClick' ); ?>></label></span>
+					<span data-wp-bind--hidden="!state.xmlapiResponse.supports.is_virtual"><label>Show virtual <input type="checkbox" data-wp-bind--checked="state.showVirtual" <?php wp_on_directive( 'input', 'handleShowVirtualClick' ); ?>></label></span>
+					<span data-wp-bind--hidden="!state.xmlapiResponse.supports.quirks_mode"><label>Quirks mode <input type="checkbox" data-wp-bind--checked="state.quirksMode" <?php wp_on_directive( 'input', 'handleQuirksModeClick' ); ?>></label></span>
+					<span data-wp-bind--hidden="!state.xmlapiResponse.supports.full_parser"><label>Full parser <input type="checkbox" data-wp-bind--checked="state.fullParser" <?php wp_on_directive( 'input', 'handleFullParserClick' ); ?>></label></span>
 				</div>
 				<div>
 					<label>
@@ -135,18 +128,18 @@ function generate_page( string $html, array $options ): string {
 		</tr>
 		<tr data-wp-bind--hidden="state.span">
 			<td colspan="2">
-				<h2>Processed HTML</h2>
-				<pre class="html-text" data-wp-text="state.hoverSpan"></pre>
+				<h2>Processed XML</h2>
+				<pre class="xml-text" data-wp-text="state.hoverSpan"></pre>
 			</td>
 		</tr>
 		<tr data-wp-bind--hidden="!state.span">
 			<td colspan="2">
-				<h2>Processed HTML selected span</h2>
+				<h2>Processed XML selected span</h2>
 				<button <?php wp_on_directive( 'click', 'clearSpan' ); ?> type="button">Clear span selection 🧹</button>
-				<div class="htmlSpanContainer">
-					<pre class="html-text html-span" data-wp-text="state.hoverSpanSplit.0"></pre>
-					<pre class="html-text html-span html selected span" data-wp-text="state.hoverSpanSplit.1"></pre>
-					<pre class="html-text html-span" data-wp-text="state.hoverSpanSplit.2"></pre>
+				<div class="xmlSpanContainer">
+					<pre class="xml-text xml-span" data-wp-text="state.hoverSpanSplit.0"></pre>
+					<pre class="xml-text xml-span xml selected span" data-wp-text="state.hoverSpanSplit.1"></pre>
+					<pre class="xml-text xml-span" data-wp-text="state.hoverSpanSplit.2"></pre>
 				</div>
 			</td>
 		</tr>
@@ -157,7 +150,7 @@ function generate_page( string $html, array $options ): string {
 				</p>
 				<details>
 					<summary>debug response</summary>
-					<pre data-wp-text="state.formattedHtmlapiResponse"></pre>
+					<pre data-wp-text="state.formattedXmlapiResponse"></pre>
 				</details>
 			</td>
 		</tr>

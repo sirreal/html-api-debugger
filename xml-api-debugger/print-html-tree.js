@@ -1,4 +1,4 @@
-import { replaceInvisible } from '@html-api-debugger/replace-invisible-chars';
+import { replaceInvisible } from '@xml-api-debugger/replace-invisible-chars';
 
 /**
  * @typedef Options

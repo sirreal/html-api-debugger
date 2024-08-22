@@ -1,8 +1,8 @@
-import { printHtmlApiTree } from '@html-api-debugger/print-html-tree';
-import { replaceInvisible } from '@html-api-debugger/replace-invisible-chars';
 import * as I from '@wordpress/interactivity';
+import { printHtmlApiTree } from '@xml-api-debugger/print-html-tree';
+import { replaceInvisible } from '@xml-api-debugger/replace-invisible-chars';
 
-const NS = 'html-api-debugger';
+const NS = 'xml-api-debugger';
 
 const DEBOUNCE_TIMEOUT = 150;
 const RENDERED_IFRAME = /** @type {HTMLIFrameElement} */ (
@@ -35,20 +35,18 @@ let debounceInputAbortController = null;
  * @property {boolean} full_parser
  *
  *
- * @typedef HtmlApiResponse
+ * @typedef XmlApiResponse
  * @property {any} error
  * @property {Supports} supports
  * @property {{tree: any}|null} result
- * @property {string} html
+ * @property {string} xml
  *
  *
  * @typedef State
- * @property {string} htmlPreambleForProcessing
- * @property {string} formattedHtmlapiResponse
- * @property {HtmlApiResponse} htmlapiResponse
+ * @property {string} formattedXmlapiResponse
+ * @property {XmlApiResponse} xmlapiResponse
  * @property {string} playgroundLink
- * @property {string} html
- * @property {string} htmlForProcessing
+ * @property {string} xml
  * @property {boolean} showClosers
  * @property {boolean} showInvisible
  * @property {boolean} showVirtual
@@ -94,8 +92,8 @@ const store = createStore(NS, {
 
 		hoverInfo: localStorage.getItem(`${NS}-hoverInfo`),
 
-		get formattedHtmlapiResponse() {
-			return JSON.stringify(store.state.htmlapiResponse, undefined, 2);
+		get formattedXmlapiResponse() {
+			return JSON.stringify(store.state.xmlapiResponse, undefined, 2);
 		},
 
 		get hoverBreadcrumbs() {
@@ -106,53 +104,36 @@ const store = createStore(NS, {
 			return store.state.hoverInfo === 'insertionMode';
 		},
 
-		get playgroundLink() {
-			// We'll embed a path in a URL.
-			const searchParams = new URLSearchParams({ page: NS });
-			if (store.state.html) {
-				searchParams.set('html', store.state.html);
-			}
-			const base = '/wp-admin/admin.php';
-			const u = new URL(
-				'https://playground.wordpress.net/?plugin=html-api-debugger&php-extension-bundle=light',
-			);
-			u.searchParams.set('url', `${base}?${searchParams.toString()}`);
-			return u.href;
-		},
-
-		get htmlPreambleForProcessing() {
-			if (store.state.fullParser) {
-				return '';
-			}
-			const doctype = `<!DOCTYPE${
-				store.state.htmlapiResponse.supports.quirks_mode &&
-				store.state.quirksMode
-					? ''
-					: ' html'
-			}>`;
-			return `${doctype}<html><body>`;
-		},
-
-		get htmlForProcessing() {
-			return store.state.htmlPreambleForProcessing + store.state.html;
-		},
+		//get playgroundLink() {
+		//	// We'll embed a path in a URL.
+		//	const searchParams = new URLSearchParams({ page: NS });
+		//	if (store.state.xml) {
+		//		searchParams.set('xml', store.state.xml);
+		//	}
+		//	const base = '/wp-admin/admin.php';
+		//	const u = new URL(
+		//		'https://playground.wordpress.net/?plugin=xml-api-debugger&php-extension-bundle=light',
+		//	);
+		//	u.searchParams.set('url', `${base}?${searchParams.toString()}`);
+		//	return u.href;
+		//},
 
 		get hoverSpan() {
 			/** @type {string | undefined} */
-			const html = store.state.htmlapiResponse.html;
-			if (!html) {
+			const xml = store.state.xmlapiResponse.xml;
+			if (!xml) {
 				return '';
 			}
-			return store.state.showInvisible ? replaceInvisible(html) : html;
+			return store.state.showInvisible ? replaceInvisible(xml) : xml;
 		},
 
 		get hoverSpanSplit() {
 			/** @type {string | undefined} */
-			const html = store.state.htmlapiResponse.html;
-			if (!html || !store.state.span) {
+			const xml = store.state.xmlapiResponse.xml;
+			if (!xml || !store.state.span) {
 				return /** @type {const} */ ([]);
 			}
-			const buf = new TextEncoder().encode(html);
+			const buf = new TextEncoder().encode(xml);
 			const decoder = new TextDecoder();
 
 			const { start: spanStart, length } = store.state.span;
@@ -170,12 +151,12 @@ const store = createStore(NS, {
 		},
 	},
 	run() {
-		// The HTML parser will replace null bytes from the HTML.
+		// The HTML parser will replace null bytes from the XML.
 		// Force print them if we have null bytes.
-		if (store.state.html.includes('\0')) {
+		if (store.state.xml.includes('\0')) {
 			/** @type {HTMLTextAreaElement} */ (
-				document.getElementById('input_html')
-			).value = store.state.html;
+				document.getElementById('input_xml')
+			).value = store.state.xml;
 		}
 
 		store.render();
@@ -184,11 +165,11 @@ const store = createStore(NS, {
 		// newlines seem especially problematic in chrome
 		// lets clean up the URL
 		const u = new URL(document.location.href);
-		if (store.state.html) {
-			u.searchParams.set('html', store.state.html);
+		if (store.state.xml) {
+			u.searchParams.set('xml', store.state.xml);
 			history.replaceState(null, '', u);
-		} else if (u.searchParams.has('html')) {
-			u.searchParams.delete('html');
+		} else if (u.searchParams.has('xml')) {
+			u.searchParams.delete('xml');
 			history.replaceState(null, '', u);
 		}
 	},
@@ -221,10 +202,10 @@ const store = createStore(NS, {
 	handleChange: function* (e) {
 		const val = /** @type {HTMLTextAreaElement} */ (e.target).value;
 
-		store.state.html = val;
+		store.state.xml = val;
 
 		const u = new URL(document.location.href);
-		u.searchParams.set('html', val);
+		u.searchParams.set('xml', val);
 		history.replaceState(null, '', u);
 
 		debounceInputAbortController?.abort('debounced');
@@ -293,9 +274,7 @@ const store = createStore(NS, {
 			const response = yield fetch(cfg.restEndpoint, {
 				method: 'POST',
 				body: JSON.stringify({
-					html: store.state.html,
-					quirksMode: store.state.quirksMode,
-					fullParser: store.state.fullParser,
+					xml: store.state.xml,
 				}),
 				headers: {
 					'Content-Type': 'application/json',
@@ -316,7 +295,7 @@ const store = createStore(NS, {
 				return;
 			}
 
-			store.state.htmlapiResponse.result = null;
+			store.state.xmlapiResponse.result = null;
 
 			if (err instanceof Response) {
 				yield err
@@ -333,7 +312,7 @@ const store = createStore(NS, {
 							msg += `${j.data.error.message} in ${j.data.error.file}:${j.data.error.line}`;
 						}
 						if (msg) {
-							store.state.htmlapiResponse.error = msg;
+							store.state.xmlapiResponse.error = msg;
 						} else {
 							// Fallback to catch
 							throw 'no msg';
@@ -341,23 +320,23 @@ const store = createStore(NS, {
 					})
 					.catch(() =>
 						err.text().then((t) => {
-							store.state.htmlapiResponse.error = t;
+							store.state.xmlapiResponse.error = t;
 						}),
 					)
 					.catch(() => {
-						store.state.htmlapiResponse.error = 'unknown error';
+						store.state.xmlapiResponse.error = 'unknown error';
 					});
 				return;
 			}
 			throw err;
 		}
 
-		store.state.htmlapiResponse = data;
+		store.state.xmlapiResponse = data;
 		store.clearSpan();
 
 		if (data.error) {
 			/** @type {HTMLUListElement} */ (
-				document.getElementById('html_api_result_holder')
+				document.getElementById('xml_api_result_holder')
 			).innerHTML = '';
 			return;
 		}
@@ -384,14 +363,14 @@ const store = createStore(NS, {
 		// @ts-expect-error This should not be null.
 		const iframeDocument = RENDERED_IFRAME.contentWindow.document;
 		iframeDocument.open();
-		iframeDocument.write(store.state.htmlForProcessing);
+		iframeDocument.write(store.state.xml);
 		iframeDocument.close();
 
-		if (store.state.htmlapiResponse.result?.tree) {
+		if (store.state.xmlapiResponse.result?.tree) {
 			printHtmlApiTree(
-				store.state.htmlapiResponse.result.tree,
+				store.state.xmlapiResponse.result.tree,
 				// @ts-expect-error
-				document.getElementById('html_api_result_holder'),
+				document.getElementById('xml_api_result_holder'),
 				{
 					showClosers: store.state.showClosers,
 					showInvisible: store.state.showInvisible,

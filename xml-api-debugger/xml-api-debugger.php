@@ -1,9 +1,9 @@
 <?php
 /**
- * Plugin Name:       HTML API Debugger
+ * Plugin Name:       XML API Debugger
  * Plugin URI:        https://github.com/sirreal/html-api-debugger
- * Description:       Add a page to wp-admin for debugging the HTML API.
- * Version:           1.4
+ * Description:       Add a page to wp-admin for debugging the XML API.
+ * Version:           0.1
  * Requires at least: 6.5
  * Tested up to:      6.6
  * Author:            Jon Surrell
@@ -11,17 +11,17 @@
  * License:           GPLv2 or later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  *
- * @package HtmlApiDebugger
+ * @package XmlApiDebugger
  */
 
-namespace HTML_API_Debugger;
+namespace XML_API_Debugger;
 
 use WP_REST_Request;
 use Exception;
 
-require_once __DIR__ . '/html-api-integration.php';
+require_once __DIR__ . '/xml-api-integration.php';
 
-const SLUG    = 'html-api-debugger';
+const SLUG    = 'xml-api-debugger';
 const VERSION = '1.4';
 
 /** Set up the plugin. */
@@ -48,17 +48,17 @@ function init() {
 		function () {
 			register_rest_route(
 				SLUG . '/v1',
-				'/htmlapi',
+				'/xmlapi',
 				array(
 					'methods'             => 'POST',
 					'callback'            => function ( WP_REST_Request $request ) {
 						// phpcs:ignore Universal.Operators.DisallowShortTernary.Found
-						$html = $request->get_json_params()['html'] ?: '';
+						$xml = $request->get_json_params()['xml'] ?: '';
 						$options = array(
 							'quirks_mode' => $request->get_json_params()['quirksMode'] ?? false,
 							'full_parser' => $request->get_json_params()['fullParser'] ?? false,
 						);
-						return prepare_html_result_object( $html, $options );
+						return prepare_xml_result_object( $xml, $options );
 					},
 					'permission_callback' => function () {
 						return current_user_can( 'edit_posts' );
@@ -75,18 +75,18 @@ function init() {
 					wp_enqueue_style( SLUG, plugins_url( 'style.css', __FILE__ ), array(), VERSION );
 
 					wp_register_script_module(
-						'@html-api-debugger/replace-invisible-chars',
+						'@xml-api-debugger/replace-invisible-chars',
 						plugins_url( 'replace-invisible-chars.js', __FILE__ ),
 						array(),
 						VERSION
 					);
 
 					wp_register_script_module(
-						'@html-api-debugger/print-html-tree',
+						'@xml-api-debugger/print-html-tree',
 						plugins_url( 'print-html-tree.js', __FILE__ ),
 						array(
 							array(
-								'id'     => '@html-api-debugger/replace-invisible-chars',
+								'id'     => '@xml-api-debugger/replace-invisible-chars',
 								'import' => 'dynamic',
 							),
 						),
@@ -94,13 +94,13 @@ function init() {
 					);
 
 					wp_enqueue_script_module(
-						'@html-api-debugger/view',
+						'@xml-api-debugger/view',
 						plugins_url( 'view.js', __FILE__ ),
 						array(
 							'@wordpress/interactivity',
-							'@html-api-debugger/print-html-tree',
+							'@xml-api-debugger/print-html-tree',
 							array(
-								'id'     => '@html-api-debugger/replace-invisible-chars',
+								'id'     => '@xml-api-debugger/replace-invisible-chars',
 								'import' => 'dynamic',
 							),
 						),
@@ -114,24 +114,24 @@ function init() {
 		'admin_menu',
 		function () {
 			add_menu_page(
-				'HTML API Debugger',
-				'HTML API Debugger',
+				'XML API Debugger',
+				'XML API Debugger',
 				'edit_posts',
 				SLUG,
 				function () {
 					require_once __DIR__ . '/interactivity.php';
 
-					$html = '';
+					$xml = '';
 					// phpcs:disable WordPress.Security.NonceVerification.Recommended
-					if ( isset( $_GET['html'] ) && is_string( $_GET['html'] ) ) {
-						$html = stripslashes( $_GET['html'] );
+					if ( isset( $_GET['xml'] ) && is_string( $_GET['xml'] ) ) {
+						$xml = stripslashes( $_GET['xml'] );
 					}
 
 					$options = array();
 					// @todo Add query args for other options
 
 					// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-					echo namespace\Interactivity\generate_page( $html, $options );
+					echo namespace\Interactivity\generate_page( $xml, $options );
 				},
 				include __DIR__ . '/icon.php'
 			);
@@ -142,19 +142,19 @@ function init() {
 /**
  * Prepare a result object.
  *
- * @param string $html The HTML.
+ * @param string $xml The XML.
  * @param array  $options Options.
  */
-function prepare_html_result_object( string $html, array $options = null ): array {
+function prepare_xml_result_object( string $xml, array $options = null ): array {
 	$response = array(
-		'supports' => HTML_API_Integration\get_supports(),
-		'html'     => $html,
+		'supports' => XML_API_Integration\get_supports(),
+		'xml'     => $xml,
 		'error'    => null,
 		'result'   => null,
 	);
 
 	try {
-		$response['result'] = array( 'tree' => HTML_API_Integration\get_tree( $html, $options ) );
+		$response['result'] = array( 'tree' => XML_API_Integration\get_tree( $xml, $options ) );
 	} catch ( Exception $e ) {
 		$response['error'] = (string) $e;
 	}

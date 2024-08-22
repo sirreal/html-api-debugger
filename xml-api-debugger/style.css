@@ -1,4 +1,4 @@
-#html-api-debugger-table {
+#xml-api-debugger-table {
   width: 100%;
   table-layout: fixed;
   padding: 20px 20px 0 0;
@@ -79,24 +79,24 @@
   min-height: 200px;
 }
 
-.html-text {
+.xml-text {
   text-wrap: pretty;
 }
 
-.htmlSpanContainer {
+.xmlSpanContainer {
   display: flex;
   gap: 0.2em;
 }
 
-.html-span {
+.xml-span {
   flex: 1 1 0;
 }
 
-.html-span:nth-child(2) {
+.xml-span:nth-child(2) {
   box-shadow: 3px 3px 3px hotpink;
 }
 
-#html_api_result_holder,
+#xml_api_result_holder,
 #dom_tree {
   border: inset thin;
   padding: 0.5em 0.5em 0.5em 1em;
@@ -198,12 +198,12 @@
   }
 
   li {
-    &.is-real > code:first-child::before {
+    &.is-real>code:first-child::before {
       content: "\211d\00a0" !important;
       color: blue;
     }
 
-    &.is-virtual > code:first-child:before {
+    &.is-virtual>code:first-child:before {
       content: "\1D456\00a0" !important;
       color: red;
     }
