@@ -32,6 +32,10 @@ function init() {
 	}
 	$done = true;
 
+	if ( ! class_exists('WP_XML_Processor') ) {
+		return;
+	}
+
 	// WP 6.5 doesn't support script modules or Interactivity API in wp-admin.
 	if ( ! has_action( 'admin_print_footer_scripts', array( wp_script_modules(), 'print_import_map' ) ) ) {
 		add_action( 'admin_print_footer_scripts', array( wp_script_modules(), 'print_import_map' ) );
