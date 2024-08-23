@@ -30,9 +30,6 @@ let debounceInputAbortController = null;
  *
  *
  * @typedef Supports
- * @property {boolean} is_virtual
- * @property {boolean} quirks_mode
- * @property {boolean} full_parser
  *
  *
  * @typedef XmlApiResponse
@@ -45,13 +42,9 @@ let debounceInputAbortController = null;
  * @typedef State
  * @property {string} formattedXmlapiResponse
  * @property {XmlApiResponse} xmlapiResponse
- * @property {string} playgroundLink
  * @property {string} xml
  * @property {boolean} showClosers
  * @property {boolean} showInvisible
- * @property {boolean} showVirtual
- * @property {boolean} quirksMode
- * @property {boolean} fullParser
  *
  * @property {'breadcrumbs'|'insertionMode'} hoverInfo
  * @property {boolean} hoverBreadcrumbs
@@ -72,9 +65,6 @@ let debounceInputAbortController = null;
  *
  * @property {()=>void} handleShowInvisibleClick
  * @property {()=>void} handleShowClosersClick
- * @property {()=>void} handleShowVirtualClick
- * @property {()=>Promise<void>} handleQuirksModeClick
- * @property {()=>Promise<void>} handleFullParserClick
  */
 
 /** @type {typeof I.store<Store>} */
@@ -86,9 +76,6 @@ const store = createStore(NS, {
 	state: {
 		showClosers: Boolean(localStorage.getItem(`${NS}-showClosers`)),
 		showInvisible: Boolean(localStorage.getItem(`${NS}-showInvisible`)),
-		showVirtual: Boolean(localStorage.getItem(`${NS}-showVirtual`)),
-		quirksMode: Boolean(localStorage.getItem(`${NS}-quirksMode`)),
-		fullParser: Boolean(localStorage.getItem(`${NS}-fullParser`)),
 
 		hoverInfo: localStorage.getItem(`${NS}-hoverInfo`),
 
@@ -103,20 +90,6 @@ const store = createStore(NS, {
 		get hoverInsertion() {
 			return store.state.hoverInfo === 'insertionMode';
 		},
-
-		//get playgroundLink() {
-		//	// We'll embed a path in a URL.
-		//	const searchParams = new URLSearchParams({ page: NS });
-		//	if (store.state.xml) {
-		//		searchParams.set('xml', store.state.xml);
-		//	}
-		//	const base = '/wp-admin/admin.php';
-		//	const u = new URL(
-		//		'https://playground.wordpress.net/?plugin=xml-api-debugger&php-extension-bundle=light',
-		//	);
-		//	u.searchParams.set('url', `${base}?${searchParams.toString()}`);
-		//	return u.href;
-		//},
 
 		get hoverSpan() {
 			/** @type {string | undefined} */
@@ -189,7 +162,6 @@ const store = createStore(NS, {
 			{
 				showClosers: store.state.showClosers,
 				showInvisible: store.state.showInvisible,
-				showVirtual: store.state.showVirtual,
 				hoverInfo: store.state.hoverInfo,
 			},
 		);
@@ -253,10 +225,6 @@ const store = createStore(NS, {
 		yield store.callAPI();
 	},
 
-	handleCopyClick: function* () {
-		yield navigator.clipboard.writeText(store.state.playgroundLink);
-	},
-
 	/** @param {Event} e */
 	handleSpanClick(e) {
 		const t = e.target;
@@ -273,9 +241,6 @@ const store = createStore(NS, {
 
 	handleShowInvisibleClick: getToggleHandler('showInvisible'),
 	handleShowClosersClick: getToggleHandler('showClosers'),
-	handleShowVirtualClick: getToggleHandler('showVirtual'),
-	handleQuirksModeClick: getToggleHandlerWithRefetch('quirksMode'),
-	handleFullParserClick: getToggleHandlerWithRefetch('fullParser'),
 
 	/** @param {Event} e */
 	hoverInfoChange: (e) => {
@@ -378,7 +343,6 @@ const store = createStore(NS, {
 			{
 				showClosers: store.state.showClosers,
 				showInvisible: store.state.showInvisible,
-				showVirtual: store.state.showVirtual,
 				hoverInfo: store.state.hoverInfo,
 			},
 		);
@@ -402,7 +366,6 @@ const store = createStore(NS, {
 				{
 					showClosers: store.state.showClosers,
 					showInvisible: store.state.showInvisible,
-					showVirtual: store.state.showVirtual,
 					hoverInfo: store.state.hoverInfo,
 				},
 			);

@@ -112,9 +112,6 @@ function generate_page( string $xml, array $options ): string {
 				<div>
 					<label>Show closers <input type="checkbox" data-wp-bind--checked="state.showClosers" <?php wp_on_directive( 'input', 'handleShowClosersClick' ); ?>></label>
 					<label>Show invisible <input type="checkbox" data-wp-bind--checked="state.showInvisible" <?php wp_on_directive( 'input', 'handleShowInvisibleClick' ); ?>></label>
-					<span data-wp-bind--hidden="!state.xmlapiResponse.supports.is_virtual"><label>Show virtual <input type="checkbox" data-wp-bind--checked="state.showVirtual" <?php wp_on_directive( 'input', 'handleShowVirtualClick' ); ?>></label></span>
-					<span data-wp-bind--hidden="!state.xmlapiResponse.supports.quirks_mode"><label>Quirks mode <input type="checkbox" data-wp-bind--checked="state.quirksMode" <?php wp_on_directive( 'input', 'handleQuirksModeClick' ); ?>></label></span>
-					<span data-wp-bind--hidden="!state.xmlapiResponse.supports.full_parser"><label>Full parser <input type="checkbox" data-wp-bind--checked="state.fullParser" <?php wp_on_directive( 'input', 'handleFullParserClick' ); ?>></label></span>
 				</div>
 				<div>
 					<label>
@@ -146,9 +143,6 @@ function generate_page( string $xml, array $options ): string {
 		</tr>
 		<tr>
 			<td>
-				<p>
-					<button <?php wp_on_directive( 'click', 'handleCopyClick' ); ?> type="button">Copy shareable playground link</button>
-				</p>
 				<details>
 					<summary>debug response</summary>
 					<pre data-wp-text="state.formattedXmlapiResponse"></pre>

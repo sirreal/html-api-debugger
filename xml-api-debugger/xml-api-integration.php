@@ -30,14 +30,19 @@ function get_supports(): array {
 }
 
 function get_tree( string $xml, array $options ): array {
+	$current_bookmark_name = __NAMESPACE__ . '-bookmark';
+
 	$processor_bytes_already_parsed = new ReflectionProperty( WP_XML_Tag_Processor::class, 'bytes_already_parsed' );
 	$processor_bytes_already_parsed->setAccessible( true );
+
+	$processor_bookmarks = new ReflectionProperty( WP_XML_Tag_Processor::class, 'bookmarks' );
+	$processor_bookmarks->setAccessible( true );
 
 	$processor_parser_context = new ReflectionProperty( WP_XML_Processor::class, 'parser_context' );
 	$processor_parser_context->setAccessible( true );
 
-	$processor_bookmarks = new ReflectionProperty( WP_XML_Processor::class, 'bookmarks' );
-	$processor_bookmarks->setAccessible( true );
+	$processor_parser_state = new ReflectionProperty( WP_XML_Tag_Processor::class, 'parser_state' );
+	$processor_parser_state->setAccessible( true );
 
 	$processor = new WP_XML_Processor( $xml );
 
@@ -85,7 +90,9 @@ function get_tree( string $xml, array $options ): array {
 
 	$cursor = array( 0 );
 
+
 	while ( $processor->next_token() ) {
+		$processor->set_bookmark($current_bookmark_name);
 		if ( $processor->get_last_error() !== null ) {
 			break;
 		}
@@ -105,7 +112,7 @@ function get_tree( string $xml, array $options ): array {
 				$current['childNodes'][] = array(
 					'nodeType' => NODE_TYPE_PROCESSING_INSTRUCTION,
 					'nodeName' => $processor->get_modifiable_text(),
-					/*'_span'    => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],*/
+					'_span'    => $processor_bookmarks->getValue( $processor )[ "_{$current_bookmark_name}" ],
 					'_bc'      => $processor->get_breadcrumbs(),
 					'_depth'   => $get_current_depth(),
 				);
@@ -115,7 +122,7 @@ function get_tree( string $xml, array $options ): array {
 				$current['childNodes'][] = array(
 					'nodeType' => NODE_TYPE_PROCESSING_INSTRUCTION,
 					'nodeName' => $processor->get_modifiable_text(),
-					/*'_span'    => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],*/
+					'_span'    => $processor_bookmarks->getValue( $processor )[ "_{$current_bookmark_name}" ],
 					'_bc'      => $processor->get_breadcrumbs(),
 					'_depth'   => $get_current_depth(),
 				);
@@ -126,7 +133,7 @@ function get_tree( string $xml, array $options ): array {
 				$current['childNodes'][] = array(
 					'nodeType' => NODE_TYPE_DOCUMENT_TYPE,
 					'nodeName' => $processor->get_modifiable_text(),
-					/*'_span'    => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],*/
+					'_span'    => $processor_bookmarks->getValue( $processor )[ "_{$current_bookmark_name}" ],
 					'_bc'      => $processor->get_breadcrumbs(),
 					'_depth'   => $get_current_depth(),
 				);
@@ -163,7 +170,7 @@ function get_tree( string $xml, array $options ): array {
 					'attributes' => $attributes,
 					'childNodes' => array(),
 					'_closer'    => (bool) $processor->is_tag_closer(),
-					/*'_span'      => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],*/
+					'_span'      => $processor_bookmarks->getValue( $processor )[ "_{$current_bookmark_name}" ],
 					'_bc'        => $processor->get_breadcrumbs(),
 					'_virtual'   => $is_virtual(),
 					'_depth'     => $get_current_depth(),
@@ -202,7 +209,7 @@ function get_tree( string $xml, array $options ): array {
 					'nodeType'  => NODE_TYPE_TEXT,
 					'nodeName'  => $processor->get_token_name(),
 					'nodeValue' => $processor->get_modifiable_text(),
-					/*'_span'     => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],*/
+					'_span'     => $processor_bookmarks->getValue( $processor )[ "_{$current_bookmark_name}" ],
 					'_bc'       => $processor->get_breadcrumbs(),
 					'_virtual'  => $is_virtual(),
 					'_depth'    => $get_current_depth(),
@@ -217,7 +224,7 @@ function get_tree( string $xml, array $options ): array {
 					'nodeType'  => NODE_TYPE_CDATA_SECTION,
 					'nodeName'  => $processor->get_token_name(),
 					'nodeValue' => $processor->get_modifiable_text(),
-					/*'_span'     => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],*/
+					'_span'     => $processor_bookmarks->getValue( $processor )[ "_{$current_bookmark_name}" ],
 					'_bc'       => $processor->get_breadcrumbs(),
 					'_virtual'  => $is_virtual(),
 					'_depth'    => $get_current_depth(),
@@ -230,7 +237,7 @@ function get_tree( string $xml, array $options ): array {
 			case '#comment':
 				$self = array(
 					'nodeType' => NODE_TYPE_COMMENT,
-					/*'_span'    => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],*/
+					'_span'    => $processor_bookmarks->getValue( $processor )[ "_{$current_bookmark_name}" ],
 					'_bc'      => $processor->get_breadcrumbs(),
 					'_virtual' => $is_virtual(),
 					'_depth'   => $get_current_depth(),
