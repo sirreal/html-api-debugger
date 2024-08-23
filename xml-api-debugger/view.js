@@ -155,16 +155,25 @@ const store = createStore(NS, {
 		store.state.DOM.renderingMode = doc.compatMode;
 		store.state.DOM.title = doc.title || '[document has no title]';
 
-		printHtmlApiTree(
-			doc,
-			// @ts-expect-error
-			document.getElementById('dom_tree'),
-			{
-				showClosers: store.state.showClosers,
-				showInvisible: store.state.showInvisible,
-				hoverInfo: store.state.hoverInfo,
-			},
-		);
+		const treeContainer = document.getElementById('dom_tree');
+
+		const parserError = doc.querySelector('parsererror');
+		if (parserError) {
+			treeContainer.classList.add('error-holder');
+			treeContainer.innerText = parserError.textContent;
+		} else {
+			treeContainer.classList.remove('error-holder');
+			printHtmlApiTree(
+				doc,
+				// @ts-expect-error
+				treeContainer,
+				{
+					showClosers: store.state.showClosers,
+					showInvisible: store.state.showInvisible,
+					hoverInfo: store.state.hoverInfo,
+				},
+			);
+		}
 	},
 	clearSpan() {
 		store.state.span = null;
