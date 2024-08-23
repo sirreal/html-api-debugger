@@ -1,21 +1,32 @@
 <?php
-
 namespace HTML_API_Debugger\Interactivity;
 
+/**
+ * Make an "on" directive
+ *
+ * Depending on supported behavior, this can be sync or async.
+ *
+ * @param string $on The event name.
+ * @param string $directive The directive name.
+ */
 function wp_on_directive( string $on, string $directive ): void {
 	static $supports_async_on = null;
 	if ( null === $supports_async_on ) {
 		$supports_async_on = version_compare( get_bloginfo( 'version' ), '6.6', '>=' );
 	}
+
 	echo $supports_async_on ?
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		"data-wp-on-async--{$on}=\"{$directive}\"" :
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		"data-wp-on--{$on}=\"{$directive}\"";
 }
 
 /**
  * Generate the WP Admin page HTML.
  *
- * @param $html The input html.
+ * @param string $html The input html.
+ * @param array  $options The input html.
  * @return The page HTML as rendered by the Interactivity API. This is intended to be printed directly to the page with no additional escaping.
  */
 function generate_page( string $html, array $options ): string {
@@ -33,8 +44,10 @@ function generate_page( string $html, array $options ): string {
 		\HTML_API_Debugger\SLUG,
 		array(
 			'DOM'                    => array(
-				'renderingMode' => '',
-				'title'         => '',
+				'renderingMode'   => '',
+				'doctypeName'     => '',
+				'doctypeSystemId' => '',
+				'doctypePublicId' => '',
 			),
 			'html'                   => $html,
 			'htmlapiResponse'        => $htmlapi_response,
@@ -82,7 +95,6 @@ function generate_page( string $html, array $options ): string {
 					<code data-wp-text="state.htmlPreambleForProcessing"></code>
 				</p>
 				<p>
-					Title:&nbsp;<code></code>[not available via HTML API]<br>
 					Rendering mode:&nbsp;<code data-wp-text="state.htmlapiResponse.result.compatMode"></code><br>
 					Doctype name:&nbsp;<code data-wp-text="state.htmlApiDoctypeName"></code><br>
 					Doctype publicId:&nbsp;<code data-wp-text="state.htmlApiDoctypePublicId"></code><br>
@@ -98,7 +110,6 @@ function generate_page( string $html, array $options ): string {
 					referrerpolicy="no-referrer"
 					sandbox="allow-forms allow-modals allow-popups allow-scripts allow-same-origin"></iframe>
 				<p>
-					Title:&nbsp;<code data-wp-text="state.DOM.title"></code><br>
 					Rendering mode:&nbsp;<code data-wp-text="state.DOM.renderingMode"></code><br>
 					Doctype name:&nbsp;<code data-wp-text="state.DOM.doctypeName"></code><br>
 					Doctype publicId:&nbsp;<code data-wp-text="state.DOM.doctypePublicId"></code><br>
