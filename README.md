@@ -1,7 +1,20 @@
-# HTML API Debugger
+# XML API Debugger
 
-[This is a WordPress plugin to help debug the behavior of the HTML API.](https://wordpress.org/plugins/html-api-debugger/)
+This is a WordPress plugin to help debug the behavior of the XML API.
 
-[Try it out in the WordPress Playground.](https://playground.wordpress.net/?blueprint-url=https%3A%2F%2Fraw.githubusercontent.com%2Fsirreal%2Fhtml-api-debugger%2Fmain%2Fassets%2Fblueprints%2Fblueprint.json)
+The XML API is currently under development and only available in WordPress development builds.
 
-![screenshot](./assets/screenshot-1.png)
+To get started:
+
+- Check out this repository.
+- Check out a branch of WordPress Develop with the XML API, [for example this branch](https://github.com/sirreal/wordpress-develop/tree/xml-processor-continue).
+- In the WordPress Develop Directory, add a `.wp-env.json` file like the following:
+  ```json
+  {
+    "core": "./src",
+    "plugins": ["…/path/to/plugin-xml-api-debugger/xml-api-debugger"]
+  }
+  ```
+- From the WordPress Develop directory, run `wp-env start`.
+
+[It is a fork of the HTML API Debugger.](https://wordpress.org/plugins/html-api-debugger/)
