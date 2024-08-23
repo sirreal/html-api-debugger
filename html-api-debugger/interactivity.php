@@ -94,12 +94,6 @@ function generate_page( string $html, array $options ): string {
 					<br>
 					<code data-wp-text="state.htmlPreambleForProcessing"></code>
 				</p>
-				<p>
-					Rendering mode:&nbsp;<code data-wp-text="state.htmlapiResponse.result.compatMode"></code><br>
-					Doctype name:&nbsp;<code data-wp-text="state.htmlApiDoctypeName"></code><br>
-					Doctype publicId:&nbsp;<code data-wp-text="state.htmlApiDoctypePublicId"></code><br>
-					Doctype systemId:&nbsp;<code data-wp-text="state.htmlApiDoctypeSystemId"></code>
-				</p>
 			</td>
 			<td>
 				<h2>Rendered output</h2>
@@ -109,12 +103,27 @@ function generate_page( string $html, array $options ): string {
 					id="rendered_iframe"
 					referrerpolicy="no-referrer"
 					sandbox="allow-forms allow-modals allow-popups allow-scripts allow-same-origin"></iframe>
-				<p>
-					Rendering mode:&nbsp;<code data-wp-text="state.DOM.renderingMode"></code><br>
-					Doctype name:&nbsp;<code data-wp-text="state.DOM.doctypeName"></code><br>
-					Doctype publicId:&nbsp;<code data-wp-text="state.DOM.doctypePublicId"></code><br>
-					Doctype systemId:&nbsp;<code data-wp-text="state.DOM.doctypeSystemId"></code>
-				</p>
+			</td>
+		</tr>
+		<tr>
+			<td colspan="2">
+				<details>
+					<summary>Document info</summary>
+					<div class="col-wrapper">
+						<div class="col">
+							Rendering mode:&nbsp;<code data-wp-text="state.htmlapiResponse.result.compatMode"></code><br>
+							Doctype name:&nbsp;<code data-wp-text="state.htmlApiDoctypeName"></code><br>
+							Doctype publicId:&nbsp;<code data-wp-text="state.htmlApiDoctypePublicId"></code><br>
+							Doctype systemId:&nbsp;<code data-wp-text="state.htmlApiDoctypeSystemId"></code>
+						</div>
+						<div class="col">
+							Rendering mode:&nbsp;<code data-wp-text="state.DOM.renderingMode"></code><br>
+							Doctype name:&nbsp;<code data-wp-text="state.DOM.doctypeName"></code><br>
+							Doctype publicId:&nbsp;<code data-wp-text="state.DOM.doctypePublicId"></code><br>
+							Doctype systemId:&nbsp;<code data-wp-text="state.DOM.doctypeSystemId"></code>
+						</div>
+					</div>
+				</details>
 			</td>
 		</tr>
 		<tr>
