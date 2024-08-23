@@ -198,6 +198,31 @@ const store = createStore(NS, {
 		store.state.span = null;
 	},
 
+	setDemoSVG: function* () {
+		const svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 14 16">
+\t<path d="M0 0h10v1H1v14h1v1H0ZM10 4h4v3h-1V5h-3ZM14 16v-6h-1v5H8v1Z"/>
+\t<path fill="#bcbcc3" d="M12 14v-3h-1v2H9v1Z"/>
+\t<path fill="#878787" d="M10 0h1v1h1v1h1v1h1v1h-1V3h-1V2h-1v2h-1Z"/>
+\t<path fill="#bcbcc3" d="M2 2h8v3h2v2H8v5H6v1H4v1H2Z"/>
+\t<path fill="#00891e" d="M5 3h2v3H4V4h1v1h1V4H5Z"/>
+\t<path fill="#00f248" d="M5 4h1v1H5Z"/>
+\t<path d="M7 4h1v2H7v1H5V6h2Z"/>
+\t<path fill="#0064fb" d="M8 7h3v2h-1V8H9v1h1v1H8Z"/>
+\t<path fill="#00fbfe" d="M9 8h1v1H9Z"/>
+\t<path fill="#003293" d="M10 9h1v1h-1Z"/>
+\t<path d="M11 7h1v2h-1ZM8 10h2v1H8Z"/>
+\t<path fill="#ff3900" d="M3 8h1v1h1v1h1v1h1v1H6v-1H5v-1H4V9H3Z"/>
+\t<path fill="#f73ae1" d="M3 9h1v1h1v1h1v1H3Z"/>
+\t<path d="M3 12h3v1H3Z"/>
+</svg>\n`;
+		/** @type {HTMLTextAreaElement} */ (
+			document.getElementById('input_xml')
+		).value = svg;
+		store.state.xml = svg;
+		yield store.callAPI();
+	},
+
 	/** @param {InputEvent} e */
 	handleChange: function* (e) {
 		const val = /** @type {HTMLTextAreaElement} */ (e.target).value;
@@ -360,11 +385,14 @@ const store = createStore(NS, {
 	},
 
 	render() {
-		// @ts-expect-error This should not be null.
-		const iframeDocument = RENDERED_IFRAME.contentWindow.document;
-		iframeDocument.open();
-		iframeDocument.write(store.state.xml);
-		iframeDocument.close();
+		const url = URL.createObjectURL(
+			new Blob([store.state.xml], {
+				type: 'application/xml',
+			}),
+		);
+		RENDERED_IFRAME.src = url;
+
+		URL.revokeObjectURL(url);
 
 		if (store.state.xmlapiResponse.result?.tree) {
 			printHtmlApiTree(

@@ -70,6 +70,7 @@ function generate_page( string $xml, array $options ): string {
 					wrap="off"
 					<?php wp_on_directive( 'input', 'handleChange' ); ?>
 				><?php echo "\n" . esc_textarea( str_replace( "\0", '', $xml ) ); ?></textarea>
+				<button type="button" data-wp-on--click="setDemoSVG">Use demo SVG</button>
 			</td>
 			<td>
 				<h2>Rendered output</h2>

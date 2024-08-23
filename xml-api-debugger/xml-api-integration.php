@@ -7,6 +7,7 @@ use ReflectionClass;
 use ReflectionMethod;
 use ReflectionProperty;
 use WP_XML_Processor;
+use WP_XML_Tag_Processor;
 
 const NODE_TYPE_ELEMENT                = 1;
 const NODE_TYPE_ATTRIBUTE              = 2;
@@ -29,6 +30,12 @@ function get_supports(): array {
 }
 
 function get_tree( string $xml, array $options ): array {
+	$processor_bytes_already_parsed = new ReflectionProperty( WP_XML_Tag_Processor::class, 'bytes_already_parsed' );
+	$processor_bytes_already_parsed->setAccessible( true );
+
+	$processor_parser_context = new ReflectionProperty( WP_XML_Processor::class, 'parser_context' );
+	$processor_parser_context->setAccessible( true );
+
 	$processor_bookmarks = new ReflectionProperty( WP_XML_Processor::class, 'bookmarks' );
 	$processor_bookmarks->setAccessible( true );
 
@@ -94,6 +101,27 @@ function get_tree( string $xml, array $options ): array {
 		$token_type = $processor->get_token_type();
 
 		switch ( $token_type ) {
+			case '#xml-declaration':
+				$current['childNodes'][] = array(
+					'nodeType' => NODE_TYPE_PROCESSING_INSTRUCTION,
+					'nodeName' => $processor->get_modifiable_text(),
+					/*'_span'    => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],*/
+					'_bc'      => $processor->get_breadcrumbs(),
+					'_depth'   => $get_current_depth(),
+				);
+				break;
+
+			case '#processing-instructions':
+				$current['childNodes'][] = array(
+					'nodeType' => NODE_TYPE_PROCESSING_INSTRUCTION,
+					'nodeName' => $processor->get_modifiable_text(),
+					/*'_span'    => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],*/
+					'_bc'      => $processor->get_breadcrumbs(),
+					'_depth'   => $get_current_depth(),
+				);
+				break;
+
+			// This doesn't exist in XML_Processor now…
 			case '#doctype':
 				$current['childNodes'][] = array(
 					'nodeType' => NODE_TYPE_DOCUMENT_TYPE,
@@ -139,6 +167,7 @@ function get_tree( string $xml, array $options ): array {
 					'_bc'        => $processor->get_breadcrumbs(),
 					'_virtual'   => $is_virtual(),
 					'_depth'     => $get_current_depth(),
+					'_mode'   => $processor_parser_context->getValue($processor),
 				);
 
 				// Self-contained tags contain their inner contents as modifiable text.
@@ -152,6 +181,7 @@ function get_tree( string $xml, array $options ): array {
 						'_bc'       => array_merge( $processor->get_breadcrumbs(), array( '#text' ) ),
 						'_virtual'  => $is_virtual(),
 						'_depth'    => $get_current_depth() + 1,
+					'_mode'   => $processor_parser_context->getValue($processor),
 					);
 				}
 
@@ -176,6 +206,7 @@ function get_tree( string $xml, array $options ): array {
 					'_bc'       => $processor->get_breadcrumbs(),
 					'_virtual'  => $is_virtual(),
 					'_depth'    => $get_current_depth(),
+					'_mode'   => $processor_parser_context->getValue($processor),
 				);
 
 				$current['childNodes'][] = $self;
@@ -190,34 +221,9 @@ function get_tree( string $xml, array $options ): array {
 					'_bc'       => $processor->get_breadcrumbs(),
 					'_virtual'  => $is_virtual(),
 					'_depth'    => $get_current_depth(),
+					'_mode'   => $processor_parser_context->getValue($processor),
 				);
 
-				$current['childNodes'][] = $self;
-				break;
-
-			case '#presumptuous-tag':
-				$self                    = array(
-					'nodeType'  => NODE_TYPE_COMMENT,
-					'nodeName'  => $processor->get_token_name(),
-					'nodeValue' => $processor->get_modifiable_text(),
-					/*'_span'     => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],*/
-					'_bc'       => $processor->get_breadcrumbs(),
-					'_virtual'  => $is_virtual(),
-					'_depth'    => $get_current_depth(),
-				);
-				$current['childNodes'][] = $self;
-				break;
-
-			case '#funky-comment':
-				$self                    = array(
-					'nodeType'  => NODE_TYPE_COMMENT,
-					'nodeName'  => $processor->get_token_name(),
-					'nodeValue' => $processor->get_modifiable_text(),
-					/*'_span'     => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],*/
-					'_bc'       => $processor->get_breadcrumbs(),
-					'_virtual'  => $is_virtual(),
-					'_depth'    => $get_current_depth(),
-				);
 				$current['childNodes'][] = $self;
 				break;
 
@@ -228,6 +234,7 @@ function get_tree( string $xml, array $options ): array {
 					'_bc'      => $processor->get_breadcrumbs(),
 					'_virtual' => $is_virtual(),
 					'_depth'   => $get_current_depth(),
+					'_mode'   => $processor_parser_context->getValue($processor),
 				);
 				$self['nodeName']  = $processor->get_token_name();
 				$self['nodeValue'] = $processor->get_modifiable_text();
@@ -246,11 +253,11 @@ function get_tree( string $xml, array $options ): array {
 
 	if ( null !== $processor->get_last_error() ) {
 		// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
-		throw new Exception( $processor->get_last_error() );
+		throw new Exception( "{$processor->get_last_error()} at {$processor_bytes_already_parsed->getValue($processor)} {$xml[$processor_bytes_already_parsed->getValue($processor)]}" );
 	}
 
 	if ( $processor->paused_at_incomplete_token() ) {
-		throw new Exception( 'Paused at incomplete token' );
+		throw new Exception( "Paused at incomplete token at {$processor_bytes_already_parsed->getValue($processor)}" );
 	}
 
 	return $tree;
