@@ -68,3 +68,4 @@ Add a page to wp-admin for debugging the HTML API.
 * Handle DOCTYPE nodes.
 * Prevent newlines from automatically being added to the HTML input.
 * Use async event directives if available.
+* Handle doctype tokens and display information about quirks-mode.

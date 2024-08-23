@@ -32,23 +32,27 @@ function generate_page( string $html, array $options ): string {
 	wp_interactivity_state(
 		\HTML_API_Debugger\SLUG,
 		array(
-			'DOM'              => array(
+			'DOM'                    => array(
 				'renderingMode' => '',
 				'title'         => '',
 			),
-			'html'             => $html,
-			'htmlapiResponse'  => $htmlapi_response,
-			'span'             => null,
+			'html'                   => $html,
+			'htmlapiResponse'        => $htmlapi_response,
+			'span'                   => null,
 
-			'showClosers'      => false,
-			'showInvisible'    => false,
-			'showVirtual'      => false,
-			'quirksMode'       => false,
-			'fullParser'       => false,
+			'showClosers'            => false,
+			'showInvisible'          => false,
+			'showVirtual'            => false,
+			'quirksMode'             => false,
+			'fullParser'             => false,
 
-			'hoverInfo'        => 'breadcrumbs',
-			'hoverBreadcrumbs' => true,
-			'hoverInsertion'   => false,
+			'hoverInfo'              => 'breadcrumbs',
+			'hoverBreadcrumbs'       => true,
+			'hoverInsertion'         => false,
+
+			'htmlApiDoctypeName'     => $htmlapi_response['result']['doctypeName'] ?? '[unknown]',
+			'htmlApiDoctypePublicId' => $htmlapi_response['result']['doctypePublicId'] ?? '[unknown]',
+			'htmlApiDoctypeSytemId'  => $htmlapi_response['result']['doctypeSystemId'] ?? '[unknown]',
 		)
 	);
 	ob_start();
@@ -77,6 +81,13 @@ function generate_page( string $html, array $options ): string {
 					<br>
 					<code data-wp-text="state.htmlPreambleForProcessing"></code>
 				</p>
+				<p>
+					Title:&nbsp;<code></code>[not available via HTML API]<br>
+					Rendering mode:&nbsp;<code data-wp-text="state.htmlapiResponse.result.compatMode"></code><br>
+					Doctype name:&nbsp;<code data-wp-text="state.htmlApiDoctypeName"></code><br>
+					Doctype publicId:&nbsp;<code data-wp-text="state.htmlApiDoctypePublicId"></code><br>
+					Doctype systemId:&nbsp;<code data-wp-text="state.htmlApiDoctypeSystemId"></code>
+				</p>
 			</td>
 			<td>
 				<h2>Rendered output</h2>
@@ -86,7 +97,13 @@ function generate_page( string $html, array $options ): string {
 					id="rendered_iframe"
 					referrerpolicy="no-referrer"
 					sandbox="allow-forms allow-modals allow-popups allow-scripts allow-same-origin"></iframe>
-				<p>Title:&nbsp;<code data-wp-text="state.DOM.title"></code> Rendering mode:&nbsp;<code data-wp-text="state.DOM.renderingMode"></code></p>
+				<p>
+					Title:&nbsp;<code data-wp-text="state.DOM.title"></code><br>
+					Rendering mode:&nbsp;<code data-wp-text="state.DOM.renderingMode"></code><br>
+					Doctype name:&nbsp;<code data-wp-text="state.DOM.doctypeName"></code><br>
+					Doctype publicId:&nbsp;<code data-wp-text="state.DOM.doctypePublicId"></code><br>
+					Doctype systemId:&nbsp;<code data-wp-text="state.DOM.doctypeSystemId"></code>
+				</p>
 			</td>
 		</tr>
 		<tr>

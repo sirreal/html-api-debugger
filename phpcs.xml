@@ -130,6 +130,14 @@
 		<severity>0</severity>
 	</rule>
 
+	<rule ref="Squiz.Commenting.FileComment.Missing">
+		<severity>0</severity>
+	</rule>
+
+	<rule ref="Squiz.Commenting.FunctionComment.ThrowsNoFullStop">
+		<severity>0</severity>
+	</rule>
+
 	<!--
 	#############################################################################
 	SELECTIVE EXCLUSIONS

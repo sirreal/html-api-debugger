@@ -154,7 +154,7 @@ function prepare_html_result_object( string $html, array $options = null ): arra
 	);
 
 	try {
-		$response['result'] = array( 'tree' => HTML_API_Integration\get_tree( $html, $options ) );
+		$response['result'] = HTML_API_Integration\get_tree( $html, $options );
 	} catch ( Exception $e ) {
 		$response['error'] = (string) $e;
 	}

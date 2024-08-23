@@ -1,5 +1,4 @@
 <?php
-
 namespace HTML_API_Debugger\HTML_API_Integration;
 
 use Exception;
@@ -9,19 +8,9 @@ use ReflectionProperty;
 use WP_HTML_Processor;
 use WP_HTML_Processor_State;
 
-const NODE_TYPE_ELEMENT                = 1;
-const NODE_TYPE_ATTRIBUTE              = 2;
-const NODE_TYPE_TEXT                   = 3;
-const NODE_TYPE_CDATA_SECTION          = 4;
-const NODE_TYPE_ENTITY_REFERENCE       = 5;
-const NODE_TYPE_ENTITY                 = 6;
-const NODE_TYPE_PROCESSING_INSTRUCTION = 7;
-const NODE_TYPE_COMMENT                = 8;
-const NODE_TYPE_DOCUMENT               = 9;
-const NODE_TYPE_DOCUMENT_TYPE          = 10;
-const NODE_TYPE_DOCUMENT_FRAGMENT      = 11;
-const NODE_TYPE_NOTATION               = 12;
-
+/**
+ * Get information about HTML API supported features
+ */
 function get_supports(): array {
 	$html_processor_rc       = new ReflectionClass( WP_HTML_Processor::class );
 	$html_processor_state_rc = new ReflectionClass( WP_HTML_Processor_State::class );
@@ -30,9 +19,18 @@ function get_supports(): array {
 		'is_virtual'  => $html_processor_rc->hasMethod( 'is_virtual' ),
 		'full_parser' => method_exists( WP_HTML_Processor::class, 'create_full_parser' ),
 		'quirks_mode' => $html_processor_state_rc->hasProperty( 'document_mode' ),
+		'doctype'     => method_exists( WP_HTML_Processor::class, 'get_doctype_info' ),
 	);
 }
 
+/**
+ * Build a DOM-like tree using the HTML API
+ *
+ * @throws Exception Throws when stuff breaks :D
+ *
+ * @param string $html    The HTML.
+ * @param array  $options The options.
+ */
 function get_tree( string $html, array $options ): array {
 	$processor_state = new ReflectionProperty( WP_HTML_Processor::class, 'state' );
 	$processor_state->setAccessible( true );
@@ -134,6 +132,11 @@ function get_tree( string $html, array $options ): array {
 		$cursor               = array( 1, 1 );
 	}
 
+	$compat_mode               = 'CSS1Compat';
+	$doctype_name              = null;
+	$doctype_public_identifier = null;
+	$doctype_system_identifier = null;
+
 	while ( $processor->next_token() ) {
 		if ( $processor->get_last_error() !== null ) {
 			break;
@@ -151,14 +154,26 @@ function get_tree( string $html, array $options ): array {
 
 		switch ( $token_type ) {
 			case '#doctype':
-				$current['childNodes'][] = array(
-					'nodeType' => NODE_TYPE_DOCUMENT_TYPE,
-					'nodeName' => $processor->get_modifiable_text(),
-					'_span'    => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
-					'_mode'    => $processor_state->getValue( $processor )->insertion_mode,
-					'_bc'      => $processor->get_breadcrumbs(),
-					'_depth'   => $get_current_depth(),
-				);
+				if ( method_exists( WP_HTML_Processor::class, 'get_doctype_info' ) ) {
+					$doctype = $processor->get_doctype_info();
+
+					$doctype_name              = $doctype->name;
+					$doctype_public_identifier = $doctype->public_identifier;
+					$doctype_system_identifier = $doctype->system_identifier;
+
+					if ( $doctype->indicated_compatability_mode === 'quirks' ) {
+						$compat_mode = 'BackCompat';
+					}
+
+					$current['childNodes'][] = array(
+						'nodeType' => NODE_TYPE_DOCUMENT_TYPE,
+						'nodeName' => $doctype_name,
+						'_span'    => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
+						'_mode'    => $processor_state->getValue( $processor )->insertion_mode,
+						'_bc'      => $processor->get_breadcrumbs(),
+						'_depth'   => $get_current_depth(),
+					);
+				}
 				break;
 
 			case '#tag':
@@ -351,5 +366,24 @@ function get_tree( string $html, array $options ): array {
 		throw new Exception( 'Paused at incomplete token' );
 	}
 
-	return $tree;
+	return array(
+		'tree'            => $tree,
+		'compatMode'      => $compat_mode,
+		'doctypeName'     => $doctype_name,
+		'doctypePublicId' => $doctype_public_identifier,
+		'doctypeSystemId' => $doctype_system_identifier,
+	);
 }
+
+const NODE_TYPE_ELEMENT                = 1;
+const NODE_TYPE_ATTRIBUTE              = 2;
+const NODE_TYPE_TEXT                   = 3;
+const NODE_TYPE_CDATA_SECTION          = 4;
+const NODE_TYPE_ENTITY_REFERENCE       = 5;
+const NODE_TYPE_ENTITY                 = 6;
+const NODE_TYPE_PROCESSING_INSTRUCTION = 7;
+const NODE_TYPE_COMMENT                = 8;
+const NODE_TYPE_DOCUMENT               = 9;
+const NODE_TYPE_DOCUMENT_TYPE          = 10;
+const NODE_TYPE_DOCUMENT_FRAGMENT      = 11;
+const NODE_TYPE_NOTATION               = 12;

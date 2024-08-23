@@ -21,6 +21,9 @@ let debounceInputAbortController = null;
 /**
  * @typedef DOM
  * @property {string} renderingMode
+ * @property {string|undefined} doctypeName
+ * @property {string|undefined} doctypeSystemId
+ * @property {string|undefined} doctypePublicId
  * @property {string} title
  *
  *
@@ -38,11 +41,14 @@ let debounceInputAbortController = null;
  * @typedef HtmlApiResponse
  * @property {any} error
  * @property {Supports} supports
- * @property {{tree: any}|null} result
+ * @property {{tree: any, compatMode:string, doctypeName:string, doctypePublicId:string, doctypeSystemId:string }|null} result
  * @property {string} html
  *
  *
  * @typedef State
+ * @property {string|null} htmlApiDoctypeName
+ * @property {string|null} htmlApiDoctypePublicId
+ * @property {string|null} htmlApiDoctypeSystemId
  * @property {string} htmlPreambleForProcessing
  * @property {string} formattedHtmlapiResponse
  * @property {HtmlApiResponse} htmlapiResponse
@@ -93,6 +99,25 @@ const store = createStore(NS, {
 		fullParser: Boolean(localStorage.getItem(`${NS}-fullParser`)),
 
 		hoverInfo: localStorage.getItem(`${NS}-hoverInfo`),
+
+		get htmlApiDoctypeName() {
+			return store.state.showInvisible
+				? store.state.htmlapiResponse.result?.doctypeName &&
+						replaceInvisible(store.state.htmlapiResponse.result.doctypeName)
+				: store.state.htmlapiResponse.result?.doctypeName;
+		},
+		get htmlApiDoctypePublicId() {
+			return store.state.showInvisible
+				? store.state.htmlapiResponse.result?.doctypePublicId &&
+						replaceInvisible(store.state.htmlapiResponse.result.doctypePublicId)
+				: store.state.htmlapiResponse.result?.doctypePublicId;
+		},
+		get htmlApiDoctypeSystemId() {
+			return store.state.showInvisible
+				? store.state.htmlapiResponse.result?.doctypeSystemId &&
+						replaceInvisible(store.state.htmlapiResponse.result.doctypeSystemId)
+				: store.state.htmlapiResponse.result?.doctypeSystemId;
+		},
 
 		get formattedHtmlapiResponse() {
 			return JSON.stringify(store.state.htmlapiResponse, undefined, 2);
@@ -200,6 +225,9 @@ const store = createStore(NS, {
 
 		store.state.DOM.renderingMode = doc.compatMode;
 		store.state.DOM.title = doc.title || '[document has no title]';
+		store.state.DOM.doctypeName = doc.doctype?.name;
+		store.state.DOM.doctypeSystemId = doc.doctype?.systemId;
+		store.state.DOM.doctypePublicId = doc.doctype?.publicId;
 
 		printHtmlApiTree(
 			doc,
