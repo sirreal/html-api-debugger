@@ -20,11 +20,10 @@ let debounceInputAbortController = null;
 
 /**
  * @typedef DOM
- * @property {string} renderingMode
+ * @property {string|undefined} renderingMode
  * @property {string|undefined} doctypeName
  * @property {string|undefined} doctypeSystemId
  * @property {string|undefined} doctypePublicId
- * @property {string} title
  *
  *
  * @typedef HTMLAPISpan
@@ -218,13 +217,11 @@ const store = createStore(NS, {
 		}
 	},
 
-	/** @param {Event} e */
 	onRenderedIframeLoad() {
 		// @ts-expect-error It better be defined!
 		const doc = RENDERED_IFRAME.contentWindow.document;
 
 		store.state.DOM.renderingMode = doc.compatMode;
-		store.state.DOM.title = doc.title || '[document has no title]';
 		store.state.DOM.doctypeName = doc.doctype?.name;
 		store.state.DOM.doctypeSystemId = doc.doctype?.systemId;
 		store.state.DOM.doctypePublicId = doc.doctype?.publicId;
