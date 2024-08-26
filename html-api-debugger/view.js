@@ -51,7 +51,7 @@ let debounceInputAbortController = null;
  * @property {string} htmlPreambleForProcessing
  * @property {string} formattedHtmlapiResponse
  * @property {HtmlApiResponse} htmlapiResponse
- * @property {string} playgroundLink
+ * @property {URL} playgroundLink
  * @property {string} html
  * @property {string} htmlForProcessing
  * @property {boolean} showClosers
@@ -59,6 +59,8 @@ let debounceInputAbortController = null;
  * @property {boolean} showVirtual
  * @property {boolean} quirksMode
  * @property {boolean} fullParser
+ * @property {number} previewPrNumber
+ * @property {boolean} checkingForPRPlaygroundLink
  *
  * @property {'breadcrumbs'|'insertionMode'} hoverInfo
  * @property {boolean} hoverBreadcrumbs
@@ -84,6 +86,10 @@ let debounceInputAbortController = null;
  * @property {()=>void} handleShowVirtualClick
  * @property {()=>Promise<void>} handleQuirksModeClick
  * @property {()=>Promise<void>} handleFullParserClick
+ *
+ * @property {()=>void} handleCopyClick
+ * @property {()=>void} handleCopyPrInput
+ * @property {()=>void} handleCopyPrClick
  */
 
 /** @type {typeof I.store<Store>} */
@@ -143,7 +149,7 @@ const store = createStore(NS, {
 				'https://playground.wordpress.net/?plugin=html-api-debugger&php-extension-bundle=light',
 			);
 			u.searchParams.set('url', `${base}?${searchParams.toString()}`);
-			return u.href;
+			return u;
 		},
 
 		get htmlPreambleForProcessing() {
@@ -275,7 +281,17 @@ const store = createStore(NS, {
 	},
 
 	handleCopyClick: function* () {
-		yield navigator.clipboard.writeText(store.state.playgroundLink);
+		const url = new URL(store.state.playgroundLink);
+
+		// @ts-expect-error This better exist.
+		const wpVersion = document.getElementById('htmlapi-wp-version').value;
+		url.searchParams.set('wp', wpVersion);
+
+		try {
+			yield navigator.clipboard.writeText(url.href);
+		} catch {
+			alert('Copy failed, make sure the browser window is focused.');
+		}
 	},
 
 	/** @param {Event} e */
@@ -426,6 +442,71 @@ const store = createStore(NS, {
 					hoverInfo: store.state.hoverInfo,
 				},
 			);
+		}
+	},
+
+	/** @param {InputEvent} e */
+	handleCopyPrInput(e) {
+		const val = /** @type {HTMLInputElement} */ (e.target).valueAsNumber;
+		if (Number.isFinite(val) && val > 0) {
+			store.state.previewPrNumber = val;
+			return;
+		}
+		store.state.previewPrNumber = val;
+	},
+
+	handleCopyPrClick: function* () {
+		const prNumber = store.state.previewPrNumber;
+		const playgroundLink = new URL(store.state.playgroundLink);
+		if (!prNumber) {
+			alert('Please enter a PR number.');
+			return;
+		}
+		const url = new URL(
+			'https://playground.wordpress.net/plugin-proxy.php?org=WordPress&repo=wordpress-develop&workflow=Test%20Build%20Processes',
+		);
+		url.searchParams.set('artifact', `wordpress-build-${prNumber}`);
+		url.searchParams.set('pr', prNumber.toString(10));
+
+		try {
+			playgroundLink.searchParams.set('wp', url.href);
+			yield navigator.clipboard.writeText(playgroundLink.href);
+		} catch {
+			alert('Copy failed, make sure the browser window is focused.');
+		}
+	},
+
+	handleCheckPrClick: function* () {
+		if (store.state.checkingForPRPlaygroundLink) {
+			return;
+		}
+
+		const prNumber = store.state.previewPrNumber;
+		if (!prNumber) {
+			alert('Please enter a PR number.');
+			return;
+		}
+
+		try {
+			store.state.checkingForPRPlaygroundLink = true;
+
+			const url = new URL(
+				'https://playground.wordpress.net/plugin-proxy.php?org=WordPress&repo=wordpress-develop&workflow=Test%20Build%20Processes',
+			);
+			url.searchParams.set('artifact', `wordpress-build-${prNumber}`);
+			url.searchParams.set('pr', prNumber.toString(10));
+			url.searchParams.set('verify_only', 'true');
+			/** @type {Response} */
+			const response = yield fetch(url.href, {
+				method: 'GET',
+			});
+			if (!response.ok) {
+				alert('The PR number is not valid or has not been built yet.');
+				return;
+			}
+			alert('The PR number looks good!');
+		} finally {
+			store.state.checkingForPRPlaygroundLink = false;
 		}
 	},
 });

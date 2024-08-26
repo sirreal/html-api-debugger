@@ -62,6 +62,7 @@ function generate_page( string $html, array $options ): string {
 			'hoverInfo'              => 'breadcrumbs',
 			'hoverBreadcrumbs'       => true,
 			'hoverInsertion'         => false,
+			'checkingForPRPlaygroundLink' => false,
 
 			'htmlApiDoctypeName'     => $htmlapi_response['result']['doctypeName'] ?? '[unknown]',
 			'htmlApiDoctypePublicId' => $htmlapi_response['result']['doctypePublicId'] ?? '[unknown]',
@@ -188,9 +189,22 @@ function generate_page( string $html, array $options ): string {
 			</td>
 		</tr>
 		<tr>
-			<td>
+			<td colspan="2">
 				<p>
-					<button <?php wp_on_directive( 'click', 'handleCopyClick' ); ?> type="button">Copy shareable playground link</button>
+					<label>
+						<select id="htmlapi-wp-version">
+							<option value="latest">latest</option>
+							<option value="beta">beta</option>
+							<option value="nightly">nightly</option>
+						</select>
+					</label>
+					<button <?php wp_on_directive( 'click', 'handleCopyClick' ); ?> type="button">Copy shareable playground link</button><br>
+					<label>
+						<code>wordpress/develop</code> PR number:
+						<input type="number" min="1" <?php wp_on_directive( 'input', 'handleCopyPrInput' ); ?>>
+					</label>
+					<button <?php wp_on_directive( 'click', 'handleCopyPrClick' ); ?>>Copy shareable playground link to PR</button>
+					<button <?php wp_on_directive( 'click', 'handleCheckPrClick' ); ?> data-wp-bind--disabled="state.checkingForPRPlaygroundLink">Check PR</button>
 				</p>
 				<details>
 					<summary>debug response</summary>
