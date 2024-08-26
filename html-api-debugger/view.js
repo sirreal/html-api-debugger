@@ -77,6 +77,8 @@ let debounceInputAbortController = null;
  * @property {()=>void} render
  * @property {()=>Promise<void>} callAPI
  *
+ * @property {()=>void} handleInput
+ *
  * @property {()=>void} handleShowInvisibleClick
  * @property {()=>void} handleShowClosersClick
  * @property {()=>void} handleShowVirtualClick
@@ -243,7 +245,7 @@ const store = createStore(NS, {
 	},
 
 	/** @param {InputEvent} e */
-	handleChange: function* (e) {
+	handleInput: function* (e) {
 		const val = /** @type {HTMLTextAreaElement} */ (e.target).value;
 
 		store.state.html = val;

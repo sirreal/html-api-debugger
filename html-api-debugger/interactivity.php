@@ -87,7 +87,7 @@ function generate_page( string $html, array $options ): string {
 					autocomplete="off"
 					spellcheck="false"
 					wrap="off"
-					<?php wp_on_directive( 'input', 'handleChange' ); ?>
+					<?php wp_on_directive( 'input', 'handleInput' ); ?>
 				><?php echo "\n" . esc_textarea( str_replace( "\0", '', $html ) ); ?></textarea>
 				<p data-wp-bind--hidden="!state.htmlPreambleForProcessing">
 					Note: Because HTML API operates in body at this time, this will be prepended:
