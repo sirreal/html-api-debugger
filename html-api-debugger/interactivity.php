@@ -51,7 +51,8 @@ function generate_page( string $html, array $options ): string {
 			),
 			'html'                   => $html,
 			'htmlapiResponse'        => $htmlapi_response,
-			'span'                   => null,
+			'span'                   => false,
+			'hoverSpan'              => $htmlapi_response['html'],
 
 			'showClosers'            => false,
 			'showInvisible'          => false,

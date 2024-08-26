@@ -67,7 +67,7 @@ let debounceInputAbortController = null;
  * @property {boolean} hoverInsertion
  *
  * @property {DOM} DOM
- * @property {HTMLAPISpan|null} span
+ * @property {HTMLAPISpan|false} span
  * @property {string} hoverSpan
  * @property {readonly []|readonly [string,string,string]} hoverSpanSplit
  */
@@ -247,7 +247,7 @@ const store = createStore(NS, {
 		);
 	},
 	clearSpan() {
-		store.state.span = null;
+		store.state.span = false;
 	},
 
 	/** @param {InputEvent} e */
