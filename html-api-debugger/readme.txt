@@ -71,3 +71,6 @@ Add a page to wp-admin for debugging the HTML API.
 * Handle doctype tokens and display information about quirks-mode.
 
 = 1.5 =
+* Improve initial rendering and reduce layout shift.
+* Allow copying playground links to latest, beta, and nightly versions.
+* Allow copying playground links to specific wordpress-develop PRs.
