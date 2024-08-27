@@ -50,8 +50,8 @@ function init() {
 				SLUG . '/v1',
 				'/htmlapi',
 				array(
-					'methods'             => 'POST',
-					'callback'            => function ( WP_REST_Request $request ) {
+					'methods' => 'POST',
+					'callback' => function ( WP_REST_Request $request ) {
 						// phpcs:ignore Universal.Operators.DisallowShortTernary.Found
 						$html = $request->get_json_params()['html'] ?: '';
 						$options = array(
@@ -86,7 +86,7 @@ function init() {
 						plugins_url( 'print-html-tree.js', __FILE__ ),
 						array(
 							array(
-								'id'     => '@html-api-debugger/replace-invisible-chars',
+								'id' => '@html-api-debugger/replace-invisible-chars',
 								'import' => 'dynamic',
 							),
 						),
@@ -100,7 +100,7 @@ function init() {
 							'@wordpress/interactivity',
 							'@html-api-debugger/print-html-tree',
 							array(
-								'id'     => '@html-api-debugger/replace-invisible-chars',
+								'id' => '@html-api-debugger/replace-invisible-chars',
 								'import' => 'dynamic',
 							),
 						),
@@ -148,9 +148,9 @@ function init() {
 function prepare_html_result_object( string $html, array $options = null ): array {
 	$response = array(
 		'supports' => HTML_API_Integration\get_supports(),
-		'html'     => $html,
-		'error'    => null,
-		'result'   => null,
+		'html' => $html,
+		'error' => null,
+		'result' => null,
 	);
 
 	try {

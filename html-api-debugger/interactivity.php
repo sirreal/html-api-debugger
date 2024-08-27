@@ -37,37 +37,37 @@ function generate_page( string $html, array $options ): string {
 		\HTML_API_Debugger\SLUG,
 		array(
 			'restEndpoint' => rest_url( 'html-api-debugger/v1/htmlapi' ),
-			'nonce'        => wp_create_nonce( 'wp_rest' ),
+			'nonce' => wp_create_nonce( 'wp_rest' ),
 		)
 	);
 	wp_interactivity_state(
 		\HTML_API_Debugger\SLUG,
 		array(
-			'DOM'                    => array(
-				'renderingMode'   => '',
-				'doctypeName'     => '',
+			'DOM' => array(
+				'renderingMode' => '',
+				'doctypeName' => '',
 				'doctypeSystemId' => '',
 				'doctypePublicId' => '',
 			),
-			'html'                   => $html,
-			'htmlapiResponse'        => $htmlapi_response,
-			'span'                   => false,
-			'hoverSpan'              => $htmlapi_response['html'],
+			'html' => $html,
+			'htmlapiResponse' => $htmlapi_response,
+			'span' => false,
+			'hoverSpan' => $htmlapi_response['html'],
 
-			'showClosers'            => false,
-			'showInvisible'          => false,
-			'showVirtual'            => false,
-			'quirksMode'             => false,
-			'fullParser'             => false,
+			'showClosers' => false,
+			'showInvisible' => false,
+			'showVirtual' => false,
+			'quirksMode' => false,
+			'fullParser' => false,
 
-			'hoverInfo'              => 'breadcrumbs',
-			'hoverBreadcrumbs'       => true,
-			'hoverInsertion'         => false,
+			'hoverInfo' => 'breadcrumbs',
+			'hoverBreadcrumbs' => true,
+			'hoverInsertion' => false,
 			'checkingForPRPlaygroundLink' => false,
 
-			'htmlApiDoctypeName'     => $htmlapi_response['result']['doctypeName'] ?? '[unknown]',
+			'htmlApiDoctypeName' => $htmlapi_response['result']['doctypeName'] ?? '[unknown]',
 			'htmlApiDoctypePublicId' => $htmlapi_response['result']['doctypePublicId'] ?? '[unknown]',
-			'htmlApiDoctypeSytemId'  => $htmlapi_response['result']['doctypeSystemId'] ?? '[unknown]',
+			'htmlApiDoctypeSytemId' => $htmlapi_response['result']['doctypeSystemId'] ?? '[unknown]',
 		)
 	);
 	ob_start();

@@ -138,6 +138,10 @@
 		<severity>0</severity>
 	</rule>
 
+	<rule ref="WordPress.Arrays.MultipleStatementAlignment.DoubleArrowNotAligned">
+		<severity>0</severity>
+	</rule>
+
 	<!--
 	#############################################################################
 	SELECTIVE EXCLUSIONS

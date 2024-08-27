@@ -16,10 +16,10 @@ function get_supports(): array {
 	$html_processor_state_rc = new ReflectionClass( WP_HTML_Processor_State::class );
 
 	return array(
-		'is_virtual'  => $html_processor_rc->hasMethod( 'is_virtual' ),
+		'is_virtual' => $html_processor_rc->hasMethod( 'is_virtual' ),
 		'full_parser' => method_exists( WP_HTML_Processor::class, 'create_full_parser' ),
 		'quirks_mode' => $html_processor_state_rc->hasProperty( 'document_mode' ),
-		'doctype'     => method_exists( WP_HTML_Processor::class, 'get_doctype_info' ),
+		'doctype' => method_exists( WP_HTML_Processor::class, 'get_doctype_info' ),
 	);
 }
 
@@ -98,32 +98,32 @@ function get_tree( string $html, array $options ): array {
 	}
 
 	$tree = array(
-		'nodeType'   => NODE_TYPE_DOCUMENT,
-		'nodeName'   => '#document',
+		'nodeType' => NODE_TYPE_DOCUMENT,
+		'nodeName' => '#document',
 		'childNodes' => array(),
 	);
 
 	$cursor = array( 0 );
 	if ( ! $use_full_parser ) {
 		$tree['childNodes'][] = array(
-			'nodeType'  => NODE_TYPE_DOCUMENT_TYPE,
-			'nodeName'  => $doctype_value,
+			'nodeType' => NODE_TYPE_DOCUMENT_TYPE,
+			'nodeName' => $doctype_value,
 			'nodeValue' => '',
 		);
 		$tree['childNodes'][] = array(
-			'nodeType'   => NODE_TYPE_ELEMENT,
-			'nodeName'   => 'HTML',
+			'nodeType' => NODE_TYPE_ELEMENT,
+			'nodeName' => 'HTML',
 			'attributes' => array(),
 			'childNodes' => array(
 				array(
-					'nodeType'   => NODE_TYPE_ELEMENT,
-					'nodeName'   => 'HEAD',
+					'nodeType' => NODE_TYPE_ELEMENT,
+					'nodeName' => 'HEAD',
 					'attributes' => array(),
 					'childNodes' => array(),
 				),
 				array(
-					'nodeType'   => NODE_TYPE_ELEMENT,
-					'nodeName'   => 'BODY',
+					'nodeType' => NODE_TYPE_ELEMENT,
+					'nodeName' => 'BODY',
 					'attributes' => array(),
 					'childNodes' => array(),
 				),
@@ -168,10 +168,10 @@ function get_tree( string $html, array $options ): array {
 					$current['childNodes'][] = array(
 						'nodeType' => NODE_TYPE_DOCUMENT_TYPE,
 						'nodeName' => $doctype_name,
-						'_span'    => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
-						'_mode'    => $processor_state->getValue( $processor )->insertion_mode,
-						'_bc'      => $processor->get_breadcrumbs(),
-						'_depth'   => $get_current_depth(),
+						'_span' => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
+						'_mode' => $processor_state->getValue( $processor )->insertion_mode,
+						'_bc' => $processor->get_breadcrumbs(),
+						'_depth' => $get_current_depth(),
 					);
 				}
 				break;
@@ -193,25 +193,25 @@ function get_tree( string $html, array $options ): array {
 							$val = '';
 						}
 						$attributes[] = array(
-							'nodeType'  => NODE_TYPE_ATTRIBUTE,
+							'nodeType' => NODE_TYPE_ATTRIBUTE,
 							'specified' => true,
-							'nodeName'  => $get_attribute_name( $attribute_name ),
+							'nodeName' => $get_attribute_name( $attribute_name ),
 							'nodeValue' => $val,
 						);
 					}
 				}
 
 				$self = array(
-					'nodeType'   => NODE_TYPE_ELEMENT,
-					'nodeName'   => $tag_name,
+					'nodeType' => NODE_TYPE_ELEMENT,
+					'nodeName' => $tag_name,
 					'attributes' => $attributes,
 					'childNodes' => array(),
-					'_closer'    => (bool) $processor->is_tag_closer(),
-					'_span'      => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
-					'_mode'      => $processor_state->getValue( $processor )->insertion_mode,
-					'_bc'        => $processor->get_breadcrumbs(),
-					'_virtual'   => $is_virtual(),
-					'_depth'     => $get_current_depth(),
+					'_closer' => (bool) $processor->is_tag_closer(),
+					'_span' => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
+					'_mode' => $processor_state->getValue( $processor )->insertion_mode,
+					'_bc' => $processor->get_breadcrumbs(),
+					'_virtual' => $is_virtual(),
+					'_depth' => $get_current_depth(),
 					'_namespace' => method_exists( WP_HTML_Processor::class, 'get_namespace' ) ? $processor->get_namespace() : 'html',
 				);
 
@@ -219,14 +219,14 @@ function get_tree( string $html, array $options ): array {
 				$modifiable_text = $processor->get_modifiable_text();
 				if ( '' !== $modifiable_text ) {
 					$self['childNodes'][] = array(
-						'nodeType'  => NODE_TYPE_TEXT,
-						'nodeName'  => '#text',
+						'nodeType' => NODE_TYPE_TEXT,
+						'nodeName' => '#text',
 						'nodeValue' => $modifiable_text,
-						'_span'     => null,
-						'_mode'     => $processor_state->getValue( $processor )->insertion_mode,
-						'_bc'       => array_merge( $processor->get_breadcrumbs(), array( '#text' ) ),
-						'_virtual'  => $is_virtual(),
-						'_depth'    => $get_current_depth() + 1,
+						'_span' => null,
+						'_mode' => $processor_state->getValue( $processor )->insertion_mode,
+						'_bc' => array_merge( $processor->get_breadcrumbs(), array( '#text' ) ),
+						'_virtual' => $is_virtual(),
+						'_depth' => $get_current_depth() + 1,
 					);
 				}
 
@@ -244,14 +244,14 @@ function get_tree( string $html, array $options ): array {
 
 			case '#text':
 				$self = array(
-					'nodeType'  => NODE_TYPE_TEXT,
-					'nodeName'  => $processor->get_token_name(),
+					'nodeType' => NODE_TYPE_TEXT,
+					'nodeName' => $processor->get_token_name(),
 					'nodeValue' => $processor->get_modifiable_text(),
-					'_span'     => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
-					'_mode'     => $processor_state->getValue( $processor )->insertion_mode,
-					'_bc'       => $processor->get_breadcrumbs(),
-					'_virtual'  => $is_virtual(),
-					'_depth'    => $get_current_depth(),
+					'_span' => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
+					'_mode' => $processor_state->getValue( $processor )->insertion_mode,
+					'_bc' => $processor->get_breadcrumbs(),
+					'_virtual' => $is_virtual(),
+					'_depth' => $get_current_depth(),
 				);
 
 				$current['childNodes'][] = $self;
@@ -259,14 +259,14 @@ function get_tree( string $html, array $options ): array {
 
 			case '#cdata-section':
 				$self = array(
-					'nodeType'  => NODE_TYPE_CDATA_SECTION,
-					'nodeName'  => $processor->get_token_name(),
+					'nodeType' => NODE_TYPE_CDATA_SECTION,
+					'nodeName' => $processor->get_token_name(),
 					'nodeValue' => $processor->get_modifiable_text(),
-					'_span'     => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
-					'_mode'     => $processor_state->getValue( $processor )->insertion_mode,
-					'_bc'       => $processor->get_breadcrumbs(),
-					'_virtual'  => $is_virtual(),
-					'_depth'    => $get_current_depth(),
+					'_span' => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
+					'_mode' => $processor_state->getValue( $processor )->insertion_mode,
+					'_bc' => $processor->get_breadcrumbs(),
+					'_virtual' => $is_virtual(),
+					'_depth' => $get_current_depth(),
 				);
 
 				$current['childNodes'][] = $self;
@@ -274,28 +274,28 @@ function get_tree( string $html, array $options ): array {
 
 			case '#presumptuous-tag':
 				$self                    = array(
-					'nodeType'  => NODE_TYPE_COMMENT,
-					'nodeName'  => $processor->get_token_name(),
+					'nodeType' => NODE_TYPE_COMMENT,
+					'nodeName' => $processor->get_token_name(),
 					'nodeValue' => $processor->get_modifiable_text(),
-					'_span'     => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
-					'_mode'     => $processor_state->getValue( $processor )->insertion_mode,
-					'_bc'       => $processor->get_breadcrumbs(),
-					'_virtual'  => $is_virtual(),
-					'_depth'    => $get_current_depth(),
+					'_span' => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
+					'_mode' => $processor_state->getValue( $processor )->insertion_mode,
+					'_bc' => $processor->get_breadcrumbs(),
+					'_virtual' => $is_virtual(),
+					'_depth' => $get_current_depth(),
 				);
 				$current['childNodes'][] = $self;
 				break;
 
 			case '#funky-comment':
 				$self                    = array(
-					'nodeType'  => NODE_TYPE_COMMENT,
-					'nodeName'  => $processor->get_token_name(),
+					'nodeType' => NODE_TYPE_COMMENT,
+					'nodeName' => $processor->get_token_name(),
 					'nodeValue' => $processor->get_modifiable_text(),
-					'_span'     => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
-					'_mode'     => $processor_state->getValue( $processor )->insertion_mode,
-					'_bc'       => $processor->get_breadcrumbs(),
-					'_virtual'  => $is_virtual(),
-					'_depth'    => $get_current_depth(),
+					'_span' => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
+					'_mode' => $processor_state->getValue( $processor )->insertion_mode,
+					'_bc' => $processor->get_breadcrumbs(),
+					'_virtual' => $is_virtual(),
+					'_depth' => $get_current_depth(),
 				);
 				$current['childNodes'][] = $self;
 				break;
@@ -303,11 +303,11 @@ function get_tree( string $html, array $options ): array {
 			case '#comment':
 				$self = array(
 					'nodeType' => NODE_TYPE_COMMENT,
-					'_span'    => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
-					'_mode'    => $processor_state->getValue( $processor )->insertion_mode,
-					'_bc'      => $processor->get_breadcrumbs(),
+					'_span' => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
+					'_mode' => $processor_state->getValue( $processor )->insertion_mode,
+					'_bc' => $processor->get_breadcrumbs(),
 					'_virtual' => $is_virtual(),
-					'_depth'   => $get_current_depth(),
+					'_depth' => $get_current_depth(),
 				);
 				switch ( $processor->get_comment_type() ) {
 					case WP_HTML_Processor::COMMENT_AS_ABRUPTLY_CLOSED_COMMENT:
@@ -321,7 +321,7 @@ function get_tree( string $html, array $options ): array {
 						$self['childNodes'] = array(
 							array(
 								'nodeType'  => NODE_TYPE_PROCESSING_INSTRUCTION,
-								'nodeName'  => $processor->get_tag(),
+								'nodeName' => $processor->get_tag(),
 								'nodeValue' => $processor->get_modifiable_text(),
 							),
 						);
@@ -367,9 +367,9 @@ function get_tree( string $html, array $options ): array {
 	}
 
 	return array(
-		'tree'            => $tree,
-		'compatMode'      => $compat_mode,
-		'doctypeName'     => $doctype_name,
+		'tree' => $tree,
+		'compatMode' => $compat_mode,
+		'doctypeName' => $doctype_name,
 		'doctypePublicId' => $doctype_public_identifier,
 		'doctypeSystemId' => $doctype_system_identifier,
 	);
