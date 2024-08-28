@@ -1,15 +1,22 @@
-#html-api-debugger-table {
+.html-api-debugger--grid {
+  display: grid;
+  grid-template-columns: 50% 50%;
+  grid-template-rows: auto;
+  row-gap: 0.2em;
+  column-gap: 0.4em;
+}
+
+.html-api-debugger-container {
   width: 100%;
-  table-layout: fixed;
   padding: 20px 20px 0 0;
 
-  .col-wrapper {
-    display: flex;
-    column-gap: 0.2em;
+  &,
+  * {
+    box-sizing: border-box;
   }
 
-  .col {
-    flex: 1 0 50%;
+  .full-width {
+    grid-column: 1 / -1;
   }
 
   pre {
@@ -26,24 +33,10 @@
     font-size: inherit;
   }
 
-  td {
-    vertical-align: top;
-  }
-
-  tr:first-child td:first-child {
-    position: relative;
-  }
-
   textarea {
     width: 100%;
     min-height: 200px;
     font-family: monospace;
-  }
-
-  .hide-on-empty {
-    &:empty {
-      display: none;
-    }
   }
 
   .error-holder {
@@ -101,7 +94,6 @@
   border: inset thin;
   padding: 0.5em 0.5em 0.5em 1em;
   color: black;
-  min-height: 100%;
   font-family: monospace;
   background: white;
   margin: 0;

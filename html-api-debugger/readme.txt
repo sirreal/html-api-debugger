@@ -76,3 +76,4 @@ Add a page to wp-admin for debugging the HTML API.
 * Allow copying playground links to specific wordpress-develop PRs.
 
 = 1.6 =
+* Replace TABLE based layout with CSS grid.
