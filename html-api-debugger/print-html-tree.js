@@ -172,7 +172,10 @@ export function printHtmlApiTree(node, ul, options = {}) {
 			}
 		}
 
-		if (node.childNodes[i].childNodes?.length || node.childNodes[i].content) {
+		if (
+			node.childNodes[i].childNodes?.length ||
+			(node.childNodes[i].nodeName === 'TEMPLATE' && node.childNodes[i].content)
+		) {
 			const next = node.childNodes[i].childNodes?.length
 				? node.childNodes[i]
 				: node.childNodes[i].content;
