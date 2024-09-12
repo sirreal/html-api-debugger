@@ -27,57 +27,36 @@ export function printHtmlApiTree(node, ul, options = {}) {
 		if (node.childNodes[i].nodeName) {
 			const code = document.createElement('code');
 
+			let nodeText = options.showInvisible
+				? replaceInvisible(node.childNodes[i].nodeName)
+				: node.childNodes[i].nodeName;
+			if (
+				node.childNodes[i]._namespace &&
+				node.childNodes[i]._namespace !== 'html'
+			) {
+				nodeText = `${node.childNodes[i]._namespace}:${nodeText}`;
+			} else if (
+				node.childNodes[i].namespaceURI &&
+				node.childNodes[i].namespaceURI !== 'http://www.w3.org/1999/xhtml'
+			) {
+				const nsSuffix = node.childNodes[i].namespaceURI.split('/').at(-1);
+				const ns =
+					nsSuffix === 'svg'
+						? 'svg'
+						: nsSuffix === 'MathML'
+							? 'math'
+							: nsSuffix;
+				nodeText = `${ns}:${nodeText}`;
+			}
+
 			if (node.childNodes[i]._closer) {
 				if (options.showClosers) {
-					code.appendChild(
-						document.createTextNode(
-							`/${
-								options.showInvisible
-									? replaceInvisible(node.childNodes[i].nodeName)
-									: node.childNodes[i].nodeName
-							}`,
-						),
-					);
+					code.appendChild(document.createTextNode(`/${nodeText}`));
 				} else {
 					continue;
 				}
 			} else {
-				if (
-					node.childNodes[i]._namespace &&
-					node.childNodes[i]._namespace !== 'html'
-				) {
-					const nodeText = `${node.childNodes[i]._namespace}:${node.childNodes[i].nodeName}`;
-					code.appendChild(
-						document.createTextNode(
-							options.showInvisible ? replaceInvisible(nodeText) : nodeText,
-						),
-					);
-				} else if (
-					node.childNodes[i].namespaceURI &&
-					node.childNodes[i].namespaceURI !== 'http://www.w3.org/1999/xhtml'
-				) {
-					const nsSuffix = node.childNodes[i].namespaceURI.split('/').at(-1);
-					const ns =
-						nsSuffix === 'svg'
-							? 'svg'
-							: nsSuffix === 'MathML'
-								? 'math'
-								: nsSuffix;
-					const nodeText = `${ns}:${node.childNodes[i].nodeName}`;
-					code.appendChild(
-						document.createTextNode(
-							options.showInvisible ? replaceInvisible(nodeText) : nodeText,
-						),
-					);
-				} else {
-					code.appendChild(
-						document.createTextNode(
-							options.showInvisible
-								? replaceInvisible(node.childNodes[i].nodeName)
-								: node.childNodes[i].nodeName,
-						),
-					);
-				}
+				code.appendChild(document.createTextNode(nodeText));
 			}
 
 			if (node.childNodes[i].nodeValue) {
