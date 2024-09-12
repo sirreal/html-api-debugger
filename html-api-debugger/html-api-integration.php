@@ -20,7 +20,22 @@ function get_supports(): array {
 		'full_parser' => method_exists( WP_HTML_Processor::class, 'create_full_parser' ),
 		'quirks_mode' => $html_processor_state_rc->hasProperty( 'document_mode' ),
 		'doctype' => method_exists( WP_HTML_Processor::class, 'get_doctype_info' ),
+		'normalize' => method_exists( WP_HTML_Processor::class, 'normalize' ),
 	);
+}
+
+
+/**
+ * Get the normalized HTML.
+ *
+ * @param string $html The HTML.
+ * @return string|null The normalized HTML or null if not supported.
+ */
+function get_normalized_html( string $html ): ?string {
+	if ( ! method_exists( WP_HTML_Processor::class, 'normalize' ) ) {
+		return null;
+	}
+	return WP_HTML_Processor::normalize( $html );
 }
 
 /**

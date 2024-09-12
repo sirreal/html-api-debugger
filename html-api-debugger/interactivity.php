@@ -68,6 +68,7 @@ function generate_page( string $html, array $options ): string {
 			'htmlApiDoctypeName' => $htmlapi_response['result']['doctypeName'] ?? '[unknown]',
 			'htmlApiDoctypePublicId' => $htmlapi_response['result']['doctypePublicId'] ?? '[unknown]',
 			'htmlApiDoctypeSytemId' => $htmlapi_response['result']['doctypeSystemId'] ?? '[unknown]',
+			'normalizedHtml' => $htmlapi_response['normalizedHtml'] ?? '',
 		)
 	);
 	ob_start();
@@ -104,6 +105,10 @@ function generate_page( string $html, array $options ): string {
 			referrerpolicy="no-referrer"
 			sandbox="allow-forms allow-modals allow-popups allow-scripts allow-same-origin"></iframe>
 	</div>
+	<details class="full-width" data-wp-bind--hidden="!state.htmlapiResponse.supports.normalize">
+		<summary>HTML API Normalized HTML</summary>
+		<pre class="html-text" data-wp-text="state.normalizedHtml"></pre>
+	</details>
 	<details class="full-width">
 		<summary>Document info</summary>
 

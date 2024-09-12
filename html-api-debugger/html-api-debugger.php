@@ -151,6 +151,7 @@ function prepare_html_result_object( string $html, array $options = null ): arra
 		'html' => $html,
 		'error' => null,
 		'result' => null,
+		'normalizedHtml' => HTML_API_Integration\get_normalized_html( $html ),
 	);
 
 	try {

@@ -35,12 +35,14 @@ let debounceInputAbortController = null;
  * @property {boolean} is_virtual
  * @property {boolean} quirks_mode
  * @property {boolean} full_parser
+ * @property {boolean} normalize
  *
  *
  * @typedef HtmlApiResponse
  * @property {any} error
  * @property {Supports} supports
  * @property {{tree: any, compatMode:string, doctypeName:string, doctypePublicId:string, doctypeSystemId:string }|null} result
+ * @property {string|null} normalizedHtml
  * @property {string} html
  *
  *
@@ -48,6 +50,7 @@ let debounceInputAbortController = null;
  * @property {string|null} htmlApiDoctypeName
  * @property {string|null} htmlApiDoctypePublicId
  * @property {string|null} htmlApiDoctypeSystemId
+ * @property {string|null} normalizedHtml
  * @property {string} htmlPreambleForProcessing
  * @property {string} formattedHtmlapiResponse
  * @property {HtmlApiResponse} htmlapiResponse
@@ -124,6 +127,18 @@ const store = createStore(NS, {
 				? store.state.htmlapiResponse.result?.doctypeSystemId &&
 						replaceInvisible(store.state.htmlapiResponse.result.doctypeSystemId)
 				: store.state.htmlapiResponse.result?.doctypeSystemId;
+		},
+
+		get normalizedHtml() {
+			if (
+				!store.state.htmlapiResponse.supports.normalize ||
+				!store.state.htmlapiResponse.normalizedHtml
+			) {
+				return '';
+			}
+			return store.state.showInvisible
+				? replaceInvisible(store.state.htmlapiResponse.normalizedHtml)
+				: store.state.htmlapiResponse.normalizedHtml;
 		},
 
 		get formattedHtmlapiResponse() {
