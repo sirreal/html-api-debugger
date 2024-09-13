@@ -3,7 +3,7 @@ Contributors: jonsurrell
 Tags: HTML API, development, debug
 Requires at least: 6.5
 Tested up to: 6.6
-Stable tag: 1.6
+Stable tag: 1.7
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -80,3 +80,6 @@ Add a page to wp-admin for debugging the HTML API.
 * Fix a crash on meta tags with a content attribute.
 * Display namespace on tag closers.
 * Display normalized HTML when supported.
+
+= 1.7 =
+* Update DOM tree when HTML document is mutated.

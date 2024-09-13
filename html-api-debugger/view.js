@@ -18,6 +18,9 @@ let inFlightRequestAbortController = null;
 /** @type {AbortController|null} */
 let debounceInputAbortController = null;
 
+/** @type {MutationObserver|null} */
+let mutationObserver = null;
+
 /**
  * @typedef DOM
  * @property {string|undefined} renderingMode
@@ -70,6 +73,7 @@ let debounceInputAbortController = null;
  * @property {boolean} hoverInsertion
  *
  * @property {DOM} DOM
+ * @property {boolean} hasMutatedDom
  * @property {HTMLAPISpan|false} span
  * @property {string} hoverSpan
  * @property {readonly []|readonly [string,string,string]} hoverSpanSplit
@@ -93,14 +97,15 @@ let debounceInputAbortController = null;
  * @property {()=>void} handleCopyClick
  * @property {()=>void} handleCopyPrInput
  * @property {()=>void} handleCopyPrClick
+ *
+ * @property {()=>void} onRenderedIframeLoad
  */
 
-/** @type {typeof I.store<Store>} */
-const createStore = I.store;
+const createStore = /** @type {typeof I.store<Store>} */ (I.store);
 
 /** @type {Store} */
-// @ts-expect-error Server provided state is not included here.
 const store = createStore(NS, {
+	// @ts-expect-error Server provided state is not included here.
 	state: {
 		showClosers: Boolean(localStorage.getItem(`${NS}-showClosers`)),
 		showInvisible: Boolean(localStorage.getItem(`${NS}-showInvisible`)),
@@ -108,7 +113,9 @@ const store = createStore(NS, {
 		quirksMode: Boolean(localStorage.getItem(`${NS}-quirksMode`)),
 		fullParser: Boolean(localStorage.getItem(`${NS}-fullParser`)),
 
-		hoverInfo: localStorage.getItem(`${NS}-hoverInfo`),
+		hoverInfo: /** @type {typeof store.state.hoverInfo} */ (
+			localStorage.getItem(`${NS}-hoverInfo`)
+		),
 
 		get htmlApiDoctypeName() {
 			return store.state.showInvisible
@@ -238,6 +245,11 @@ const store = createStore(NS, {
 			u.searchParams.delete('html');
 			history.replaceState(null, '', u);
 		}
+
+		mutationObserver = new MutationObserver(() => {
+			store.state.hasMutatedDom = true;
+			store.onRenderedIframeLoad();
+		});
 	},
 
 	onRenderedIframeLoad() {
@@ -260,7 +272,26 @@ const store = createStore(NS, {
 				hoverInfo: store.state.hoverInfo,
 			},
 		);
+		mutationObserver?.observe(doc, {
+			subtree: true,
+			childList: true,
+			attributes: true,
+			characterData: true,
+		});
+		Array.prototype.forEach.call(
+			doc.getElementsByTagNameNS('http://www.w3.org/1999/xhtml', 'template'),
+			/** @param {HTMLTemplateElement} template */
+			(template) => {
+				mutationObserver?.observe(template.content, {
+					subtree: true,
+					childList: true,
+					attributes: true,
+					characterData: true,
+				});
+			},
+		);
 	},
+
 	clearSpan() {
 		store.state.span = false;
 	},
@@ -441,6 +472,10 @@ const store = createStore(NS, {
 	render() {
 		// @ts-expect-error This should not be null.
 		const iframeDocument = RENDERED_IFRAME.contentWindow.document;
+
+		mutationObserver?.disconnect();
+		store.state.hasMutatedDom = false;
+
 		iframeDocument.open();
 		iframeDocument.write(store.state.htmlForProcessing);
 		iframeDocument.close();

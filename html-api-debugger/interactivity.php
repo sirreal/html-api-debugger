@@ -49,6 +49,7 @@ function generate_page( string $html, array $options ): string {
 				'doctypeSystemId' => '',
 				'doctypePublicId' => '',
 			),
+			'hasMutatedDom' => false,
 			'html' => $html,
 			'htmlapiResponse' => $htmlapi_response,
 			'span' => false,
@@ -140,7 +141,7 @@ function generate_page( string $html, array $options ): string {
 		</div>
 		<div>
 			<h2>Interpreted from DOM</h2>
-			<ul id="dom_tree" data-wp-ignore></ul>
+			<div data-wp-class--mutated="state.hasMutatedDom"><ul id="dom_tree" data-wp-ignore></ul></div>
 		</div>
 	</div>
 

@@ -21,7 +21,7 @@
 
   pre {
     background-color: #fff;
-    border: inset thin;
+    border: inset 1px;
     padding: 0.2em 0.4em;
   }
 
@@ -63,6 +63,21 @@
     word-break: break-all;
     text-wrap: pretty;
   }
+
+  .mutated {
+    position: relative;
+
+    &::after {
+      position: absolute;
+      top: 0;
+      right: 1px;
+      padding: 0.1em 0.2em;
+
+      content: "DOM MODIFIED";
+      background: red;
+      color: white;
+    }
+  }
 }
 
 #rendered_iframe {
@@ -91,7 +106,7 @@
 
 #html_api_result_holder,
 #dom_tree {
-  border: inset thin;
+  border: inset 1px;
   padding: 0.5em 0.5em 0.5em 1em;
   color: black;
   font-family: monospace;
