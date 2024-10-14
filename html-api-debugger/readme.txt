@@ -2,8 +2,8 @@
 Contributors: jonsurrell
 Tags: HTML API, development, debug
 Requires at least: 6.5
-Tested up to: 6.6
-Stable tag: 1.7
+Tested up to: 6.7
+Stable tag: 1.8
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -85,3 +85,5 @@ Add a page to wp-admin for debugging the HTML API.
 * Update DOM tree when HTML document is mutated.
 * Fix deprecation notice on WordPress 6.7.
 * Register script modules unconditionally.
+
+= 1.8 =
