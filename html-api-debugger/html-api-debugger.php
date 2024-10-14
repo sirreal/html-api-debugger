@@ -70,44 +70,45 @@ function init() {
 		}
 	);
 
+	wp_register_script_module(
+		'@html-api-debugger/replace-invisible-chars',
+		plugins_url( 'replace-invisible-chars.js', __FILE__ ),
+		array(),
+		VERSION
+	);
+
+	wp_register_script_module(
+		'@html-api-debugger/print-html-tree',
+		plugins_url( 'print-html-tree.js', __FILE__ ),
+		array(
+			array(
+				'id' => '@html-api-debugger/replace-invisible-chars',
+				'import' => 'dynamic',
+			),
+		),
+		VERSION
+	);
+
+	wp_enqueue_script_module(
+		'@html-api-debugger/main',
+		plugins_url( 'view.js', __FILE__ ),
+		array(
+			'@wordpress/interactivity',
+			'@html-api-debugger/print-html-tree',
+			array(
+				'id' => '@html-api-debugger/replace-invisible-chars',
+				'import' => 'dynamic',
+			),
+		),
+		VERSION
+	);
+
 	add_action(
 		'admin_enqueue_scripts',
 		function ( $hook_suffix ) {
 			if ( $hook_suffix === 'toplevel_page_' . SLUG ) {
 					wp_enqueue_style( SLUG, plugins_url( 'style.css', __FILE__ ), array(), VERSION );
-
-					wp_register_script_module(
-						'@html-api-debugger/replace-invisible-chars',
-						plugins_url( 'replace-invisible-chars.js', __FILE__ ),
-						array(),
-						VERSION
-					);
-
-					wp_register_script_module(
-						'@html-api-debugger/print-html-tree',
-						plugins_url( 'print-html-tree.js', __FILE__ ),
-						array(
-							array(
-								'id' => '@html-api-debugger/replace-invisible-chars',
-								'import' => 'dynamic',
-							),
-						),
-						VERSION
-					);
-
-					wp_enqueue_script_module(
-						'@html-api-debugger/view',
-						plugins_url( 'view.js', __FILE__ ),
-						array(
-							'@wordpress/interactivity',
-							'@html-api-debugger/print-html-tree',
-							array(
-								'id' => '@html-api-debugger/replace-invisible-chars',
-								'import' => 'dynamic',
-							),
-						),
-						VERSION
-					);
+					wp_enqueue_script_module( '@html-api-debugger/view' );
 			}
 		}
 	);

@@ -84,3 +84,4 @@ Add a page to wp-admin for debugging the HTML API.
 = 1.7 =
 * Update DOM tree when HTML document is mutated.
 * Fix deprecation notice on WordPress 6.7.
+* Register script modules unconditionally.
