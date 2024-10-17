@@ -87,3 +87,4 @@ Add a page to wp-admin for debugging the HTML API.
 * Register script modules unconditionally.
 
 = 1.8 =
+* Highlight spans in HTML input on hover.

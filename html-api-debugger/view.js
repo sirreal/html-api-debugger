@@ -76,7 +76,7 @@ let mutationObserver = null;
  * @property {boolean} hasMutatedDom
  * @property {HTMLAPISpan|false} span
  * @property {string} hoverSpan
- * @property {readonly []|readonly [string,string,string]} hoverSpanSplit
+ * @property {(span:HTMLAPISpan) => readonly [string,string,string]} hoverSpanSplit
  */
 
 /**
@@ -200,16 +200,17 @@ const store = createStore(NS, {
 			return store.state.showInvisible ? replaceInvisible(html) : html;
 		},
 
-		get hoverSpanSplit() {
+		/** @param {HTMLAPISpan} span */
+		hoverSpanSplit(span) {
 			/** @type {string | undefined} */
 			const html = store.state.htmlapiResponse.html;
-			if (!html || !store.state.span) {
-				return /** @type {const} */ ([]);
+			if (!html) {
+				return /** @type {const} */ (['', '', '']);
 			}
 			const buf = new TextEncoder().encode(html);
 			const decoder = new TextDecoder();
 
-			const { start: spanStart, length } = store.state.span;
+			const { start: spanStart, length } = span;
 			const spanEnd = spanStart + length;
 			const split = /** @type {const} */ ([
 				decoder.decode(buf.slice(0, spanStart)),
@@ -223,6 +224,42 @@ const store = createStore(NS, {
 				: split;
 		},
 	},
+
+	/** @param {MouseEvent} e */
+	handleSpanClear(e) {
+		/** @type {HTMLElement} */ (
+			document.getElementById('processed-html')
+		).textContent = store.state.hoverSpan;
+	},
+
+	/** @param {MouseEvent} e */
+	handleSpanOver(e) {
+		const t = /** @type {HTMLElement} */ (e.target);
+		const { spanStart, spanLength } = t.dataset;
+		if (!t || !spanStart || !spanLength) {
+			return;
+		}
+
+		console.log('t: %o, ct: %o', e.target, e.currentTarget);
+		// @ts-expect-error 3-tuple to 3-tuple
+		const [before, current, after] = /** @type {readonly [Text,Text,Text]} */ (
+			store.state
+				.hoverSpanSplit({
+					start: Number(spanStart),
+					length: Number(spanLength),
+				})
+				.map((text) => document.createTextNode(text))
+		);
+		const highlightCurrent = document.createElement('span');
+		highlightCurrent.className = 'highlight-span';
+		highlightCurrent.appendChild(current);
+
+		const el = /** @type {HTMLElement} */ (
+			document.getElementById('processed-html')
+		);
+		el.replaceChildren(before, highlightCurrent, after);
+	},
+
 	run() {
 		// The HTML parser will replace null bytes from the HTML.
 		// Force print them if we have null bytes.
@@ -292,10 +329,6 @@ const store = createStore(NS, {
 		);
 	},
 
-	clearSpan() {
-		store.state.span = false;
-	},
-
 	/** @param {InputEvent} e */
 	handleInput: function* (e) {
 		const val = /** @type {HTMLTextAreaElement} */ (e.target).value;
@@ -337,20 +370,6 @@ const store = createStore(NS, {
 			yield navigator.clipboard.writeText(url.href);
 		} catch {
 			alert('Copy failed, make sure the browser window is focused.');
-		}
-	},
-
-	/** @param {Event} e */
-	handleSpanClick(e) {
-		const t = e.target;
-		if (t && t instanceof HTMLElement) {
-			/** @type {HTMLElement|null} */
-			const spanEl = t.closest('[data-span-start]');
-			if (spanEl) {
-				const start = Number(spanEl.dataset['spanStart']);
-				const length = Number(spanEl.dataset['spanLength']);
-				store.state.span = { start, length };
-			}
 		}
 	},
 

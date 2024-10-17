@@ -52,8 +52,6 @@ function generate_page( string $html, array $options ): string {
 			'hasMutatedDom' => false,
 			'html' => $html,
 			'htmlapiResponse' => $htmlapi_response,
-			'span' => false,
-			'hoverSpan' => $htmlapi_response['html'],
 
 			'showClosers' => false,
 			'showInvisible' => false,
@@ -131,13 +129,17 @@ function generate_page( string $html, array $options ): string {
 	<div class="full-width html-api-debugger--grid">
 		<div>
 			<h2>Interpreted by HTML API</h2>
-			<div <?php wp_on_directive( 'click', 'handleSpanClick' ); ?>>
+			<div
+				<?php
+					wp_on_directive( 'mouseover', 'handleSpanOver' );
+					wp_on_directive( 'mouseleave', 'handleSpanClear' );
+				?>
+			>
 				<pre class="error-holder" data-wp-bind--hidden="!state.htmlapiResponse.error" data-wp-text="state.htmlapiResponse.error"></pre>
 				<div data-wp-bind--hidden="state.htmlapiResponse.error">
 					<ul id="html_api_result_holder" data-wp-ignore></ul>
 				</div>
 			</div>
-			<p>Click a node above to see its span details below.</p>
 		</div>
 		<div>
 			<h2>Interpreted from DOM</h2>
@@ -166,20 +168,8 @@ function generate_page( string $html, array $options ): string {
 		</div>
 
 		<div>
-			<div data-wp-bind--hidden="state.span">
-				<h2>Processed HTML</h2>
-				<pre class="html-text" data-wp-text="state.hoverSpan"></pre>
-			</div>
-
-			<div data-wp-bind--hidden="!state.span">
-				<h2>Processed HTML selected span</h2>
-				<button <?php wp_on_directive( 'click', 'clearSpan' ); ?> type="button">Clear span selection 🧹</button>
-				<div class="htmlSpanContainer">
-					<pre class="html-text html-span" data-wp-text="state.hoverSpanSplit.0"></pre>
-					<pre class="html-text html-span html selected span" data-wp-text="state.hoverSpanSplit.1"></pre>
-					<pre class="html-text html-span" data-wp-text="state.hoverSpanSplit.2"></pre>
-				</div>
-			</div>
+			<h2>Processed HTML</h2>
+			<pre class="html-text" id="processed-html" data-wp-ignore><?php echo esc_html( $html ); ?></pre>
 		</div>
 
 		<div>

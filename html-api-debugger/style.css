@@ -78,6 +78,12 @@
       color: white;
     }
   }
+
+  .highlight-span {
+    box-shadow:
+      0 0 2px 1px hotpink,
+      inset 0 0 2px 1px hotpink;
+  }
 }
 
 #rendered_iframe {
@@ -89,19 +95,6 @@
 
 .html-text {
   text-wrap: pretty;
-}
-
-.htmlSpanContainer {
-  display: flex;
-  gap: 0.2em;
-}
-
-.html-span {
-  flex: 1 1 0;
-}
-
-.html-span:nth-child(2) {
-  box-shadow: 3px 3px 3px hotpink;
 }
 
 #html_api_result_holder,
