@@ -79,6 +79,10 @@
     }
   }
 
+  .has-highlighted-span {
+    box-shadow: 0 0 4px 2px hotpink;
+  }
+
   .highlight-span {
     box-shadow:
       0 0 2px 1px hotpink,

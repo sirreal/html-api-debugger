@@ -225,11 +225,12 @@ const store = createStore(NS, {
 		},
 	},
 
-	/** @param {MouseEvent} e */
-	handleSpanClear(e) {
-		/** @type {HTMLElement} */ (
+	handleSpanClear() {
+		const el = /** @type {HTMLElement} */ (
 			document.getElementById('processed-html')
-		).textContent = store.state.hoverSpan;
+		);
+		el.classList.remove('has-highlighted-span');
+		el.textContent = store.state.hoverSpan;
 	},
 
 	/** @param {MouseEvent} e */
@@ -257,6 +258,7 @@ const store = createStore(NS, {
 		const el = /** @type {HTMLElement} */ (
 			document.getElementById('processed-html')
 		);
+		el.classList.add('has-highlighted-span');
 		el.replaceChildren(before, highlightCurrent, after);
 	},
 
