@@ -88,3 +88,4 @@ Add a page to wp-admin for debugging the HTML API.
 
 = 1.8 =
 * Highlight spans in HTML input on hover.
+* Fix a bug in tree construction with self-closing tags in foreign content.

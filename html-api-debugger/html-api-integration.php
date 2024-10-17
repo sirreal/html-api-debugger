@@ -216,6 +216,7 @@ function get_tree( string $html, array $options ): array {
 					}
 				}
 
+				$namespace = method_exists( WP_HTML_Processor::class, 'get_namespace' ) ? $processor->get_namespace() : 'html';
 				$self = array(
 					'nodeType' => NODE_TYPE_ELEMENT,
 					'nodeName' => $tag_name,
@@ -227,7 +228,7 @@ function get_tree( string $html, array $options ): array {
 					'_bc' => $processor->get_breadcrumbs(),
 					'_virtual' => $is_virtual(),
 					'_depth' => $get_current_depth(),
-					'_namespace' => method_exists( WP_HTML_Processor::class, 'get_namespace' ) ? $processor->get_namespace() : 'html',
+					'_namespace' => $namespace,
 				);
 
 				// Self-contained tags contain their inner contents as modifiable text.
@@ -247,7 +248,10 @@ function get_tree( string $html, array $options ): array {
 
 				$current['childNodes'][] = $self;
 
-				if ( $processor->is_tag_closer() ) {
+				if (
+					$processor->is_tag_closer() ||
+					( $namespace !== 'html' && $processor->has_self_closing_flag() )
+				) {
 					break;
 				}
 
