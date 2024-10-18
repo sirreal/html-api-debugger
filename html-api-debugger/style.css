@@ -84,9 +84,7 @@
   }
 
   .highlight-span {
-    box-shadow:
-      0 0 2px 1px hotpink,
-      inset 0 0 2px 1px hotpink;
+    outline: 2px solid #0000ff77;
   }
 }
 
