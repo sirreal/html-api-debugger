@@ -11,57 +11,27 @@ Add a page to wp-admin for debugging the HTML API.
 
 == Changelog ==
 
-= 0.1 =
-* Initial release.
+= 1.9 =
 
-= 0.2 =
-* Remove redundant module.
-* Rearrange debugging panes.
-* Add option to show invisible characters.
+= 1.8 =
+* Highlight spans in HTML input on hover.
+* Fix a bug in tree construction with self-closing tags in foreign content.
 
-= 0.3 =
-* Add button to copy instant playground link.
+= 1.7 =
+* Update DOM tree when HTML document is mutated.
+* Fix deprecation notice on WordPress 6.7.
+* Register script modules unconditionally.
 
-= 0.4 =
-* Improve debugger visibility controls.
-* Add handling for real/virtual nodes.
+= 1.6 =
+* Replace TABLE based layout with CSS grid.
+* Fix a crash on meta tags with a content attribute.
+* Display namespace on tag closers.
+* Display normalized HTML when supported.
 
-= 0.5 =
-* Use regular REST API result response shape.
-* Display text content of "atomic" HTML API nodes like `textarea` or `xmp`.
-
-= 0.6 =
-* Add better unsupported error messages when possible. (WordPress >= 6.7)
-
-= 0.7 =
-* Fix some issues where parsing errors could crash the client.
-
-= 0.8 =
-* Show invisible characters in processed HTML spans.
-* Fix null-byte rendering in the initial page render.
-
-= 0.9 =
-* Fix a bug where "}" was replaced as an invisible character.
-* Add a quirks mode toggle that allows changing the doctype used.
-
-= 1.0 =
-* Prevent flash of "�" replacing null-byte in input on initial render.
-* Support HTML API quirks mode.
-* Support for full HTML processor.
-* Configurable hover information on nodes: depth and breadcrumbs or insertion mode.
-
-= 1.1 =
-* Print tag namespaces.
-
-= 1.2 =
-* Handle CDATA sections.
-* Use WordPress Script Modules API for all modules.
-
-= 1.3 =
-* Replace wp-api-fetch script dependency with native fetch.
-* Improve error messages.
-* Display templates consistently between DOM and HTML API trees.
-* Use "qualified" names. SVG and MathML tags and attributes have some specialized casing.
+= 1.5 =
+* Improve initial rendering and reduce layout shift.
+* Allow copying playground links to latest, beta, and nightly versions.
+* Allow copying playground links to specific wordpress-develop PRs.
 
 = 1.4 =
 * Show invisible characters in the tree in attribute names, values, and tag names.
@@ -70,22 +40,54 @@ Add a page to wp-admin for debugging the HTML API.
 * Use async event directives if available.
 * Handle doctype tokens and display information about quirks-mode.
 
-= 1.5 =
-* Improve initial rendering and reduce layout shift.
-* Allow copying playground links to latest, beta, and nightly versions.
-* Allow copying playground links to specific wordpress-develop PRs.
+= 1.3 =
+* Replace wp-api-fetch script dependency with native fetch.
+* Improve error messages.
+* Display templates consistently between DOM and HTML API trees.
+* Use "qualified" names. SVG and MathML tags and attributes have some specialized casing.
 
-= 1.6 =
-* Replace TABLE based layout with CSS grid.
-* Fix a crash on meta tags with a content attribute.
-* Display namespace on tag closers.
-* Display normalized HTML when supported.
+= 1.2 =
+* Handle CDATA sections.
+* Use WordPress Script Modules API for all modules.
 
-= 1.7 =
-* Update DOM tree when HTML document is mutated.
-* Fix deprecation notice on WordPress 6.7.
-* Register script modules unconditionally.
+= 1.1 =
+* Print tag namespaces.
 
-= 1.8 =
-* Highlight spans in HTML input on hover.
-* Fix a bug in tree construction with self-closing tags in foreign content.
+= 1.0 =
+* Prevent flash of "�" replacing null-byte in input on initial render.
+* Support HTML API quirks mode.
+* Support for full HTML processor.
+* Configurable hover information on nodes: depth and breadcrumbs or insertion mode.
+
+= 0.9 =
+* Fix a bug where "}" was replaced as an invisible character.
+* Add a quirks mode toggle that allows changing the doctype used.
+
+= 0.8 =
+* Show invisible characters in processed HTML spans.
+* Fix null-byte rendering in the initial page render.
+
+= 0.7 =
+* Fix some issues where parsing errors could crash the client.
+
+= 0.6 =
+* Add better unsupported error messages when possible. (WordPress >= 6.7)
+
+= 0.5 =
+* Use regular REST API result response shape.
+* Display text content of "atomic" HTML API nodes like `textarea` or `xmp`.
+
+= 0.4 =
+* Improve debugger visibility controls.
+* Add handling for real/virtual nodes.
+
+= 0.3 =
+* Add button to copy instant playground link.
+
+= 0.2 =
+* Remove redundant module.
+* Rearrange debugging panes.
+* Add option to show invisible characters.
+
+= 0.1 =
+* Initial release.
