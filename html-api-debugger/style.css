@@ -79,6 +79,12 @@
     }
   }
 
+  .html-text {
+    text-wrap: pretty;
+    box-shadow: 0 0 0 0 hotpink;
+    transition: ease box-shadow 120ms;
+  }
+
   .has-highlighted-span {
     box-shadow: 0 0 4px 2px hotpink;
   }
@@ -93,10 +99,6 @@
   border: 1px solid black;
   width: 100%;
   min-height: 200px;
-}
-
-.html-text {
-  text-wrap: pretty;
 }
 
 #html_api_result_holder,
