@@ -241,7 +241,6 @@ const store = createStore(NS, {
 			return;
 		}
 
-		console.log('t: %o, ct: %o', e.target, e.currentTarget);
 		// @ts-expect-error 3-tuple to 3-tuple
 		const [before, current, after] = /** @type {readonly [Text,Text,Text]} */ (
 			store.state
