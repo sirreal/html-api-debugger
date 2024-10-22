@@ -22,6 +22,10 @@ let debounceInputAbortController = null;
 let mutationObserver = null;
 
 /**
+ * @typedef Link
+ * @property {string} href
+ * @property {string} text
+ *
  * @typedef DOM
  * @property {string|undefined} renderingMode
  * @property {string|undefined} doctypeName
@@ -65,7 +69,10 @@ let mutationObserver = null;
  * @property {boolean} showVirtual
  * @property {boolean} quirksMode
  * @property {boolean} fullParser
- * @property {number} previewPrNumber
+ * @property {number|null} previewCorePrNumber
+ * @property {number|null} previewGutenbergPrNumber
+ * @property {Link|null} previewCoreLink
+ * @property {Link|null} previewGutenbergLink
  * @property {boolean} checkingForPRPlaygroundLink
  *
  * @property {'breadcrumbs'|'insertionMode'} hoverInfo
@@ -112,6 +119,31 @@ const store = createStore(NS, {
 		showVirtual: Boolean(localStorage.getItem(`${NS}-showVirtual`)),
 		quirksMode: Boolean(localStorage.getItem(`${NS}-quirksMode`)),
 		fullParser: Boolean(localStorage.getItem(`${NS}-fullParser`)),
+
+		previewCorePrNumber: null,
+		previewGutenbergPrNumber: null,
+
+		/** @type {Link|null} */
+		get previewCoreLink() {
+			if (!store.state.previewCorePrNumber) {
+				return null;
+			}
+			return {
+				href: `https://github.com/WordPress/wordpress-develop/pull/${store.state.previewCorePrNumber}`,
+				text: `wordpress-develop #${store.state.previewCorePrNumber}`,
+			};
+		},
+
+		/** @type {Link|null} */
+		get previewGutenbergLink() {
+			if (!store.state.previewGutenbergPrNumber) {
+				return null;
+			}
+			return {
+				href: `https://github.com/WordPress/gutenberg/pull/${store.state.previewGutenbergPrNumber}`,
+				text: `Gutenberg #${store.state.previewGutenbergPrNumber}`,
+			};
+		},
 
 		hoverInfo: /** @type {typeof store.state.hoverInfo} */ (
 			localStorage.getItem(`${NS}-hoverInfo`)
@@ -516,67 +548,41 @@ const store = createStore(NS, {
 	},
 
 	/** @param {InputEvent} e */
-	handleCopyPrInput(e) {
+	handleCopyCorePrInput(e) {
 		const val = /** @type {HTMLInputElement} */ (e.target).valueAsNumber;
 		if (Number.isFinite(val) && val > 0) {
-			store.state.previewPrNumber = val;
+			store.state.previewCorePrNumber = val;
 			return;
 		}
-		store.state.previewPrNumber = val;
+		store.state.previewCorePrNumber = null;
+	},
+
+	/** @param {InputEvent} e */
+	handleCopyGbPrInput(e) {
+		const val = /** @type {HTMLInputElement} */ (e.target).valueAsNumber;
+		if (Number.isFinite(val) && val > 0) {
+			store.state.previewGutenbergPrNumber = val;
+			return;
+		}
+		store.state.previewGutenbergPrNumber = null;
 	},
 
 	handleCopyPrClick: function* () {
-		const prNumber = store.state.previewPrNumber;
+		const corePrNumber = store.state.previewCorePrNumber;
+		const gbPrNumber = store.state.previewGutenbergPrNumber;
+
 		const playgroundLink = new URL(store.state.playgroundLink);
-		if (!prNumber) {
-			alert('Please enter a PR number.');
-			return;
+		if (corePrNumber) {
+			playgroundLink.searchParams.set('core-pr', String(corePrNumber));
 		}
-		const url = new URL(
-			'https://playground.wordpress.net/plugin-proxy.php?org=WordPress&repo=wordpress-develop&workflow=Test%20Build%20Processes',
-		);
-		url.searchParams.set('artifact', `wordpress-build-${prNumber}`);
-		url.searchParams.set('pr', prNumber.toString(10));
+		if (gbPrNumber) {
+			playgroundLink.searchParams.set('gutenberg-pr', String(gbPrNumber));
+		}
 
 		try {
-			playgroundLink.searchParams.set('wp', url.href);
 			yield navigator.clipboard.writeText(playgroundLink.href);
 		} catch {
 			alert('Copy failed, make sure the browser window is focused.');
-		}
-	},
-
-	handleCheckPrClick: function* () {
-		if (store.state.checkingForPRPlaygroundLink) {
-			return;
-		}
-
-		const prNumber = store.state.previewPrNumber;
-		if (!prNumber) {
-			alert('Please enter a PR number.');
-			return;
-		}
-
-		try {
-			store.state.checkingForPRPlaygroundLink = true;
-
-			const url = new URL(
-				'https://playground.wordpress.net/plugin-proxy.php?org=WordPress&repo=wordpress-develop&workflow=Test%20Build%20Processes',
-			);
-			url.searchParams.set('artifact', `wordpress-build-${prNumber}`);
-			url.searchParams.set('pr', prNumber.toString(10));
-			url.searchParams.set('verify_only', 'true');
-			/** @type {Response} */
-			const response = yield fetch(url.href, {
-				method: 'GET',
-			});
-			if (!response.ok) {
-				alert('The PR number is not valid or has not been built yet.');
-				return;
-			}
-			alert('The PR number looks good!');
-		} finally {
-			store.state.checkingForPRPlaygroundLink = false;
 		}
 	},
 });

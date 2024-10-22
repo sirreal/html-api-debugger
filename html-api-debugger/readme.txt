@@ -12,6 +12,7 @@ Add a page to wp-admin for debugging the HTML API.
 == Changelog ==
 
 = 1.9 =
+* Update WordPress Playground links to use current query args.
 
 = 1.8 =
 * Highlight spans in HTML input on hover.
