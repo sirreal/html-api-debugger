@@ -168,7 +168,7 @@ const store = createStore(NS, {
 			}
 			const base = '/wp-admin/admin.php';
 			const u = new URL(
-				'https://playground.wordpress.net/?plugin=html-api-debugger&php-extension-bundle=light',
+				'https://playground.wordpress.net/?plugin=html-api-debugger',
 			);
 			u.searchParams.set('url', `${base}?${searchParams.toString()}`);
 			return u;
