@@ -172,43 +172,45 @@ function generate_page( string $html, array $options ): string {
 			<pre class="html-text" id="processed-html" data-wp-ignore><?php echo esc_html( $html ); ?></pre>
 		</div>
 
+		<p>
+			<label>
+				<select id="htmlapi-wp-version">
+					<option value="latest">latest</option>
+					<option value="nightly">nightly</option>
+					<option value="beta">beta</option>
+					<option value="6.7">6.7</option>
+					<option value="6.6">6.6</option>
+					<option value="6.5">6.5</option>
+				</select>
+			</label>
+			<button <?php wp_on_directive( 'click', 'handleCopyClick' ); ?> type="button">Copy shareable playground link</button><br>
+		</p>
+		<p>
+			<label>
+				<code>WordPress/develop</code> PR number:
+				<input type="number" min="1" <?php wp_on_directive( 'input', 'handleCopyCorePrInput' ); ?>>
+			</label>
+			<label>
+				<code>WordPress/gutenberg</code> PR number:
+				<input type="number" min="1" <?php wp_on_directive( 'input', 'handleCopyGutenbergPrInput' ); ?>>
+			</label>
+			<button <?php wp_on_directive( 'click', 'handleCopyPrClick' ); ?>>Copy shareable playground link to PR</button>
+			<span data-wp-bind--hidden="!state.previewCoreLink">
+				<a
+					data-wp-bind--href="state.previewCoreLink.href"
+					data-wp-text="state.previewCoreLink.text"
+					rel="noopener noreferrer"
+				></a>
+			</span>
+			<span data-wp-bind--hidden="!state.previewGutenbergLink">
+				<a
+					data-wp-bind--href="state.previewGutenbergLink.href"
+					data-wp-text="state.previewGutenbergLink.text"
+					rel="noopener noreferrer"
+				></a>
+			</span>
+		</p>
 		<div>
-			<p>
-				<label>
-					<select id="htmlapi-wp-version">
-						<option value="latest">latest</option>
-						<option value="nightly">nightly</option>
-						<option value="beta">beta</option>
-						<option value="6.7">6.7</option>
-						<option value="6.6">6.6</option>
-						<option value="6.5">6.5</option>
-					</select>
-				</label>
-				<button <?php wp_on_directive( 'click', 'handleCopyClick' ); ?> type="button">Copy shareable playground link</button><br>
-				<label>
-					<code>WordPress/develop</code> PR number:
-					<input type="number" min="1" <?php wp_on_directive( 'input', 'handleCopyCorePrInput' ); ?>>
-				</label>
-				<label>
-					<code>WordPress/gutenberg</code> PR number:
-					<input type="number" min="1" <?php wp_on_directive( 'input', 'handleCopyGutenbergPrInput' ); ?>>
-				</label>
-				<button <?php wp_on_directive( 'click', 'handleCopyPrClick' ); ?>>Copy shareable playground link to PR</button>
-				<span data-wp-bind--hidden="!state.previewCoreLink">
-					<a
-						data-wp-bind--href="state.previewCoreLink.href"
-						data-wp-text="state.previewCoreLink.text"
-						rel="noopener noreferrer"
-					></a>
-				</span>
-				<span data-wp-bind--hidden="!state.previewGutenbergLink">
-					<a
-						data-wp-bind--href="state.previewGutenbergLink.href"
-						data-wp-text="state.previewGutenbergLink.text"
-						rel="noopener noreferrer"
-					></a>
-				</span>
-			</p>
 			<details>
 				<summary>debug response</summary>
 				<pre data-wp-text="state.formattedHtmlapiResponse"></pre>
