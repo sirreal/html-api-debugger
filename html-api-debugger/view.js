@@ -267,9 +267,17 @@ const store = createStore(NS, {
 
 	/** @param {MouseEvent} e */
 	handleSpanOver(e) {
-		const t = /** @type {HTMLElement} */ (e.target);
-		const { spanStart, spanLength } = t.dataset;
-		if (!t || !spanStart || !spanLength) {
+		const target = /** @type {HTMLElement} */ (e.target);
+		/** @type {HTMLElement|null} */
+		const spanElement = target.dataset['spanStart']
+			? target
+			: target.closest('[data-span-start]');
+
+		if (!spanElement) {
+			return;
+		}
+		const { spanStart, spanLength } = spanElement.dataset;
+		if (!spanStart || !spanLength) {
 			return;
 		}
 
