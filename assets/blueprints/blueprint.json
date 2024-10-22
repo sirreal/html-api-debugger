@@ -5,16 +5,14 @@
 		"php": "8.0",
 		"wp": "latest"
 	},
-	"phpExtensionBundles": ["kitchen-sink"],
 	"steps": [
 		{
 			"step": "login",
-			"username": "admin",
-			"password": "password"
+			"username": "admin"
 		},
 		{
 			"step": "installPlugin",
-			"pluginZipFile": {
+			"pluginData": {
 				"resource": "wordpress.org/plugins",
 				"slug": "html-api-debugger"
 			}
