@@ -15,6 +15,14 @@
     box-sizing: border-box;
   }
 
+  input[type="number"] {
+    appearance: textfield;
+  }
+
+  ::-webkit-inner-spin-button {
+    display: none;
+  }
+
   .full-width {
     grid-column: 1 / -1;
   }
