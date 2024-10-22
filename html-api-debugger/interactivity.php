@@ -191,7 +191,7 @@ function generate_page( string $html, array $options ): string {
 				</label>
 				<label>
 					<code>WordPress/gutenberg</code> PR number:
-					<input type="number" min="1" <?php wp_on_directive( 'input', 'handleCopyGbPrInput' ); ?>>
+					<input type="number" min="1" <?php wp_on_directive( 'input', 'handleCopyGutenbergPrInput' ); ?>>
 				</label>
 				<button <?php wp_on_directive( 'click', 'handleCopyPrClick' ); ?>>Copy shareable playground link to PR</button>
 				<span data-wp-bind--hidden="!state.previewCoreLink">

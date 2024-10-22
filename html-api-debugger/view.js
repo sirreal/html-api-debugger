@@ -558,7 +558,7 @@ const store = createStore(NS, {
 	},
 
 	/** @param {InputEvent} e */
-	handleCopyGbPrInput(e) {
+	handleCopyGutenbergPrInput(e) {
 		const val = /** @type {HTMLInputElement} */ (e.target).valueAsNumber;
 		if (Number.isFinite(val) && val > 0) {
 			store.state.previewGutenbergPrNumber = val;
