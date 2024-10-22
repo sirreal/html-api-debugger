@@ -40,7 +40,7 @@ Add a page to wp-admin for debugging the HTML API.
 * Handle DOCTYPE nodes.
 * Prevent newlines from automatically being added to the HTML input.
 * Use async event directives if available.
-* Handle doctype tokens and display information about quirks-mode.
+* Handle DOCTYPE tokens and display information about quirks-mode.
 
 = 1.3 =
 * Replace wp-api-fetch script dependency with native fetch.
@@ -63,7 +63,7 @@ Add a page to wp-admin for debugging the HTML API.
 
 = 0.9 =
 * Fix a bug where "}" was replaced as an invisible character.
-* Add a quirks mode toggle that allows changing the doctype used.
+* Add a quirks mode toggle that allows changing the DOCTYPE used.
 
 = 0.8 =
 * Show invisible characters in processed HTML spans.
@@ -77,7 +77,7 @@ Add a page to wp-admin for debugging the HTML API.
 
 = 0.5 =
 * Use regular REST API result response shape.
-* Display text content of "atomic" HTML API nodes like `textarea` or `xmp`.
+* Display text content of "atomic" HTML API nodes like TEXTAREA or XMP.
 
 = 0.4 =
 * Improve debugger visibility controls.
