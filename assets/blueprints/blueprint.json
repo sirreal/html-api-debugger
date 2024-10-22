@@ -9,13 +9,7 @@
 		{
 			"step": "login",
 			"username": "admin"
-		},
-		{
-			"step": "installPlugin",
-			"pluginData": {
-				"resource": "wordpress.org/plugins",
-				"slug": "html-api-debugger"
-			}
 		}
-	]
+	],
+	"plugins": ["html-api-debugger"]
 }
