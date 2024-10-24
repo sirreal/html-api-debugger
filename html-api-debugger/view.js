@@ -257,7 +257,7 @@ const store = createStore(NS, {
 		},
 	},
 
-	handleSpanClear() {
+	clearSpan() {
 		const el = /** @type {HTMLElement} */ (
 			document.getElementById('processed-html')
 		);

@@ -132,7 +132,7 @@ function generate_page( string $html, array $options ): string {
 			<div
 				<?php
 					wp_on_directive( 'mouseover', 'handleSpanOver' );
-					wp_on_directive( 'mouseleave', 'handleSpanClear' );
+					wp_on_directive( 'mouseleave', 'clearSpan' );
 				?>
 			>
 				<pre class="error-holder" data-wp-bind--hidden="!state.htmlapiResponse.error" data-wp-text="state.htmlapiResponse.error"></pre>
