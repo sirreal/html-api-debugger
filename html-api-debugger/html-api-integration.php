@@ -18,7 +18,7 @@ function get_supports(): array {
 	return array(
 		'is_virtual' => $html_processor_rc->hasMethod( 'is_virtual' ),
 		'full_parser' => method_exists( WP_HTML_Processor::class, 'create_full_parser' ),
-		'quirks_mode' => $html_processor_state_rc->hasProperty( 'document_mode' ),
+		'quirks_mode' => $html_processor_rc->hasProperty( 'compat_mode' ),
 		'doctype' => method_exists( WP_HTML_Processor::class, 'get_doctype_info' ),
 		'normalize' => method_exists( WP_HTML_Processor::class, 'normalize' ),
 	);
@@ -63,10 +63,11 @@ function get_tree( string $html, array $options ): array {
 	if (
 		! $use_full_parser &&
 		( $options['quirks_mode'] ?? false ) &&
-		property_exists( WP_HTML_Processor_State::class, 'document_mode' ) &&
-		defined( WP_HTML_Processor_State::class . '::QUIRKS_MODE' )
+		property_exists( WP_HTML_Processor::class, 'compat_mode' ) &&
+		defined( WP_HTML_Processor::class . '::QUIRKS_MODE' )
 	) {
-		$processor_state->getValue( $processor )->document_mode = WP_HTML_Processor_State::QUIRKS_MODE;
+		$processor_compat_mode = new ReflectionProperty( WP_HTML_Processor::class, 'compat_mode' );
+		$processor_compat_mode->setValue( $processor, WP_HTML_Processor::QUIRKS_MODE );
 		$doctype_value = '';
 	}
 
