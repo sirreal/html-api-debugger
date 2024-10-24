@@ -4,7 +4,7 @@
  * Plugin URI:        https://github.com/sirreal/html-api-debugger
  * Description:       Add a page to wp-admin for debugging the HTML API.
  * Version:           2.0
- * Requires at least: 6.5
+ * Requires at least: 6.6
  * Tested up to:      6.7
  * Author:            Jon Surrell
  * Author URI:        https://profiles.wordpress.org/jonsurrell/
@@ -31,19 +31,6 @@ function init() {
 		return;
 	}
 	$done = true;
-
-	// WP < 6.6 doesn't support script modules or Interactivity API in wp-admin.
-	if ( version_compare( get_bloginfo( 'version' ), '6.6', '<' ) ) {
-		if ( ! has_action( 'admin_print_footer_scripts', array( wp_script_modules(), 'print_import_map' ) ) ) {
-			add_action( 'admin_print_footer_scripts', array( wp_script_modules(), 'print_import_map' ) );
-			add_action( 'admin_print_footer_scripts', array( wp_script_modules(), 'print_enqueued_script_modules' ) );
-			add_action( 'admin_print_footer_scripts', array( wp_script_modules(), 'print_script_module_preloads' ) );
-		}
-		if ( ! has_action( 'admin_enqueue_scripts', array( wp_interactivity(), 'register_script_modules' ) ) ) {
-			add_action( 'admin_enqueue_scripts', array( wp_interactivity(), 'register_script_modules' ) );
-			add_action( 'admin_print_footer_scripts', array( wp_interactivity(), 'print_client_interactivity_data' ) );
-		}
-	}
 
 	add_action(
 		'rest_api_init',
