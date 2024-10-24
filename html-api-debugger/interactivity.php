@@ -169,6 +169,19 @@ function generate_page( string $html, array $options ): string {
 
 		<div>
 			<h2>Processed HTML</h2>
+			<div data-wp-bind--hidden="!state.htmlapiResponse.result.playback">
+				<label>
+					Move the slider to replay token processing:
+					<input
+						type="range"
+						min="2"
+						style="width:100%"
+						data-wp-bind--max="state.htmlapiResponse.result.playback.length"
+						data-wp-bind--value="state.htmlapiResponse.result.playback.length"
+						data-wp-on--input="handlePlaybackChange"
+					>
+				</label>
+			</div>
 			<pre class="html-text" id="processed-html" data-wp-ignore><?php echo esc_html( $html ); ?></pre>
 		</div>
 

@@ -152,7 +152,19 @@ function get_tree( string $html, array $options ): array {
 	$doctype_public_identifier = null;
 	$doctype_system_identifier = null;
 
+	$playback = array();
+
+	$last_html = '';
 	while ( $processor->next_token() ) {
+		$playback[] = array( $last_html, $tree );
+		/**
+		 * The bookmark of the current token.
+		 *
+		 * @var \WP_HTML_Span
+		 */
+		$bookmark  = $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ];
+		$last_html = substr( $html, 0, $bookmark->start + $bookmark->length );
+
 		if ( $processor->get_last_error() !== null ) {
 			break;
 		}
@@ -183,7 +195,7 @@ function get_tree( string $html, array $options ): array {
 					$current['childNodes'][] = array(
 						'nodeType' => NODE_TYPE_DOCUMENT_TYPE,
 						'nodeName' => $doctype_name,
-						'_span' => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
+						'_span' => $bookmark,
 						'_mode' => $processor_state->getValue( $processor )->insertion_mode,
 						'_bc' => $processor->get_breadcrumbs(),
 						'_depth' => $get_current_depth(),
@@ -217,13 +229,14 @@ function get_tree( string $html, array $options ): array {
 				}
 
 				$namespace = method_exists( WP_HTML_Processor::class, 'get_namespace' ) ? $processor->get_namespace() : 'html';
+
 				$self = array(
 					'nodeType' => NODE_TYPE_ELEMENT,
 					'nodeName' => $tag_name,
 					'attributes' => $attributes,
 					'childNodes' => array(),
 					'_closer' => (bool) $processor->is_tag_closer(),
-					'_span' => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
+					'_span' => $bookmark,
 					'_mode' => $processor_state->getValue( $processor )->insertion_mode,
 					'_bc' => $processor->get_breadcrumbs(),
 					'_virtual' => $is_virtual(),
@@ -266,7 +279,7 @@ function get_tree( string $html, array $options ): array {
 					'nodeType' => NODE_TYPE_TEXT,
 					'nodeName' => $processor->get_token_name(),
 					'nodeValue' => $processor->get_modifiable_text(),
-					'_span' => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
+					'_span' => $bookmark,
 					'_mode' => $processor_state->getValue( $processor )->insertion_mode,
 					'_bc' => $processor->get_breadcrumbs(),
 					'_virtual' => $is_virtual(),
@@ -281,7 +294,7 @@ function get_tree( string $html, array $options ): array {
 					'nodeType' => NODE_TYPE_CDATA_SECTION,
 					'nodeName' => $processor->get_token_name(),
 					'nodeValue' => $processor->get_modifiable_text(),
-					'_span' => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
+					'_span' => $bookmark,
 					'_mode' => $processor_state->getValue( $processor )->insertion_mode,
 					'_bc' => $processor->get_breadcrumbs(),
 					'_virtual' => $is_virtual(),
@@ -296,7 +309,7 @@ function get_tree( string $html, array $options ): array {
 					'nodeType' => NODE_TYPE_COMMENT,
 					'nodeName' => $processor->get_token_name(),
 					'nodeValue' => $processor->get_modifiable_text(),
-					'_span' => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
+					'_span' => $bookmark,
 					'_mode' => $processor_state->getValue( $processor )->insertion_mode,
 					'_bc' => $processor->get_breadcrumbs(),
 					'_virtual' => $is_virtual(),
@@ -310,7 +323,7 @@ function get_tree( string $html, array $options ): array {
 					'nodeType' => NODE_TYPE_COMMENT,
 					'nodeName' => $processor->get_token_name(),
 					'nodeValue' => $processor->get_modifiable_text(),
-					'_span' => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
+					'_span' => $bookmark,
 					'_mode' => $processor_state->getValue( $processor )->insertion_mode,
 					'_bc' => $processor->get_breadcrumbs(),
 					'_virtual' => $is_virtual(),
@@ -322,7 +335,7 @@ function get_tree( string $html, array $options ): array {
 			case '#comment':
 				$self = array(
 					'nodeType' => NODE_TYPE_COMMENT,
-					'_span' => $processor_bookmarks->getValue( $processor )[ $processor_state->getValue( $processor )->current_token->bookmark_name ],
+					'_span' => $bookmark,
 					'_mode' => $processor_state->getValue( $processor )->insertion_mode,
 					'_bc' => $processor->get_breadcrumbs(),
 					'_virtual' => $is_virtual(),
@@ -371,6 +384,7 @@ function get_tree( string $html, array $options ): array {
 				throw new Exception( "Unhandled token type for tree construction: {$serialized_token_type}" );
 		}
 	}
+	$playback[] = array( $last_html, $tree );
 
 	if ( null !== $processor->get_last_error() ) {
 		if ( method_exists( WP_HTML_Processor::class, 'get_unsupported_exception' ) && $processor->get_unsupported_exception() ) {
@@ -387,6 +401,7 @@ function get_tree( string $html, array $options ): array {
 
 	return array(
 		'tree' => $tree,
+		'playback' => $playback,
 		'compatMode' => $compat_mode,
 		'doctypeName' => $doctype_name,
 		'doctypePublicId' => $doctype_public_identifier,

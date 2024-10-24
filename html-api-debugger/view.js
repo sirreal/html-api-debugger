@@ -48,12 +48,15 @@ let mutationObserver = null;
  * @typedef HtmlApiResponse
  * @property {any} error
  * @property {Supports} supports
- * @property {{tree: any, compatMode:string, doctypeName:string, doctypePublicId:string, doctypeSystemId:string }|null} result
+ * @property {{tree: any, compatMode:string, doctypeName:string, doctypePublicId:string, doctypeSystemId:string, playback: ReadonlyArray<[string,any]> }|null} result
  * @property {string|null} normalizedHtml
  * @property {string} html
  *
  *
  * @typedef State
+ * @property {any|undefined} playbackTree
+ * @property {string|undefined} playbackHTML
+ * @property {number|null} playbackPoint
  * @property {string|null} htmlApiDoctypeName
  * @property {string|null} htmlApiDoctypePublicId
  * @property {string|null} htmlApiDoctypeSystemId
@@ -82,8 +85,7 @@ let mutationObserver = null;
  * @property {DOM} DOM
  * @property {boolean} hasMutatedDom
  * @property {HTMLAPISpan|false} span
- * @property {string} hoverSpan
- * @property {(span:HTMLAPISpan) => readonly [string,string,string]} hoverSpanSplit
+ * @property {string} htmlForDisplay
  */
 
 /**
@@ -120,8 +122,26 @@ const store = createStore(NS, {
 		quirksMode: Boolean(localStorage.getItem(`${NS}-quirksMode`)),
 		fullParser: Boolean(localStorage.getItem(`${NS}-fullParser`)),
 
+		playbackPoint: null,
 		previewCorePrNumber: null,
 		previewGutenbergPrNumber: null,
+
+		get playbackTree() {
+			if (store.state.playbackPoint === null) {
+				return undefined;
+			}
+			return store.state.htmlapiResponse.result?.playback?.[
+				store.state.playbackPoint
+			]?.[1];
+		},
+		get playbackHTML() {
+			if (store.state.playbackPoint === null) {
+				return undefined;
+			}
+			return store.state.htmlapiResponse.result?.playback?.[
+				store.state.playbackPoint
+			]?.[0];
+		},
 
 		/** @type {Link|null} */
 		get previewCoreLink() {
@@ -223,37 +243,13 @@ const store = createStore(NS, {
 			return store.state.htmlPreambleForProcessing + store.state.html;
 		},
 
-		get hoverSpan() {
+		get htmlForDisplay() {
 			/** @type {string | undefined} */
-			const html = store.state.htmlapiResponse.html;
+			const html = store.state.playbackHTML ?? store.state.htmlapiResponse.html;
 			if (!html) {
 				return '';
 			}
 			return store.state.showInvisible ? replaceInvisible(html) : html;
-		},
-
-		/** @param {HTMLAPISpan} span */
-		hoverSpanSplit(span) {
-			/** @type {string | undefined} */
-			const html = store.state.htmlapiResponse.html;
-			if (!html) {
-				return /** @type {const} */ (['', '', '']);
-			}
-			const buf = new TextEncoder().encode(html);
-			const decoder = new TextDecoder();
-
-			const { start: spanStart, length } = span;
-			const spanEnd = spanStart + length;
-			const split = /** @type {const} */ ([
-				decoder.decode(buf.slice(0, spanStart)),
-				decoder.decode(buf.slice(spanStart, spanEnd)),
-				decoder.decode(buf.slice(spanEnd)),
-			]);
-
-			return store.state.showInvisible
-				? // @ts-expect-error It's fine, really.
-					/** @type {typeof split} */ (split.map(replaceInvisible))
-				: split;
 		},
 	},
 
@@ -262,12 +258,18 @@ const store = createStore(NS, {
 			document.getElementById('processed-html')
 		);
 		el.classList.remove('has-highlighted-span');
-		el.textContent = store.state.hoverSpan;
+		el.textContent = store.state.htmlForDisplay;
 	},
 
 	/** @param {MouseEvent} e */
 	handleSpanOver(e) {
 		const target = /** @type {HTMLElement} */ (e.target);
+
+		const html = store.state.playbackHTML ?? store.state.htmlapiResponse.html;
+		if (!html) {
+			return;
+		}
+
 		/** @type {HTMLElement|null} */
 		const spanElement = target.dataset['spanStart']
 			? target
@@ -276,20 +278,30 @@ const store = createStore(NS, {
 		if (!spanElement) {
 			return;
 		}
-		const { spanStart, spanLength } = spanElement.dataset;
-		if (!spanStart || !spanLength) {
+
+		const { spanStart: spanStartVal, spanLength: spanLengthVal } =
+			spanElement.dataset;
+		if (!spanStartVal || !spanLengthVal) {
 			return;
 		}
+		const spanStart = Number(spanStartVal);
+		const spanLength = Number(spanLengthVal);
 
-		// @ts-expect-error 3-tuple to 3-tuple
-		const [before, current, after] = /** @type {readonly [Text,Text,Text]} */ (
-			store.state
-				.hoverSpanSplit({
-					start: Number(spanStart),
-					length: Number(spanLength),
-				})
-				.map((text) => document.createTextNode(text))
-		);
+		const buf = new TextEncoder().encode(html);
+		const decoder = new TextDecoder();
+
+		const spanEnd = spanStart + spanLength;
+		/** @type {readonly [Text,Text,Text]} */
+		// @ts-expect-error trust me!
+		const [before, current, after] = /** @type {const} */ ([
+			decoder.decode(buf.slice(0, spanStart)),
+			decoder.decode(buf.slice(spanStart, spanEnd)),
+			decoder.decode(buf.slice(spanEnd)),
+		]).map((text) => {
+			const t = store.state.showInvisible ? replaceInvisible(text) : text;
+			return document.createTextNode(t);
+		});
+
 		const highlightCurrent = document.createElement('span');
 		highlightCurrent.className = 'highlight-span';
 		highlightCurrent.appendChild(current);
@@ -502,6 +514,7 @@ const store = createStore(NS, {
 		}
 
 		store.state.htmlapiResponse = data;
+		store.state.playbackPoint = null;
 		store.clearSpan();
 
 		if (data.error) {
@@ -536,13 +549,24 @@ const store = createStore(NS, {
 		mutationObserver?.disconnect();
 		store.state.hasMutatedDom = false;
 
+		const html = store.state.playbackHTML ?? store.state.htmlForProcessing;
+
 		iframeDocument.open();
-		iframeDocument.write(store.state.htmlForProcessing);
+		iframeDocument.write(html);
 		iframeDocument.close();
 
-		if (store.state.htmlapiResponse.result?.tree) {
+		const tree =
+			store.state.playbackTree ?? store.state.htmlapiResponse.result?.tree;
+
+		const processedHtmlEl = /** @type {HTMLElement} */ (
+			document.getElementById('processed-html')
+		);
+		processedHtmlEl.classList.remove('has-highlighted-span');
+		processedHtmlEl.textContent = store.state.htmlForDisplay;
+
+		if (tree) {
 			printHtmlApiTree(
-				store.state.htmlapiResponse.result.tree,
+				tree,
 				// @ts-expect-error
 				document.getElementById('html_api_result_holder'),
 				{
@@ -592,6 +616,12 @@ const store = createStore(NS, {
 		} catch {
 			alert('Copy failed, make sure the browser window is focused.');
 		}
+	},
+
+	/** @param {InputEvent} e */
+	handlePlaybackChange(e) {
+		const val = /** @type {HTMLInputElement} */ (e.target).valueAsNumber;
+		store.state.playbackPoint = val - 1;
 	},
 });
 
