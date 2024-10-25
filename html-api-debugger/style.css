@@ -69,6 +69,7 @@
     outline: 1px dotted #111;
     vertical-align: top;
     word-break: break-all;
+    text-wrap: auto;
     text-wrap: pretty;
   }
 
@@ -88,6 +89,7 @@
   }
 
   .html-text {
+    text-wrap: auto;
     text-wrap: pretty;
     box-shadow: 0 0 0 0 hotpink;
     transition: ease box-shadow 120ms;

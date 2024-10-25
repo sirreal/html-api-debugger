@@ -3,13 +3,16 @@ Contributors: jonsurrell
 Tags: HTML API, development, debug
 Requires at least: 6.6
 Tested up to: 6.7
-Stable tag: 2.0
+Stable tag: 2.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 Add a page to wp-admin for debugging the HTML API.
 
 == Changelog ==
+
+= 2.1 =
+* Add text-wrap styling fallback for unsupported browsers.
 
 = 2.0 =
 * Add ability to replay token processing.
