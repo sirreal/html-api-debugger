@@ -1,15 +1,10 @@
 {
 	"$schema": "https://playground.wordpress.net/blueprint-schema.json",
-	"landingPage": "/wp-admin/admin.php?page=html-api-debugger&html=<h1>Hello world!</h1>",
+	"landingPage": "/wp-admin/admin.php?page=html-api-debugger&html=<%21DOCTYPE+html>%0A<html>%0A<body>%0A++Look+a+<strong>ball<%2Fstrong>%3A<br+cool>%0A++<img+src%3D%27data%3Aimage%2Fsvg%2Bxml%3Butf8%2C<svg+width%3D\"20\"+height%3D\"20\"+xmlns%3D\"http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg\"><circle+cx%3D\"10\"+cy%3D\"10\"+fill%3D\"red\"+r%3D\"10\"+%2F><%2Fsvg>%27%2F>%0A++<%2Fbr+awesome>%0A++It%27s+<s>blue<%2Fs><em>red<%2Fem>.%0A<%2Fbody>%0A<%2Fhtml>",
 	"preferredVersions": {
 		"php": "8.0",
 		"wp": "latest"
 	},
-	"steps": [
-		{
-			"step": "login",
-			"username": "admin"
-		}
-	],
+	"login": true,
 	"plugins": ["html-api-debugger"]
 }
