@@ -53,6 +53,8 @@ function get_tree( string $html, array $options ): array {
 	$processor_bookmarks = new ReflectionProperty( WP_HTML_Processor::class, 'bookmarks' );
 	$processor_bookmarks->setAccessible( true );
 
+	$is_fragment_processor = false;
+
 	if (
 		method_exists( WP_HTML_Processor::class, 'create_fragment_at_current_node' ) &&
 		$options['context_html']
@@ -70,6 +72,8 @@ function get_tree( string $html, array $options ): array {
 		if ( ! isset( $processor ) ) {
 			throw new Exception( 'Could not create processor from context HTML.' );
 		}
+
+		$is_fragment_processor = true;
 	} else {
 		$processor = WP_HTML_Processor::create_full_parser( $html );
 	}
@@ -124,7 +128,7 @@ function get_tree( string $html, array $options ): array {
 
 	$cursor = array( 0 );
 
-	if ( $context_processor ) {
+	if ( $is_fragment_processor ) {
 		$tree   = array();
 		$cursor = array();
 	}
@@ -133,7 +137,7 @@ function get_tree( string $html, array $options ): array {
 	$doctype_name              = null;
 	$doctype_public_identifier = null;
 	$doctype_system_identifier = null;
-	$context_node              = $context_processor ? $context_processor->get_tag() : null;
+	$context_node              = isset( $context_processor ) ? $context_processor->get_tag() : null;
 
 	$playback = array();
 
@@ -152,7 +156,8 @@ function get_tree( string $html, array $options ): array {
 			break;
 		}
 
-		if ( ( count( $cursor ) + 1 ) > $get_current_depth() ) {
+		// Breadcrumbs and depth are off by one because they include an extra context node.
+		if ( ( count( $cursor ) + 1 ) > ( $get_current_depth() - ( $is_fragment_processor ? 1 : 0 ) ) ) {
 			array_pop( $cursor );
 		}
 		$current = &$tree;
