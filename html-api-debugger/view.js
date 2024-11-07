@@ -61,17 +61,14 @@ let mutationObserver = null;
  * @property {string|null} htmlApiDoctypePublicId
  * @property {string|null} htmlApiDoctypeSystemId
  * @property {string|null} normalizedHtml
- * @property {string} htmlPreambleForProcessing
  * @property {string} formattedHtmlapiResponse
  * @property {HtmlApiResponse} htmlapiResponse
  * @property {URL} playgroundLink
  * @property {string} html
- * @property {string} htmlForProcessing
  * @property {boolean} showClosers
  * @property {boolean} showInvisible
  * @property {boolean} showVirtual
- * @property {boolean} quirksMode
- * @property {boolean} fullParser
+ * @property {string} contextHTML
  * @property {number|null} previewCorePrNumber
  * @property {number|null} previewGutenbergPrNumber
  * @property {Link|null} previewCoreLink
@@ -100,14 +97,17 @@ let mutationObserver = null;
  * @property {()=>void} handleShowInvisibleClick
  * @property {()=>void} handleShowClosersClick
  * @property {()=>void} handleShowVirtualClick
- * @property {()=>Promise<void>} handleQuirksModeClick
- * @property {()=>Promise<void>} handleFullParserClick
+ * @property {()=>void} handleContextHtmlInput
  *
  * @property {()=>void} handleCopyClick
  * @property {()=>void} handleCopyPrInput
  * @property {()=>void} handleCopyPrClick
  *
  * @property {()=>void} onRenderedIframeLoad
+ *
+ * @property {()=>void} watch
+ * @property {()=>void} watchDom
+ * @property {()=>void} watchURL
  */
 
 const createStore = /** @type {typeof I.store<Store>} */ (I.store);
@@ -119,8 +119,6 @@ const store = createStore(NS, {
 		showClosers: Boolean(localStorage.getItem(`${NS}-showClosers`)),
 		showInvisible: Boolean(localStorage.getItem(`${NS}-showInvisible`)),
 		showVirtual: Boolean(localStorage.getItem(`${NS}-showVirtual`)),
-		quirksMode: Boolean(localStorage.getItem(`${NS}-quirksMode`)),
-		fullParser: Boolean(localStorage.getItem(`${NS}-fullParser`)),
 
 		playbackPoint: null,
 		previewCorePrNumber: null,
@@ -218,29 +216,15 @@ const store = createStore(NS, {
 			if (store.state.html) {
 				searchParams.set('html', store.state.html);
 			}
+			if (store.state.contextHTML) {
+				searchParams.set('contextHTML', store.state.contextHTML);
+			}
 			const base = '/wp-admin/admin.php';
 			const u = new URL(
 				'https://playground.wordpress.net/?plugin=html-api-debugger',
 			);
 			u.searchParams.set('url', `${base}?${searchParams.toString()}`);
 			return u;
-		},
-
-		get htmlPreambleForProcessing() {
-			if (store.state.fullParser) {
-				return '';
-			}
-			const doctype = `<!DOCTYPE${
-				store.state.htmlapiResponse.supports.quirks_mode &&
-				store.state.quirksMode
-					? ''
-					: ' html'
-			}>`;
-			return `${doctype}<html><body>`;
-		},
-
-		get htmlForProcessing() {
-			return store.state.htmlPreambleForProcessing + store.state.html;
 		},
 
 		get htmlForDisplay() {
@@ -325,16 +309,9 @@ const store = createStore(NS, {
 		store.render();
 
 		// browsers "eat" some characters from search params…
-		// newlines seem especially problematic in chrome
-		// lets clean up the URL
-		const u = new URL(document.location.href);
-		if (store.state.html) {
-			u.searchParams.set('html', store.state.html);
-			history.replaceState(null, '', u);
-		} else if (u.searchParams.has('html')) {
-			u.searchParams.delete('html');
-			history.replaceState(null, '', u);
-		}
+		// newlines seem especially problematic in chrome.
+		// Let's clean up the URL
+		store.watchURL();
 
 		mutationObserver = new MutationObserver(() => {
 			store.state.hasMutatedDom = true;
@@ -429,8 +406,6 @@ const store = createStore(NS, {
 	handleShowInvisibleClick: getToggleHandler('showInvisible'),
 	handleShowClosersClick: getToggleHandler('showClosers'),
 	handleShowVirtualClick: getToggleHandler('showVirtual'),
-	handleQuirksModeClick: getToggleHandlerWithRefetch('quirksMode'),
-	handleFullParserClick: getToggleHandlerWithRefetch('fullParser'),
 
 	/** @param {Event} e */
 	hoverInfoChange: (e) => {
@@ -441,6 +416,23 @@ const store = createStore(NS, {
 
 	watch() {
 		store.render();
+	},
+
+	watchURL() {
+		const u = new URL(document.location.href);
+		let shouldReplace = false;
+		for (const param of /** @type {const} */ (['html', 'contextHTML'])) {
+			if (store.state[param]) {
+				u.searchParams.set(param, store.state[param]);
+				shouldReplace = true;
+			} else if (u.searchParams.has(param)) {
+				u.searchParams.delete(param);
+				shouldReplace = true;
+			}
+		}
+		if (shouldReplace) {
+			history.replaceState(null, '', u);
+		}
 	},
 
 	// @ts-expect-error This will be transformed by the Interactivity API runtime when called through the store.
@@ -455,8 +447,7 @@ const store = createStore(NS, {
 				method: 'POST',
 				body: JSON.stringify({
 					html: store.state.html,
-					quirksMode: store.state.quirksMode,
-					fullParser: store.state.fullParser,
+					contextHTML: store.state.contextHTML,
 				}),
 				headers: {
 					'Content-Type': 'application/json',
@@ -549,7 +540,7 @@ const store = createStore(NS, {
 		mutationObserver?.disconnect();
 		store.state.hasMutatedDom = false;
 
-		const html = store.state.playbackHTML ?? store.state.htmlForProcessing;
+		const html = store.state.playbackHTML ?? store.state.html;
 
 		iframeDocument.open();
 		iframeDocument.write(html);
@@ -577,6 +568,14 @@ const store = createStore(NS, {
 				},
 			);
 		}
+	},
+
+	/** @param {InputEvent} e */
+	handleContextHtmlInput: function* (e) {
+		const val = /** @type {HTMLInputElement} */ (e.target).value;
+		store.state.contextHTML = val.trim();
+
+		yield store.callAPI();
 	},
 
 	/** @param {InputEvent} e */

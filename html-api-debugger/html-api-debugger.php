@@ -44,8 +44,7 @@ function init() {
 						// phpcs:ignore Universal.Operators.DisallowShortTernary.Found
 						$html = $request->get_json_params()['html'] ?: '';
 						$options = array(
-							'quirks_mode' => $request->get_json_params()['quirksMode'] ?? false,
-							'full_parser' => $request->get_json_params()['fullParser'] ?? false,
+							'context_html' => $request->get_json_params()['contextHTML'] ?: null,
 						);
 						return prepare_html_result_object( $html, $options );
 					},
@@ -111,14 +110,19 @@ function init() {
 				function () {
 					require_once __DIR__ . '/interactivity.php';
 
+					$options = array(
+						'context_html' => null,
+					);
+
 					$html = '';
 					// phpcs:disable WordPress.Security.NonceVerification.Recommended
 					if ( isset( $_GET['html'] ) && is_string( $_GET['html'] ) ) {
 						$html = stripslashes( $_GET['html'] );
 					}
-
-					$options = array();
-					// @todo Add query args for other options
+					if ( isset( $_GET['contextHTML'] ) && is_string( $_GET['contextHTML'] ) ) {
+						$options['context_html'] = stripslashes( $_GET['contextHTML'] );
+					}
+					// phpcs:enable WordPress.Security.NonceVerification.Recommended
 
 					// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 					echo namespace\Interactivity\generate_page( $html, $options );

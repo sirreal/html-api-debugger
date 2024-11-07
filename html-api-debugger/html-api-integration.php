@@ -12,8 +12,7 @@ use WP_HTML_Processor_State;
  * Get information about HTML API supported features
  */
 function get_supports(): array {
-	$html_processor_rc       = new ReflectionClass( WP_HTML_Processor::class );
-	$html_processor_state_rc = new ReflectionClass( WP_HTML_Processor_State::class );
+	$html_processor_rc = new ReflectionClass( WP_HTML_Processor::class );
 
 	return array(
 		'is_virtual' => $html_processor_rc->hasMethod( 'is_virtual' ),
@@ -21,6 +20,7 @@ function get_supports(): array {
 		'quirks_mode' => $html_processor_rc->hasProperty( 'compat_mode' ),
 		'doctype' => method_exists( WP_HTML_Processor::class, 'get_doctype_info' ),
 		'normalize' => method_exists( WP_HTML_Processor::class, 'normalize' ),
+		'create_fragment_advanced' => method_exists( WP_HTML_Processor::class, 'create_fragment_at_current_node' ),
 	);
 }
 
@@ -53,22 +53,25 @@ function get_tree( string $html, array $options ): array {
 	$processor_bookmarks = new ReflectionProperty( WP_HTML_Processor::class, 'bookmarks' );
 	$processor_bookmarks->setAccessible( true );
 
-	$use_full_parser = method_exists( WP_HTML_Processor::class, 'create_full_parser' ) && ( $options['full_parser'] ?? false );
-
-	$processor = $use_full_parser
-		? WP_HTML_Processor::create_full_parser( $html )
-		: WP_HTML_Processor::create_fragment( $html );
-
-	$doctype_value = $use_full_parser ? '' : 'html';
 	if (
-		! $use_full_parser &&
-		( $options['quirks_mode'] ?? false ) &&
-		property_exists( WP_HTML_Processor::class, 'compat_mode' ) &&
-		defined( WP_HTML_Processor::class . '::QUIRKS_MODE' )
+		method_exists( WP_HTML_Processor::class, 'create_fragment_at_current_node' ) &&
+		$options['context_html']
 	) {
-		$processor_compat_mode = new ReflectionProperty( WP_HTML_Processor::class, 'compat_mode' );
-		$processor_compat_mode->setValue( $processor, WP_HTML_Processor::QUIRKS_MODE );
-		$doctype_value = '';
+		$context_processor = WP_HTML_Processor::create_full_parser( $options['context_html'] );
+
+		while ( $context_processor->next_tag() ) {
+			$context_processor->set_bookmark( 'final_node' );
+		}
+		if ( $context_processor->has_bookmark( 'final_node' ) ) {
+			$context_processor->seek( 'final_node' );
+			$processor = $context_processor->create_fragment_at_current_node( $html );
+		}
+
+		if ( ! isset( $processor ) ) {
+			throw new Exception( 'Could not create processor from context HTML.' );
+		}
+	} else {
+		$processor = WP_HTML_Processor::create_full_parser( $html );
 	}
 
 	$rc = new ReflectionClass( WP_HTML_Processor::class );
@@ -120,33 +123,6 @@ function get_tree( string $html, array $options ): array {
 	);
 
 	$cursor = array( 0 );
-	if ( ! $use_full_parser ) {
-		$tree['childNodes'][] = array(
-			'nodeType' => NODE_TYPE_DOCUMENT_TYPE,
-			'nodeName' => $doctype_value,
-			'nodeValue' => '',
-		);
-		$tree['childNodes'][] = array(
-			'nodeType' => NODE_TYPE_ELEMENT,
-			'nodeName' => 'HTML',
-			'attributes' => array(),
-			'childNodes' => array(
-				array(
-					'nodeType' => NODE_TYPE_ELEMENT,
-					'nodeName' => 'HEAD',
-					'attributes' => array(),
-					'childNodes' => array(),
-				),
-				array(
-					'nodeType' => NODE_TYPE_ELEMENT,
-					'nodeName' => 'BODY',
-					'attributes' => array(),
-					'childNodes' => array(),
-				),
-			),
-		);
-		$cursor               = array( 1, 1 );
-	}
 
 	$compat_mode               = 'CSS1Compat';
 	$doctype_name              = null;

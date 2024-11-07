@@ -56,8 +56,7 @@ function generate_page( string $html, array $options ): string {
 			'showClosers' => false,
 			'showInvisible' => false,
 			'showVirtual' => false,
-			'quirksMode' => false,
-			'fullParser' => false,
+			'contextHTML' => $options['context_html'] ?? '',
 
 			'hoverInfo' => 'breadcrumbs',
 			'hoverBreadcrumbs' => true,
@@ -76,6 +75,7 @@ function generate_page( string $html, array $options ): string {
 	data-wp-interactive="<?php echo esc_attr( \HTML_API_Debugger\SLUG ); ?>"
 	data-wp-watch--a="watch"
 	data-wp-watch--b="watchDom"
+	data-wp-watch--url="watchURL"
 	data-wp-run="run"
 	class="html-api-debugger-container html-api-debugger--grid"
 >
@@ -89,11 +89,6 @@ function generate_page( string $html, array $options ): string {
 			wrap="off"
 			<?php wp_on_directive( 'input', 'handleInput' ); ?>
 		><?php echo "\n" . esc_textarea( str_replace( "\0", '', $html ) ); ?></textarea>
-		<p data-wp-bind--hidden="!state.htmlPreambleForProcessing">
-			Note: Because HTML API operates in body at this time, this will be prepended:
-			<br>
-			<code data-wp-text="state.htmlPreambleForProcessing"></code>
-		</p>
 	</div>
 	<div>
 		<h2>Rendered output</h2>
@@ -153,8 +148,13 @@ function generate_page( string $html, array $options ): string {
 				<label>Show closers <input type="checkbox" data-wp-bind--checked="state.showClosers" <?php wp_on_directive( 'input', 'handleShowClosersClick' ); ?>></label>
 				<label>Show invisible <input type="checkbox" data-wp-bind--checked="state.showInvisible" <?php wp_on_directive( 'input', 'handleShowInvisibleClick' ); ?>></label>
 				<span data-wp-bind--hidden="!state.htmlapiResponse.supports.is_virtual"><label>Show virtual <input type="checkbox" data-wp-bind--checked="state.showVirtual" <?php wp_on_directive( 'input', 'handleShowVirtualClick' ); ?>></label></span>
-				<span data-wp-bind--hidden="!state.htmlapiResponse.supports.quirks_mode"><label>Quirks mode <input type="checkbox" data-wp-bind--checked="state.quirksMode" data-wp-bind--disabled="state.fullParser" <?php wp_on_directive( 'input', 'handleQuirksModeClick' ); ?>></label></span>
-				<span data-wp-bind--hidden="!state.htmlapiResponse.supports.full_parser"><label>Full parser <input type="checkbox" data-wp-bind--checked="state.fullParser" <?php wp_on_directive( 'input', 'handleFullParserClick' ); ?>></label></span>
+				<div data-wp-bind--hidden="!state.htmlapiResponse.supports.create_fragment_advanced">
+					<label>Context html
+						<textarea
+							<?php wp_on_directive( 'input', 'handleContextHtmlInput' ); ?>
+						><?php echo "\n" . esc_textarea( str_replace( "\0", '', $options['context_html'] ?? '' ) ); ?></textarea>
+				</label>
+				</div>
 			</div>
 			<div>
 				<label>
