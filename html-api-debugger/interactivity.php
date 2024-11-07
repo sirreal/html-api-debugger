@@ -152,7 +152,9 @@ function generate_page( string $html, array $options ): string {
 				<div data-wp-bind--hidden="!state.htmlapiResponse.supports.create_fragment_advanced">
 					<label>Context html
 						<textarea
-							placeholder="<!DOCTYPE html><body>"
+							class="context-html"
+							placeholder="Provide a fragment context, for example:&#x0A;<!DOCTYPE html><body>"
+							rows="2"
 							<?php wp_on_directive( 'input', 'handleContextHtmlInput' ); ?>
 						><?php echo "\n" . esc_textarea( str_replace( "\0", '', $options['context_html'] ?? '' ) ); ?></textarea>
 				</label>
