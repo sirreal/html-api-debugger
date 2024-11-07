@@ -106,7 +106,6 @@ let mutationObserver = null;
  * @property {()=>void} onRenderedIframeLoad
  *
  * @property {()=>void} watch
- * @property {()=>void} watchDom
  * @property {()=>void} watchURL
  */
 
@@ -529,23 +528,6 @@ const store = createStore(NS, {
 			).innerHTML = '';
 			return;
 		}
-	},
-
-	watchDom() {
-		const doc =
-			// @ts-expect-error
-			document.getElementById('rendered_iframe').contentWindow.document;
-		printHtmlApiTree(
-			doc,
-			// @ts-expect-error
-			document.getElementById('dom_tree'),
-			{
-				showClosers: store.state.showClosers,
-				showInvisible: store.state.showInvisible,
-				showVirtual: store.state.showVirtual,
-				hoverInfo: store.state.hoverInfo,
-			},
-		);
 	},
 
 	render() {

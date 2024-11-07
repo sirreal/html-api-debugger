@@ -73,8 +73,7 @@ function generate_page( string $html, array $options ): string {
 	?>
 <div
 	data-wp-interactive="<?php echo esc_attr( \HTML_API_Debugger\SLUG ); ?>"
-	data-wp-watch--a="watch"
-	data-wp-watch--b="watchDom"
+	data-wp-watch--main="watch"
 	data-wp-watch--url="watchURL"
 	data-wp-run="run"
 	class="html-api-debugger-container html-api-debugger--grid"
