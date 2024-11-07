@@ -131,6 +131,7 @@ const store = createStore(NS, {
 				store.state.playbackPoint
 			]?.[1];
 		},
+
 		get playbackHTML() {
 			if (store.state.playbackPoint === null) {
 				return undefined;
@@ -337,7 +338,7 @@ const store = createStore(NS, {
 			}
 			if (contextElement) {
 				store.state.DOM.contextNode = contextElement.nodeName;
-				contextElement.innerHTML = store.state.html;
+				contextElement.innerHTML = store.state.playbackHTML ?? store.state.html;
 			}
 		}
 
@@ -538,7 +539,7 @@ const store = createStore(NS, {
 		store.state.hasMutatedDom = false;
 
 		const html =
-			store.state.playbackHTML ?? (store.state.contextHTML || store.state.html);
+			store.state.contextHTML || (store.state.playbackHTML ?? store.state.html);
 
 		iframeDocument.open();
 		iframeDocument.write(html);
