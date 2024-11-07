@@ -124,6 +124,11 @@ function get_tree( string $html, array $options ): array {
 
 	$cursor = array( 0 );
 
+	if ( $context_processor ) {
+		$tree   = array();
+		$cursor = array();
+	}
+
 	$compat_mode               = 'CSS1Compat';
 	$doctype_name              = null;
 	$doctype_public_identifier = null;

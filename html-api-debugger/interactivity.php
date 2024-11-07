@@ -117,7 +117,8 @@ function generate_page( string $html, array $options ): string {
 				Rendering mode:&nbsp;<code data-wp-text="state.DOM.renderingMode"></code><br>
 				Doctype name:&nbsp;<code data-wp-text="state.DOM.doctypeName"></code><br>
 				Doctype publicId:&nbsp;<code data-wp-text="state.DOM.doctypePublicId"></code><br>
-				Doctype systemId:&nbsp;<code data-wp-text="state.DOM.doctypeSystemId"></code>
+				Doctype systemId:&nbsp;<code data-wp-text="state.DOM.doctypeSystemId"></code><br>
+				Context node:&nbsp;<code data-wp-text="state.DOM.contextNode"></code>
 			</div>
 		</div>
 	</details>
@@ -151,6 +152,7 @@ function generate_page( string $html, array $options ): string {
 				<div data-wp-bind--hidden="!state.htmlapiResponse.supports.create_fragment_advanced">
 					<label>Context html
 						<textarea
+							placeholder="<!DOCTYPE html><body>"
 							<?php wp_on_directive( 'input', 'handleContextHtmlInput' ); ?>
 						><?php echo "\n" . esc_textarea( str_replace( "\0", '', $options['context_html'] ?? '' ) ); ?></textarea>
 				</label>

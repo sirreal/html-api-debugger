@@ -31,7 +31,7 @@ let mutationObserver = null;
  * @property {string|undefined} doctypeName
  * @property {string|undefined} doctypeSystemId
  * @property {string|undefined} doctypePublicId
- *
+ * @property {string|undefined} contextNode
  *
  * @typedef HTMLAPISpan
  * @property {number} start
@@ -328,8 +328,22 @@ const store = createStore(NS, {
 		store.state.DOM.doctypeSystemId = doc.doctype?.systemId;
 		store.state.DOM.doctypePublicId = doc.doctype?.publicId;
 
+		/** @type {Element|null} */
+		let contextElement = null;
+		if (store.state.contextHTML) {
+			const walker = doc.createTreeWalker(doc, NodeFilter.SHOW_ELEMENT);
+			while (walker.nextNode()) {
+				// @ts-expect-error It's an Element!
+				contextElement = walker.currentNode;
+			}
+			if (contextElement) {
+				store.state.DOM.contextNode = contextElement.outerHTML;
+				contextElement.innerHTML = store.state.html;
+			}
+		}
+
 		printHtmlApiTree(
-			doc,
+			contextElement ?? doc,
 			// @ts-expect-error
 			document.getElementById('dom_tree'),
 			{
@@ -339,6 +353,7 @@ const store = createStore(NS, {
 				hoverInfo: store.state.hoverInfo,
 			},
 		);
+
 		mutationObserver?.observe(doc, {
 			subtree: true,
 			childList: true,
@@ -540,7 +555,8 @@ const store = createStore(NS, {
 		mutationObserver?.disconnect();
 		store.state.hasMutatedDom = false;
 
-		const html = store.state.playbackHTML ?? store.state.html;
+		const html =
+			store.state.playbackHTML ?? (store.state.contextHTML || store.state.html);
 
 		iframeDocument.open();
 		iframeDocument.write(html);
