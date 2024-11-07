@@ -251,15 +251,13 @@ function get_tree( string $html, array $options ): array {
 
 				if (
 					$processor->is_tag_closer() ||
+					WP_HTML_Processor::is_void( $tag_name ) ||
 					( $namespace !== 'html' && $processor->has_self_closing_flag() )
 				) {
 					break;
 				}
 
-				if ( ! WP_HTML_Processor::is_void( $tag_name ) ) {
-					$cursor[] = count( $current['childNodes'] ) - 1;
-				}
-
+				$cursor[] = count( $current['childNodes'] ) - 1;
 				break;
 
 			case '#text':
