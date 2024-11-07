@@ -111,7 +111,8 @@ function generate_page( string $html, array $options ): string {
 				Rendering mode:&nbsp;<code data-wp-text="state.htmlapiResponse.result.compatMode"></code><br>
 				Doctype name:&nbsp;<code data-wp-text="state.htmlApiDoctypeName"></code><br>
 				Doctype publicId:&nbsp;<code data-wp-text="state.htmlApiDoctypePublicId"></code><br>
-				Doctype systemId:&nbsp;<code data-wp-text="state.htmlApiDoctypeSystemId"></code>
+				Doctype systemId:&nbsp;<code data-wp-text="state.htmlApiDoctypeSystemId"></code><br>
+				Context node:&nbsp;<code data-wp-text="state.htmlapiResponse.result.contextNode"></code>
 			</div>
 			<div>
 				Rendering mode:&nbsp;<code data-wp-text="state.DOM.renderingMode"></code><br>

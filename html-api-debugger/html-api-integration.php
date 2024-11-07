@@ -133,6 +133,7 @@ function get_tree( string $html, array $options ): array {
 	$doctype_name              = null;
 	$doctype_public_identifier = null;
 	$doctype_system_identifier = null;
+	$context_node              = $context_processor ? $context_processor->get_tag() : null;
 
 	$playback = array();
 
@@ -388,6 +389,7 @@ function get_tree( string $html, array $options ): array {
 		'doctypeName' => $doctype_name,
 		'doctypePublicId' => $doctype_public_identifier,
 		'doctypeSystemId' => $doctype_system_identifier,
+		'contextNode' => $context_node,
 	);
 }
 

@@ -337,7 +337,7 @@ const store = createStore(NS, {
 				contextElement = walker.currentNode;
 			}
 			if (contextElement) {
-				store.state.DOM.contextNode = contextElement.outerHTML;
+				store.state.DOM.contextNode = contextElement.nodeName;
 				contextElement.innerHTML = store.state.html;
 			}
 		}
