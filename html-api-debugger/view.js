@@ -39,9 +39,8 @@ let mutationObserver = null;
  *
  *
  * @typedef Supports
+ * @property {boolean} create_fragment_advanced
  * @property {boolean} is_virtual
- * @property {boolean} quirks_mode
- * @property {boolean} full_parser
  * @property {boolean} normalize
  *
  *
