@@ -6,7 +6,6 @@ use ReflectionClass;
 use ReflectionMethod;
 use ReflectionProperty;
 use WP_HTML_Processor;
-use WP_HTML_Processor_State;
 
 /**
  * Get information about HTML API supported features
@@ -16,9 +15,6 @@ function get_supports(): array {
 
 	return array(
 		'is_virtual' => $html_processor_rc->hasMethod( 'is_virtual' ),
-		'full_parser' => method_exists( WP_HTML_Processor::class, 'create_full_parser' ),
-		'quirks_mode' => $html_processor_rc->hasProperty( 'compat_mode' ),
-		'doctype' => method_exists( WP_HTML_Processor::class, 'get_doctype_info' ),
 		'normalize' => method_exists( WP_HTML_Processor::class, 'normalize' ),
 		'create_fragment_advanced' => method_exists( WP_HTML_Processor::class, 'create_fragment_at_current_node' ),
 	);
