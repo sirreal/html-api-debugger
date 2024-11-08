@@ -68,6 +68,7 @@ let mutationObserver = null;
  * @property {boolean} showInvisible
  * @property {boolean} showVirtual
  * @property {string} contextHTML
+ * @property {string|null} contextHTMLForUse
  * @property {number|null} previewCorePrNumber
  * @property {number|null} previewGutenbergPrNumber
  * @property {Link|null} previewCoreLink
@@ -138,6 +139,12 @@ const store = createStore(NS, {
 			return store.state.htmlapiResponse.result?.playback?.[
 				store.state.playbackPoint
 			]?.[0];
+		},
+
+		get contextHTMLForUse() {
+			return store.state.htmlapiResponse.supports.create_fragment_advanced
+				? store.state.contextHTML.trim() || null
+				: null;
 		},
 
 		/** @type {Link|null} */
@@ -215,8 +222,8 @@ const store = createStore(NS, {
 			if (store.state.html) {
 				searchParams.set('html', store.state.html);
 			}
-			if (store.state.contextHTML) {
-				searchParams.set('contextHTML', store.state.contextHTML);
+			if (store.state.contextHTMLForUse) {
+				searchParams.set('contextHTML', store.state.contextHTMLForUse);
 			}
 			const base = '/wp-admin/admin.php';
 			const u = new URL(
@@ -329,7 +336,7 @@ const store = createStore(NS, {
 
 		/** @type {Element|null} */
 		let contextElement = null;
-		if (store.state.contextHTML) {
+		if (store.state.contextHTMLForUse) {
 			const walker = doc.createTreeWalker(doc, NodeFilter.SHOW_ELEMENT);
 			while (walker.nextNode()) {
 				// @ts-expect-error It's an Element!
@@ -435,9 +442,12 @@ const store = createStore(NS, {
 	watchURL() {
 		const u = new URL(document.location.href);
 		let shouldReplace = false;
-		for (const param of /** @type {const} */ (['html', 'contextHTML'])) {
-			if (store.state[param]) {
-				u.searchParams.set(param, store.state[param]);
+		for (const [param, prop] of /** @type {const} */ ([
+			['html', 'html'],
+			['contextHTML', 'contextHTMLForUse'],
+		])) {
+			if (store.state[prop]) {
+				u.searchParams.set(param, store.state[prop]);
 				shouldReplace = true;
 			} else if (u.searchParams.has(param)) {
 				u.searchParams.delete(param);
@@ -461,7 +471,7 @@ const store = createStore(NS, {
 				method: 'POST',
 				body: JSON.stringify({
 					html: store.state.html,
-					contextHTML: store.state.contextHTML,
+					contextHTML: store.state.contextHTMLForUse,
 				}),
 				headers: {
 					'Content-Type': 'application/json',
@@ -538,7 +548,9 @@ const store = createStore(NS, {
 		store.state.hasMutatedDom = false;
 
 		const html =
-			store.state.contextHTML || (store.state.playbackHTML ?? store.state.html);
+			store.state.contextHTMLForUse ??
+			store.state.playbackHTML ??
+			store.state.html;
 
 		iframeDocument.open();
 		iframeDocument.write(html);
@@ -570,9 +582,7 @@ const store = createStore(NS, {
 
 	/** @param {InputEvent} e */
 	handleContextHtmlInput: function* (e) {
-		const val = /** @type {HTMLInputElement} */ (e.target).value;
-		store.state.contextHTML = val.trim();
-
+		store.state.contextHTML = /** @type {HTMLInputElement} */ (e.target).value;
 		yield store.callAPI();
 	},
 
