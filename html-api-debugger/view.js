@@ -26,12 +26,14 @@ let mutationObserver = null;
  * @property {string} href
  * @property {string} text
  *
+ *
  * @typedef DOM
  * @property {string|undefined} renderingMode
  * @property {string|undefined} doctypeName
  * @property {string|undefined} doctypeSystemId
  * @property {string|undefined} doctypePublicId
  * @property {string|undefined} contextNode
+ *
  *
  * @typedef HTMLAPISpan
  * @property {number} start
@@ -40,8 +42,6 @@ let mutationObserver = null;
  *
  * @typedef Supports
  * @property {boolean} create_fragment_advanced
- * @property {boolean} is_virtual
- * @property {boolean} normalize
  *
  *
  * @typedef HtmlApiResponse
@@ -83,30 +83,25 @@ let mutationObserver = null;
  * @property {boolean} hasMutatedDom
  * @property {HTMLAPISpan|false} span
  * @property {string} htmlForDisplay
- */
 
-/**
+  *
+  *
  * @typedef Store
- * @property {State} state
- * @property {()=>void} clearSpan
- * @property {()=>void} render
  * @property {()=>Promise<void>} callAPI
- *
- * @property {()=>void} handleInput
- *
- * @property {()=>void} handleShowInvisibleClick
- * @property {()=>void} handleShowClosersClick
- * @property {()=>void} handleShowVirtualClick
+ * @property {()=>void} clearSpan
  * @property {()=>void} handleContextHtmlInput
- *
  * @property {()=>void} handleCopyClick
- * @property {()=>void} handleCopyPrInput
  * @property {()=>void} handleCopyPrClick
- *
+ * @property {()=>void} handleCopyPrInput
+ * @property {()=>void} handleInput
+ * @property {()=>void} handleShowClosersClick
+ * @property {()=>void} handleShowInvisibleClick
+ * @property {()=>void} handleShowVirtualClick
  * @property {()=>void} onRenderedIframeLoad
- *
+ * @property {()=>void} render
  * @property {()=>void} watch
  * @property {()=>void} watchURL
+ * @property {State} state
  */
 
 const createStore = /** @type {typeof I.store<Store>} */ (I.store);
@@ -193,10 +188,7 @@ const store = createStore(NS, {
 		},
 
 		get normalizedHtml() {
-			if (
-				!store.state.htmlapiResponse.supports.normalize ||
-				!store.state.htmlapiResponse.normalizedHtml
-			) {
+			if (!store.state.htmlapiResponse.normalizedHtml) {
 				return '';
 			}
 			return store.state.showInvisible
@@ -459,8 +451,6 @@ const store = createStore(NS, {
 		}
 	},
 
-	// @ts-expect-error This will be transformed by the Interactivity API runtime when called through the store.
-	/** @returns {Promise<void>} */
 	callAPI: function* () {
 		inFlightRequestAbortController?.abort('request superseded');
 		inFlightRequestAbortController = new AbortController();
@@ -486,6 +476,8 @@ const store = createStore(NS, {
 			if (!response.ok) {
 				throw response;
 			}
+
+			// @ts-expect-error It's fine.
 			data = yield response.json();
 		} catch (/** @type {any} */ err) {
 			if (err === 'request superseded' || err instanceof DOMException) {
@@ -536,7 +528,6 @@ const store = createStore(NS, {
 			/** @type {HTMLUListElement} */ (
 				document.getElementById('html_api_result_holder')
 			).innerHTML = '';
-			return;
 		}
 	},
 

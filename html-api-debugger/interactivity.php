@@ -98,7 +98,7 @@ function generate_page( string $html, array $options ): string {
 			referrerpolicy="no-referrer"
 			sandbox="allow-forms allow-modals allow-popups allow-scripts allow-same-origin"></iframe>
 	</div>
-	<details class="full-width" data-wp-bind--hidden="!state.htmlapiResponse.supports.normalize">
+	<details class="full-width">
 		<summary>HTML API Normalized HTML</summary>
 		<pre class="html-text" data-wp-text="state.normalizedHtml"></pre>
 	</details>
@@ -148,7 +148,7 @@ function generate_page( string $html, array $options ): string {
 			<div>
 				<label>Show closers <input type="checkbox" data-wp-bind--checked="state.showClosers" <?php wp_on_directive( 'input', 'handleShowClosersClick' ); ?>></label>
 				<label>Show invisible <input type="checkbox" data-wp-bind--checked="state.showInvisible" <?php wp_on_directive( 'input', 'handleShowInvisibleClick' ); ?>></label>
-				<span data-wp-bind--hidden="!state.htmlapiResponse.supports.is_virtual"><label>Show virtual <input type="checkbox" data-wp-bind--checked="state.showVirtual" <?php wp_on_directive( 'input', 'handleShowVirtualClick' ); ?>></label></span>
+				<span><label>Show virtual <input type="checkbox" data-wp-bind--checked="state.showVirtual" <?php wp_on_directive( 'input', 'handleShowVirtualClick' ); ?>></label></span>
 				<div data-wp-bind--hidden="!state.htmlapiResponse.supports.create_fragment_advanced">
 					<label>Context html
 						<textarea
