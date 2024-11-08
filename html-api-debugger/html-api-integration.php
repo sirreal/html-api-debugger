@@ -137,7 +137,11 @@ function get_tree( string $html, array $options ): array {
 	$doctype_name              = null;
 	$doctype_public_identifier = null;
 	$doctype_system_identifier = null;
-	$context_node              = isset( $context_processor ) ? $context_processor->get_tag() : null;
+	$context_node              = isset( $context_processor )
+		? ( method_exists( $context_processor, 'get_qualified_tag_name' )
+				? $context_processor->get_qualified_tag_name()
+				: $context_processor->get_tag() )
+		: null;
 
 	$playback = array();
 
