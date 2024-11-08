@@ -129,7 +129,9 @@ function get_tree( string $html, array $options ): array {
 	$cursor = array( 0 );
 
 	if ( $is_fragment_processor ) {
-		$tree   = array();
+		$tree   = array(
+			'childNodes' => array(),
+		);
 		$cursor = array();
 	}
 
