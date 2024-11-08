@@ -651,20 +651,3 @@ function getToggleHandler(stateKey) {
 		}
 	};
 }
-
-/**
- * @param {keyof State} stateKey
- * @return {(e: Event) => Promise<void>}
- */
-function getToggleHandlerWithRefetch(stateKey) {
-	const f1 = getToggleHandler(stateKey);
-
-	/**
-	 * @param {Event} e
-	 */
-	// @ts-expect-error The iAPI runtime transforms the generator to an async function.
-	return function* (e) {
-		f1(e);
-		yield store.callAPI();
-	};
-}
