@@ -24,7 +24,6 @@ function get_supports(): array {
 	);
 }
 
-
 /**
  * Get the normalized HTML.
  *

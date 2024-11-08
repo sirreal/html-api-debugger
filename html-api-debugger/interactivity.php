@@ -196,8 +196,6 @@ function generate_page( string $html, array $options ): string {
 					<option value="nightly">nightly</option>
 					<option value="beta">beta</option>
 					<option value="6.7">6.7</option>
-					<option value="6.6">6.6</option>
-					<option value="6.5">6.5</option>
 				</select>
 			</label>
 			<button <?php wp_on_directive( 'click', 'handleCopyClick' ); ?> type="button">Copy shareable playground link</button><br>

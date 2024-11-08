@@ -1,7 +1,7 @@
 === HTML API Debugger ===
 Contributors: jonsurrell
 Tags: HTML API, development, debug
-Requires at least: 6.6
+Requires at least: 6.7
 Tested up to: 6.8
 Stable tag: 2.2
 License: GPLv2 or later
@@ -12,6 +12,7 @@ Add a page to wp-admin for debugging the HTML API.
 == Changelog ==
 
 = 2.2 =
+* Drop support for WordPress 6.7.
 * Drop basic fragment parsing and quirks mode support.
 * Add advanced context and fragment parsing when supported (WordPress 6.8+).
 
