@@ -26,11 +26,13 @@ let mutationObserver = null;
  * @property {string} href
  * @property {string} text
  *
+ *
  * @typedef DOM
  * @property {string|undefined} renderingMode
  * @property {string|undefined} doctypeName
  * @property {string|undefined} doctypeSystemId
  * @property {string|undefined} doctypePublicId
+ * @property {string|undefined} contextNode
  *
  *
  * @typedef HTMLAPISpan
@@ -39,10 +41,7 @@ let mutationObserver = null;
  *
  *
  * @typedef Supports
- * @property {boolean} is_virtual
- * @property {boolean} quirks_mode
- * @property {boolean} full_parser
- * @property {boolean} normalize
+ * @property {boolean} create_fragment_advanced
  *
  *
  * @typedef HtmlApiResponse
@@ -57,21 +56,20 @@ let mutationObserver = null;
  * @property {any|undefined} playbackTree
  * @property {string|undefined} playbackHTML
  * @property {number|null} playbackPoint
+ * @property {number|null} playbackLength
  * @property {string|null} htmlApiDoctypeName
  * @property {string|null} htmlApiDoctypePublicId
  * @property {string|null} htmlApiDoctypeSystemId
  * @property {string|null} normalizedHtml
- * @property {string} htmlPreambleForProcessing
  * @property {string} formattedHtmlapiResponse
  * @property {HtmlApiResponse} htmlapiResponse
  * @property {URL} playgroundLink
  * @property {string} html
- * @property {string} htmlForProcessing
  * @property {boolean} showClosers
  * @property {boolean} showInvisible
  * @property {boolean} showVirtual
- * @property {boolean} quirksMode
- * @property {boolean} fullParser
+ * @property {string} contextHTML
+ * @property {string|null} contextHTMLForUse
  * @property {number|null} previewCorePrNumber
  * @property {number|null} previewGutenbergPrNumber
  * @property {Link|null} previewCoreLink
@@ -86,28 +84,26 @@ let mutationObserver = null;
  * @property {boolean} hasMutatedDom
  * @property {HTMLAPISpan|false} span
  * @property {string} htmlForDisplay
- */
 
-/**
+  *
+  *
  * @typedef Store
- * @property {State} state
- * @property {()=>void} clearSpan
- * @property {()=>void} render
  * @property {()=>Promise<void>} callAPI
- *
- * @property {()=>void} handleInput
- *
- * @property {()=>void} handleShowInvisibleClick
- * @property {()=>void} handleShowClosersClick
- * @property {()=>void} handleShowVirtualClick
- * @property {()=>Promise<void>} handleQuirksModeClick
- * @property {()=>Promise<void>} handleFullParserClick
- *
+ * @property {()=>void} clearSpan
+ * @property {()=>void} handleContextHtmlInput
  * @property {()=>void} handleCopyClick
- * @property {()=>void} handleCopyPrInput
  * @property {()=>void} handleCopyPrClick
- *
+ * @property {()=>void} handleCopyPrInput
+ * @property {()=>void} handleInput
+ * @property {()=>void} handleShowClosersClick
+ * @property {()=>void} handleShowInvisibleClick
+ * @property {()=>void} handleShowVirtualClick
  * @property {()=>void} onRenderedIframeLoad
+ * @property {()=>void} redrawDOMTreeFromIframe
+ * @property {()=>void} render
+ * @property {()=>void} watch
+ * @property {()=>void} watchURL
+ * @property {State} state
  */
 
 const createStore = /** @type {typeof I.store<Store>} */ (I.store);
@@ -119,8 +115,6 @@ const store = createStore(NS, {
 		showClosers: Boolean(localStorage.getItem(`${NS}-showClosers`)),
 		showInvisible: Boolean(localStorage.getItem(`${NS}-showInvisible`)),
 		showVirtual: Boolean(localStorage.getItem(`${NS}-showVirtual`)),
-		quirksMode: Boolean(localStorage.getItem(`${NS}-quirksMode`)),
-		fullParser: Boolean(localStorage.getItem(`${NS}-fullParser`)),
 
 		playbackPoint: null,
 		previewCorePrNumber: null,
@@ -134,6 +128,7 @@ const store = createStore(NS, {
 				store.state.playbackPoint
 			]?.[1];
 		},
+
 		get playbackHTML() {
 			if (store.state.playbackPoint === null) {
 				return undefined;
@@ -141,6 +136,16 @@ const store = createStore(NS, {
 			return store.state.htmlapiResponse.result?.playback?.[
 				store.state.playbackPoint
 			]?.[0];
+		},
+
+		get playbackLength() {
+			return store.state.htmlapiResponse.result?.playback?.length;
+		},
+
+		get contextHTMLForUse() {
+			return store.state.htmlapiResponse.supports.create_fragment_advanced
+				? store.state.contextHTML.trim() || null
+				: null;
 		},
 
 		/** @type {Link|null} */
@@ -189,10 +194,7 @@ const store = createStore(NS, {
 		},
 
 		get normalizedHtml() {
-			if (
-				!store.state.htmlapiResponse.supports.normalize ||
-				!store.state.htmlapiResponse.normalizedHtml
-			) {
+			if (!store.state.htmlapiResponse.normalizedHtml) {
 				return '';
 			}
 			return store.state.showInvisible
@@ -218,29 +220,15 @@ const store = createStore(NS, {
 			if (store.state.html) {
 				searchParams.set('html', store.state.html);
 			}
+			if (store.state.contextHTMLForUse) {
+				searchParams.set('contextHTML', store.state.contextHTMLForUse);
+			}
 			const base = '/wp-admin/admin.php';
 			const u = new URL(
 				'https://playground.wordpress.net/?plugin=html-api-debugger',
 			);
 			u.searchParams.set('url', `${base}?${searchParams.toString()}`);
 			return u;
-		},
-
-		get htmlPreambleForProcessing() {
-			if (store.state.fullParser) {
-				return '';
-			}
-			const doctype = `<!DOCTYPE${
-				store.state.htmlapiResponse.supports.quirks_mode &&
-				store.state.quirksMode
-					? ''
-					: ' html'
-			}>`;
-			return `${doctype}<html><body>`;
-		},
-
-		get htmlForProcessing() {
-			return store.state.htmlPreambleForProcessing + store.state.html;
 		},
 
 		get htmlForDisplay() {
@@ -314,6 +302,10 @@ const store = createStore(NS, {
 	},
 
 	run() {
+		RENDERED_IFRAME.addEventListener('load', store.onRenderedIframeLoad, {
+			passive: true,
+		});
+
 		// The HTML parser will replace null bytes from the HTML.
 		// Force print them if we have null bytes.
 		if (store.state.html.includes('\0')) {
@@ -325,43 +317,22 @@ const store = createStore(NS, {
 		store.render();
 
 		// browsers "eat" some characters from search params…
-		// newlines seem especially problematic in chrome
-		// lets clean up the URL
-		const u = new URL(document.location.href);
-		if (store.state.html) {
-			u.searchParams.set('html', store.state.html);
-			history.replaceState(null, '', u);
-		} else if (u.searchParams.has('html')) {
-			u.searchParams.delete('html');
-			history.replaceState(null, '', u);
-		}
+		// newlines seem especially problematic in chrome.
+		// Let's clean up the URL
+		store.watchURL();
 
 		mutationObserver = new MutationObserver(() => {
 			store.state.hasMutatedDom = true;
-			store.onRenderedIframeLoad();
+			store.redrawDOMTreeFromIframe();
 		});
 	},
 
 	onRenderedIframeLoad() {
+		store.redrawDOMTreeFromIframe();
+
 		// @ts-expect-error It better be defined!
 		const doc = RENDERED_IFRAME.contentWindow.document;
 
-		store.state.DOM.renderingMode = doc.compatMode;
-		store.state.DOM.doctypeName = doc.doctype?.name;
-		store.state.DOM.doctypeSystemId = doc.doctype?.systemId;
-		store.state.DOM.doctypePublicId = doc.doctype?.publicId;
-
-		printHtmlApiTree(
-			doc,
-			// @ts-expect-error
-			document.getElementById('dom_tree'),
-			{
-				showClosers: store.state.showClosers,
-				showInvisible: store.state.showInvisible,
-				showVirtual: store.state.showVirtual,
-				hoverInfo: store.state.hoverInfo,
-			},
-		);
 		mutationObserver?.observe(doc, {
 			subtree: true,
 			childList: true,
@@ -378,6 +349,42 @@ const store = createStore(NS, {
 					attributes: true,
 					characterData: true,
 				});
+			},
+		);
+	},
+
+	redrawDOMTreeFromIframe() {
+		// @ts-expect-error It better be defined!
+		const doc = RENDERED_IFRAME.contentWindow.document;
+
+		store.state.DOM.renderingMode = doc.compatMode;
+		store.state.DOM.doctypeName = doc.doctype?.name;
+		store.state.DOM.doctypeSystemId = doc.doctype?.systemId;
+		store.state.DOM.doctypePublicId = doc.doctype?.publicId;
+
+		/** @type {Element|null} */
+		let contextElement = null;
+		if (store.state.contextHTMLForUse) {
+			const walker = doc.createTreeWalker(doc, NodeFilter.SHOW_ELEMENT);
+			while (walker.nextNode()) {
+				// @ts-expect-error It's an Element!
+				contextElement = walker.currentNode;
+			}
+			if (contextElement) {
+				store.state.DOM.contextNode = contextElement.nodeName;
+				contextElement.innerHTML = store.state.playbackHTML ?? store.state.html;
+			}
+		}
+
+		printHtmlApiTree(
+			contextElement ?? doc,
+			// @ts-expect-error
+			document.getElementById('dom_tree'),
+			{
+				showClosers: store.state.showClosers,
+				showInvisible: store.state.showInvisible,
+				showVirtual: store.state.showVirtual,
+				hoverInfo: store.state.hoverInfo,
 			},
 		);
 	},
@@ -429,8 +436,6 @@ const store = createStore(NS, {
 	handleShowInvisibleClick: getToggleHandler('showInvisible'),
 	handleShowClosersClick: getToggleHandler('showClosers'),
 	handleShowVirtualClick: getToggleHandler('showVirtual'),
-	handleQuirksModeClick: getToggleHandlerWithRefetch('quirksMode'),
-	handleFullParserClick: getToggleHandlerWithRefetch('fullParser'),
 
 	/** @param {Event} e */
 	hoverInfoChange: (e) => {
@@ -443,8 +448,26 @@ const store = createStore(NS, {
 		store.render();
 	},
 
-	// @ts-expect-error This will be transformed by the Interactivity API runtime when called through the store.
-	/** @returns {Promise<void>} */
+	watchURL() {
+		const u = new URL(document.location.href);
+		let shouldReplace = false;
+		for (const [param, prop] of /** @type {const} */ ([
+			['html', 'html'],
+			['contextHTML', 'contextHTMLForUse'],
+		])) {
+			if (store.state[prop]) {
+				u.searchParams.set(param, store.state[prop]);
+				shouldReplace = true;
+			} else if (u.searchParams.has(param)) {
+				u.searchParams.delete(param);
+				shouldReplace = true;
+			}
+		}
+		if (shouldReplace) {
+			history.replaceState(null, '', u);
+		}
+	},
+
 	callAPI: function* () {
 		inFlightRequestAbortController?.abort('request superseded');
 		inFlightRequestAbortController = new AbortController();
@@ -455,8 +478,7 @@ const store = createStore(NS, {
 				method: 'POST',
 				body: JSON.stringify({
 					html: store.state.html,
-					quirksMode: store.state.quirksMode,
-					fullParser: store.state.fullParser,
+					contextHTML: store.state.contextHTMLForUse,
 				}),
 				headers: {
 					'Content-Type': 'application/json',
@@ -471,6 +493,8 @@ const store = createStore(NS, {
 			if (!response.ok) {
 				throw response;
 			}
+
+			// @ts-expect-error It's fine.
 			data = yield response.json();
 		} catch (/** @type {any} */ err) {
 			if (err === 'request superseded' || err instanceof DOMException) {
@@ -521,35 +545,20 @@ const store = createStore(NS, {
 			/** @type {HTMLUListElement} */ (
 				document.getElementById('html_api_result_holder')
 			).innerHTML = '';
-			return;
 		}
-	},
-
-	watchDom() {
-		const doc =
-			// @ts-expect-error
-			document.getElementById('rendered_iframe').contentWindow.document;
-		printHtmlApiTree(
-			doc,
-			// @ts-expect-error
-			document.getElementById('dom_tree'),
-			{
-				showClosers: store.state.showClosers,
-				showInvisible: store.state.showInvisible,
-				showVirtual: store.state.showVirtual,
-				hoverInfo: store.state.hoverInfo,
-			},
-		);
 	},
 
 	render() {
 		// @ts-expect-error This should not be null.
 		const iframeDocument = RENDERED_IFRAME.contentWindow.document;
-
 		mutationObserver?.disconnect();
+
 		store.state.hasMutatedDom = false;
 
-		const html = store.state.playbackHTML ?? store.state.htmlForProcessing;
+		const html =
+			store.state.contextHTMLForUse ??
+			store.state.playbackHTML ??
+			store.state.html;
 
 		iframeDocument.open();
 		iframeDocument.write(html);
@@ -577,6 +586,12 @@ const store = createStore(NS, {
 				},
 			);
 		}
+	},
+
+	/** @param {InputEvent} e */
+	handleContextHtmlInput: function* (e) {
+		store.state.contextHTML = /** @type {HTMLInputElement} */ (e.target).value;
+		yield store.callAPI();
 	},
 
 	/** @param {InputEvent} e */
@@ -642,22 +657,5 @@ function getToggleHandler(stateKey) {
 			store.state[stateKey] = false;
 			localStorage.removeItem(`${NS}-${stateKey}`);
 		}
-	};
-}
-
-/**
- * @param {keyof State} stateKey
- * @return {(e: Event) => Promise<void>}
- */
-function getToggleHandlerWithRefetch(stateKey) {
-	const f1 = getToggleHandler(stateKey);
-
-	/**
-	 * @param {Event} e
-	 */
-	// @ts-expect-error The iAPI runtime transforms the generator to an async function.
-	return function* (e) {
-		f1(e);
-		yield store.callAPI();
 	};
 }

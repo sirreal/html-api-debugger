@@ -2,27 +2,6 @@
 namespace HTML_API_Debugger\Interactivity;
 
 /**
- * Make an "on" directive
- *
- * Depending on supported behavior, this can be sync or async.
- *
- * @param string $on The event name.
- * @param string $directive The directive name.
- */
-function wp_on_directive( string $on, string $directive ): void {
-	static $supports_async_on = null;
-	if ( null === $supports_async_on ) {
-		$supports_async_on = version_compare( get_bloginfo( 'version' ), '6.6', '>=' );
-	}
-
-	echo $supports_async_on ?
-		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-		"data-wp-on-async--{$on}=\"{$directive}\"" :
-		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-		"data-wp-on--{$on}=\"{$directive}\"";
-}
-
-/**
  * Generate the WP Admin page HTML.
  *
  * @param string $html The input html.
@@ -56,8 +35,7 @@ function generate_page( string $html, array $options ): string {
 			'showClosers' => false,
 			'showInvisible' => false,
 			'showVirtual' => false,
-			'quirksMode' => false,
-			'fullParser' => false,
+			'contextHTML' => $options['context_html'] ?? '',
 
 			'hoverInfo' => 'breadcrumbs',
 			'hoverBreadcrumbs' => true,
@@ -68,15 +46,19 @@ function generate_page( string $html, array $options ): string {
 			'htmlApiDoctypePublicId' => $htmlapi_response['result']['doctypePublicId'] ?? '[unknown]',
 			'htmlApiDoctypeSytemId' => $htmlapi_response['result']['doctypeSystemId'] ?? '[unknown]',
 			'normalizedHtml' => $htmlapi_response['normalizedHtml'] ?? '',
+
+			'playbackLength' => isset( $htmlapi_response['result']['playback'] )
+				? count( $htmlapi_response['result']['playback'] )
+				: 0,
 		)
 	);
 	ob_start();
 	?>
 <div
 	data-wp-interactive="<?php echo esc_attr( \HTML_API_Debugger\SLUG ); ?>"
-	data-wp-watch--a="watch"
-	data-wp-watch--b="watchDom"
-	data-wp-run="run"
+	data-wp-watch--main="watch"
+	data-wp-watch--url="watchURL"
+	data-wp-init="run"
 	class="html-api-debugger-container html-api-debugger--grid"
 >
 	<div>
@@ -87,24 +69,18 @@ function generate_page( string $html, array $options ): string {
 			autocomplete="off"
 			spellcheck="false"
 			wrap="off"
-			<?php wp_on_directive( 'input', 'handleInput' ); ?>
+			data-wp-on-async--input="handleInput"
 		><?php echo "\n" . esc_textarea( str_replace( "\0", '', $html ) ); ?></textarea>
-		<p data-wp-bind--hidden="!state.htmlPreambleForProcessing">
-			Note: Because HTML API operates in body at this time, this will be prepended:
-			<br>
-			<code data-wp-text="state.htmlPreambleForProcessing"></code>
-		</p>
 	</div>
 	<div>
 		<h2>Rendered output</h2>
 		<iframe
-			<?php wp_on_directive( 'load', 'onRenderedIframeLoad' ); ?>
 			src="about:blank"
 			id="rendered_iframe"
 			referrerpolicy="no-referrer"
 			sandbox="allow-forms allow-modals allow-popups allow-scripts allow-same-origin"></iframe>
 	</div>
-	<details class="full-width" data-wp-bind--hidden="!state.htmlapiResponse.supports.normalize">
+	<details class="full-width">
 		<summary>HTML API Normalized HTML</summary>
 		<pre class="html-text" data-wp-text="state.normalizedHtml"></pre>
 	</details>
@@ -116,13 +92,15 @@ function generate_page( string $html, array $options ): string {
 				Rendering mode:&nbsp;<code data-wp-text="state.htmlapiResponse.result.compatMode"></code><br>
 				Doctype name:&nbsp;<code data-wp-text="state.htmlApiDoctypeName"></code><br>
 				Doctype publicId:&nbsp;<code data-wp-text="state.htmlApiDoctypePublicId"></code><br>
-				Doctype systemId:&nbsp;<code data-wp-text="state.htmlApiDoctypeSystemId"></code>
+				Doctype systemId:&nbsp;<code data-wp-text="state.htmlApiDoctypeSystemId"></code><br>
+				Context node:&nbsp;<code data-wp-text="state.htmlapiResponse.result.contextNode"></code>
 			</div>
 			<div>
 				Rendering mode:&nbsp;<code data-wp-text="state.DOM.renderingMode"></code><br>
 				Doctype name:&nbsp;<code data-wp-text="state.DOM.doctypeName"></code><br>
 				Doctype publicId:&nbsp;<code data-wp-text="state.DOM.doctypePublicId"></code><br>
-				Doctype systemId:&nbsp;<code data-wp-text="state.DOM.doctypeSystemId"></code>
+				Doctype systemId:&nbsp;<code data-wp-text="state.DOM.doctypeSystemId"></code><br>
+				Context node:&nbsp;<code data-wp-text="state.DOM.contextNode"></code>
 			</div>
 		</div>
 	</details>
@@ -130,10 +108,8 @@ function generate_page( string $html, array $options ): string {
 		<div>
 			<h2>Interpreted by HTML API</h2>
 			<div
-				<?php
-					wp_on_directive( 'mouseover', 'handleSpanOver' );
-					wp_on_directive( 'mouseleave', 'clearSpan' );
-				?>
+				data-wp-on-async--mouseover="handleSpanOver"
+				data-wp-on-async--mouseleave="clearSpan"
 			>
 				<pre class="error-holder" data-wp-bind--hidden="!state.htmlapiResponse.error" data-wp-text="state.htmlapiResponse.error"></pre>
 				<div data-wp-bind--hidden="state.htmlapiResponse.error">
@@ -150,16 +126,24 @@ function generate_page( string $html, array $options ): string {
 	<div class="full-width">
 		<div>
 			<div>
-				<label>Show closers <input type="checkbox" data-wp-bind--checked="state.showClosers" <?php wp_on_directive( 'input', 'handleShowClosersClick' ); ?>></label>
-				<label>Show invisible <input type="checkbox" data-wp-bind--checked="state.showInvisible" <?php wp_on_directive( 'input', 'handleShowInvisibleClick' ); ?>></label>
-				<span data-wp-bind--hidden="!state.htmlapiResponse.supports.is_virtual"><label>Show virtual <input type="checkbox" data-wp-bind--checked="state.showVirtual" <?php wp_on_directive( 'input', 'handleShowVirtualClick' ); ?>></label></span>
-				<span data-wp-bind--hidden="!state.htmlapiResponse.supports.quirks_mode"><label>Quirks mode <input type="checkbox" data-wp-bind--checked="state.quirksMode" data-wp-bind--disabled="state.fullParser" <?php wp_on_directive( 'input', 'handleQuirksModeClick' ); ?>></label></span>
-				<span data-wp-bind--hidden="!state.htmlapiResponse.supports.full_parser"><label>Full parser <input type="checkbox" data-wp-bind--checked="state.fullParser" <?php wp_on_directive( 'input', 'handleFullParserClick' ); ?>></label></span>
+				<label>Show closers <input type="checkbox" data-wp-bind--checked="state.showClosers" data-wp-on-async--input="handleShowClosersClick"></label>
+				<label>Show invisible <input type="checkbox" data-wp-bind--checked="state.showInvisible" data-wp-on-async--input="handleShowInvisibleClick"></label>
+				<span><label>Show virtual <input type="checkbox" data-wp-bind--checked="state.showVirtual" data-wp-on-async--input="handleShowVirtualClick"></label></span>
+				<div data-wp-bind--hidden="!state.htmlapiResponse.supports.create_fragment_advanced">
+					<label>Context html
+						<textarea
+							class="context-html"
+							placeholder="Provide a fragment context, for example:&#x0A;<!DOCTYPE html><body>"
+							rows="2"
+							data-wp-on-async--input="handleContextHtmlInput"
+						><?php echo "\n" . esc_textarea( str_replace( "\0", '', $options['context_html'] ?? '' ) ); ?></textarea>
+				</label>
+				</div>
 			</div>
 			<div>
 				<label>
 					Hover information
-					<select <?php wp_on_directive( 'change', 'hoverInfoChange' ); ?>>
+					<select data-wp-on-async--change="hoverInfoChange">
 						<option data-wp-bind--selected="state.hoverBreadcrumbs" value="breadcrumbs">(depth) Breadcrumbs…</option>
 						<option data-wp-bind--selected="state.hoverInsertion" value="insertionMode">Insertion mode</option>
 					</select>
@@ -176,8 +160,8 @@ function generate_page( string $html, array $options ): string {
 						type="range"
 						min="2"
 						style="width:100%"
-						data-wp-bind--max="state.htmlapiResponse.result.playback.length"
-						data-wp-bind--value="state.htmlapiResponse.result.playback.length"
+						data-wp-bind--max="state.playbackLength"
+						data-wp-bind--value="state.playbackLength"
 						data-wp-on--input="handlePlaybackChange"
 					>
 				</label>
@@ -192,22 +176,20 @@ function generate_page( string $html, array $options ): string {
 					<option value="nightly">nightly</option>
 					<option value="beta">beta</option>
 					<option value="6.7">6.7</option>
-					<option value="6.6">6.6</option>
-					<option value="6.5">6.5</option>
 				</select>
 			</label>
-			<button <?php wp_on_directive( 'click', 'handleCopyClick' ); ?> type="button">Copy shareable playground link</button><br>
+			<button data-wp-on-async--click="handleCopyClick" type="button">Copy shareable playground link</button><br>
 		</p>
 		<p>
 			<label>
 				<code>WordPress/develop</code> PR number:
-				<input type="number" min="1" <?php wp_on_directive( 'input', 'handleCopyCorePrInput' ); ?>>
+				<input type="number" min="1" data-wp-on-async--input="handleCopyCorePrInput">
 			</label>
 			<label>
 				<code>WordPress/gutenberg</code> PR number:
-				<input type="number" min="1" <?php wp_on_directive( 'input', 'handleCopyGutenbergPrInput' ); ?>>
+				<input type="number" min="1" data-wp-on-async--input="handleCopyGutenbergPrInput">
 			</label>
-			<button <?php wp_on_directive( 'click', 'handleCopyPrClick' ); ?>>Copy shareable playground link to PR</button>
+			<button data-wp-on-async--click="handleCopyPrClick">Copy shareable playground link to PR</button>
 			<span data-wp-bind--hidden="!state.previewCoreLink">
 				<a
 					data-wp-bind--href="state.previewCoreLink.href"

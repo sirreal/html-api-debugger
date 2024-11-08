@@ -41,10 +41,19 @@
 		font-size: inherit;
 	}
 
-	textarea {
+	#input_html {
 		width: 100%;
 		min-height: 200px;
 		font-family: monospace;
+	}
+
+	.context-html {
+		width: 100%;
+		font-family: monospace;
+
+		&:placeholder-shown {
+			font-style: italic;
+		}
 	}
 
 	.error-holder {

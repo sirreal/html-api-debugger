@@ -2,40 +2,55 @@
 namespace HTML_API_Debugger\HTML_API_Integration;
 
 use Exception;
-use ReflectionClass;
 use ReflectionMethod;
 use ReflectionProperty;
 use WP_HTML_Processor;
-use WP_HTML_Processor_State;
 
 /**
  * Get information about HTML API supported features
  */
 function get_supports(): array {
-	$html_processor_rc       = new ReflectionClass( WP_HTML_Processor::class );
-	$html_processor_state_rc = new ReflectionClass( WP_HTML_Processor_State::class );
-
 	return array(
-		'is_virtual' => $html_processor_rc->hasMethod( 'is_virtual' ),
-		'full_parser' => method_exists( WP_HTML_Processor::class, 'create_full_parser' ),
-		'quirks_mode' => $html_processor_rc->hasProperty( 'compat_mode' ),
-		'doctype' => method_exists( WP_HTML_Processor::class, 'get_doctype_info' ),
-		'normalize' => method_exists( WP_HTML_Processor::class, 'normalize' ),
+		'create_fragment_advanced' => method_exists( WP_HTML_Processor::class, 'create_fragment_at_current_node' ),
 	);
 }
-
 
 /**
  * Get the normalized HTML.
  *
  * @param string $html The HTML.
+ * @param array  $options The options.
  * @return string|null The normalized HTML or null if not supported.
  */
-function get_normalized_html( string $html ): ?string {
-	if ( ! method_exists( WP_HTML_Processor::class, 'normalize' ) ) {
+function get_normalized_html( string $html, array $options ): ?string {
+	if (
+		method_exists( WP_HTML_Processor::class, 'create_fragment_at_current_node' ) &&
+		$options['context_html']
+	) {
+		$context_processor = WP_HTML_Processor::create_full_parser( $options['context_html'] );
+
+		while ( $context_processor->next_tag() ) {
+			$context_processor->set_bookmark( 'final_node' );
+		}
+		if ( $context_processor->has_bookmark( 'final_node' ) ) {
+			$context_processor->seek( 'final_node' );
+			/**
+			 * The main processor used for tree building.
+			 *
+			 * @var WP_HTML_Processor|null $processor
+			 * @disregard P1013
+			 */
+			$processor = $context_processor->create_fragment_at_current_node( $html );
+		}
+	} else {
+		$processor = WP_HTML_Processor::create_full_parser( $html );
+	}
+
+	if ( ! isset( $processor ) ) {
 		return null;
 	}
-	return WP_HTML_Processor::normalize( $html );
+
+	return $processor->serialize();
 }
 
 /**
@@ -53,65 +68,46 @@ function get_tree( string $html, array $options ): array {
 	$processor_bookmarks = new ReflectionProperty( WP_HTML_Processor::class, 'bookmarks' );
 	$processor_bookmarks->setAccessible( true );
 
-	$use_full_parser = method_exists( WP_HTML_Processor::class, 'create_full_parser' ) && ( $options['full_parser'] ?? false );
+	$is_fragment_processor = false;
 
-	$processor = $use_full_parser
-		? WP_HTML_Processor::create_full_parser( $html )
-		: WP_HTML_Processor::create_fragment( $html );
-
-	$doctype_value = $use_full_parser ? '' : 'html';
 	if (
-		! $use_full_parser &&
-		( $options['quirks_mode'] ?? false ) &&
-		property_exists( WP_HTML_Processor::class, 'compat_mode' ) &&
-		defined( WP_HTML_Processor::class . '::QUIRKS_MODE' )
+		method_exists( WP_HTML_Processor::class, 'create_fragment_at_current_node' ) &&
+		$options['context_html']
 	) {
-		$processor_compat_mode = new ReflectionProperty( WP_HTML_Processor::class, 'compat_mode' );
-		$processor_compat_mode->setValue( $processor, WP_HTML_Processor::QUIRKS_MODE );
-		$doctype_value = '';
+		$context_processor = WP_HTML_Processor::create_full_parser( $options['context_html'] );
+
+		while ( $context_processor->next_tag() ) {
+			$context_processor->set_bookmark( 'final_node' );
+		}
+		if ( $context_processor->has_bookmark( 'final_node' ) ) {
+			$context_processor->seek( 'final_node' );
+			/**
+			 * The main processor used for tree building.
+			 *
+			 * @var WP_HTML_Processor|null $processor
+			 * @disregard P1013
+			 */
+			$processor = $context_processor->create_fragment_at_current_node( $html );
+		}
+
+		if ( ! isset( $processor ) ) {
+			throw new Exception( 'Could not create processor from context HTML.' );
+		}
+
+		$is_fragment_processor = true;
+	} else {
+		$processor = WP_HTML_Processor::create_full_parser( $html );
 	}
-
-	$rc = new ReflectionClass( WP_HTML_Processor::class );
-
-	$is_virtual = function () {
-		return null;
-	};
-
-	if ( $rc->hasMethod( 'is_virtual' ) ) {
-		$processor_is_virtual = new ReflectionMethod( WP_HTML_Processor::class, 'is_virtual' );
-		$processor_is_virtual->setAccessible( true );
-		$is_virtual = function () use ( $processor_is_virtual, $processor ) {
-			return $processor_is_virtual->invoke( $processor );
-		};
-	}
-
-	$get_current_depth = method_exists( WP_HTML_Processor::class, 'get_current_depth' )
-		? function () use ( $processor ): int {
-			return $processor->get_current_depth();
-		}
-		: function () use ( $processor ): int {
-			return count( $processor->get_breadcrumbs() );
-		};
-
-	$get_tag_name = method_exists( WP_HTML_Processor::class, 'get_qualified_tag_name' )
-		? function () use ( $processor ): string {
-			return $processor->get_qualified_tag_name();
-		}
-		: function () use ( $processor ): string {
-			return $processor->get_tag();
-		};
-
-	$get_attribute_name = method_exists( WP_HTML_Processor::class, 'get_qualified_attribute_name' )
-		? function ( string $attribute_name ) use ( $processor ): string {
-			return $processor->get_qualified_attribute_name( $attribute_name );
-		}
-		: function ( string $attribute_name ): string {
-			return $attribute_name;
-		};
 
 	if ( null === $processor ) {
-		throw new Exception( 'could not process html' );
+		throw new Exception( 'Could not create processor.' );
 	}
+
+	$processor_is_virtual = new ReflectionMethod( WP_HTML_Processor::class, 'is_virtual' );
+	$processor_is_virtual->setAccessible( true );
+	$is_virtual = function () use ( $processor_is_virtual, $processor ) {
+		return $processor_is_virtual->invoke( $processor );
+	};
 
 	$tree = array(
 		'nodeType' => NODE_TYPE_DOCUMENT,
@@ -120,38 +116,21 @@ function get_tree( string $html, array $options ): array {
 	);
 
 	$cursor = array( 0 );
-	if ( ! $use_full_parser ) {
-		$tree['childNodes'][] = array(
-			'nodeType' => NODE_TYPE_DOCUMENT_TYPE,
-			'nodeName' => $doctype_value,
-			'nodeValue' => '',
+
+	if ( $is_fragment_processor ) {
+		$tree   = array(
+			'childNodes' => array(),
 		);
-		$tree['childNodes'][] = array(
-			'nodeType' => NODE_TYPE_ELEMENT,
-			'nodeName' => 'HTML',
-			'attributes' => array(),
-			'childNodes' => array(
-				array(
-					'nodeType' => NODE_TYPE_ELEMENT,
-					'nodeName' => 'HEAD',
-					'attributes' => array(),
-					'childNodes' => array(),
-				),
-				array(
-					'nodeType' => NODE_TYPE_ELEMENT,
-					'nodeName' => 'BODY',
-					'attributes' => array(),
-					'childNodes' => array(),
-				),
-			),
-		);
-		$cursor               = array( 1, 1 );
+		$cursor = array();
 	}
 
 	$compat_mode               = 'CSS1Compat';
 	$doctype_name              = null;
 	$doctype_public_identifier = null;
 	$doctype_system_identifier = null;
+	$context_node              = isset( $context_processor )
+		? $context_processor->get_qualified_tag_name()
+		: null;
 
 	$playback = array();
 
@@ -170,7 +149,10 @@ function get_tree( string $html, array $options ): array {
 			break;
 		}
 
-		if ( ( count( $cursor ) + 1 ) > $get_current_depth() ) {
+		// Depth needs and adjustment because:
+		// - Nodes in a full tree are all placed under a document node.
+		// - Nodes in a fragment tree start at the root.
+		if ( ( count( $cursor ) + 1 ) > ( $processor->get_current_depth() - ( $is_fragment_processor ? 1 : 0 ) ) ) {
 			array_pop( $cursor );
 		}
 		$current = &$tree;
@@ -181,31 +163,30 @@ function get_tree( string $html, array $options ): array {
 		$token_type = $processor->get_token_type();
 
 		switch ( $token_type ) {
+			// @todo this should be set on the context processor if present.
 			case '#doctype':
-				if ( method_exists( WP_HTML_Processor::class, 'get_doctype_info' ) ) {
-					$doctype = $processor->get_doctype_info();
+				$doctype = $processor->get_doctype_info();
 
-					$doctype_name              = $doctype->name;
-					$doctype_public_identifier = $doctype->public_identifier;
-					$doctype_system_identifier = $doctype->system_identifier;
+				$doctype_name              = $doctype->name;
+				$doctype_public_identifier = $doctype->public_identifier;
+				$doctype_system_identifier = $doctype->system_identifier;
 
-					if ( $doctype->indicated_compatability_mode === 'quirks' ) {
-						$compat_mode = 'BackCompat';
-					}
-
-					$current['childNodes'][] = array(
-						'nodeType' => NODE_TYPE_DOCUMENT_TYPE,
-						'nodeName' => $doctype_name,
-						'_span' => $bookmark,
-						'_mode' => $processor_state->getValue( $processor )->insertion_mode,
-						'_bc' => $processor->get_breadcrumbs(),
-						'_depth' => $get_current_depth(),
-					);
+				if ( $doctype->indicated_compatability_mode === 'quirks' ) {
+					$compat_mode = 'BackCompat';
 				}
+
+				$current['childNodes'][] = array(
+					'nodeType' => NODE_TYPE_DOCUMENT_TYPE,
+					'nodeName' => $doctype_name,
+					'_span' => $bookmark,
+					'_mode' => $processor_state->getValue( $processor )->insertion_mode,
+					'_bc' => $processor->get_breadcrumbs(),
+					'_depth' => $processor->get_current_depth(),
+				);
 				break;
 
 			case '#tag':
-				$tag_name = $get_tag_name();
+				$tag_name = $processor->get_qualified_tag_name();
 
 				$attributes      = array();
 				$attribute_names = $processor->get_attribute_names_with_prefix( '' );
@@ -223,13 +204,13 @@ function get_tree( string $html, array $options ): array {
 						$attributes[] = array(
 							'nodeType' => NODE_TYPE_ATTRIBUTE,
 							'specified' => true,
-							'nodeName' => $get_attribute_name( $attribute_name ),
+							'nodeName' => $processor->get_qualified_attribute_name( $attribute_name ),
 							'nodeValue' => $val,
 						);
 					}
 				}
 
-				$namespace = method_exists( WP_HTML_Processor::class, 'get_namespace' ) ? $processor->get_namespace() : 'html';
+				$namespace = $processor->get_namespace();
 
 				$self = array(
 					'nodeType' => NODE_TYPE_ELEMENT,
@@ -241,7 +222,7 @@ function get_tree( string $html, array $options ): array {
 					'_mode' => $processor_state->getValue( $processor )->insertion_mode,
 					'_bc' => $processor->get_breadcrumbs(),
 					'_virtual' => $is_virtual(),
-					'_depth' => $get_current_depth(),
+					'_depth' => $processor->get_current_depth(),
 					'_namespace' => $namespace,
 				);
 
@@ -256,7 +237,7 @@ function get_tree( string $html, array $options ): array {
 						'_mode' => $processor_state->getValue( $processor )->insertion_mode,
 						'_bc' => array_merge( $processor->get_breadcrumbs(), array( '#text' ) ),
 						'_virtual' => $is_virtual(),
-						'_depth' => $get_current_depth() + 1,
+						'_depth' => $processor->get_current_depth() + 1,
 					);
 				}
 
@@ -264,15 +245,13 @@ function get_tree( string $html, array $options ): array {
 
 				if (
 					$processor->is_tag_closer() ||
+					( $namespace === 'html' && WP_HTML_Processor::is_void( $tag_name ) ) ||
 					( $namespace !== 'html' && $processor->has_self_closing_flag() )
 				) {
 					break;
 				}
 
-				if ( ! WP_HTML_Processor::is_void( $tag_name ) ) {
-					$cursor[] = count( $current['childNodes'] ) - 1;
-				}
-
+				$cursor[] = count( $current['childNodes'] ) - 1;
 				break;
 
 			case '#text':
@@ -284,7 +263,7 @@ function get_tree( string $html, array $options ): array {
 					'_mode' => $processor_state->getValue( $processor )->insertion_mode,
 					'_bc' => $processor->get_breadcrumbs(),
 					'_virtual' => $is_virtual(),
-					'_depth' => $get_current_depth(),
+					'_depth' => $processor->get_current_depth(),
 				);
 
 				$current['childNodes'][] = $self;
@@ -299,7 +278,7 @@ function get_tree( string $html, array $options ): array {
 					'_mode' => $processor_state->getValue( $processor )->insertion_mode,
 					'_bc' => $processor->get_breadcrumbs(),
 					'_virtual' => $is_virtual(),
-					'_depth' => $get_current_depth(),
+					'_depth' => $processor->get_current_depth(),
 				);
 
 				$current['childNodes'][] = $self;
@@ -314,7 +293,7 @@ function get_tree( string $html, array $options ): array {
 					'_mode' => $processor_state->getValue( $processor )->insertion_mode,
 					'_bc' => $processor->get_breadcrumbs(),
 					'_virtual' => $is_virtual(),
-					'_depth' => $get_current_depth(),
+					'_depth' => $processor->get_current_depth(),
 				);
 				$current['childNodes'][] = $self;
 				break;
@@ -328,7 +307,7 @@ function get_tree( string $html, array $options ): array {
 					'_mode' => $processor_state->getValue( $processor )->insertion_mode,
 					'_bc' => $processor->get_breadcrumbs(),
 					'_virtual' => $is_virtual(),
-					'_depth' => $get_current_depth(),
+					'_depth' => $processor->get_current_depth(),
 				);
 				$current['childNodes'][] = $self;
 				break;
@@ -340,7 +319,7 @@ function get_tree( string $html, array $options ): array {
 					'_mode' => $processor_state->getValue( $processor )->insertion_mode,
 					'_bc' => $processor->get_breadcrumbs(),
 					'_virtual' => $is_virtual(),
-					'_depth' => $get_current_depth(),
+					'_depth' => $processor->get_current_depth(),
 				);
 				switch ( $processor->get_comment_type() ) {
 					case WP_HTML_Processor::COMMENT_AS_ABRUPTLY_CLOSED_COMMENT:
@@ -388,16 +367,19 @@ function get_tree( string $html, array $options ): array {
 	$playback[] = array( $last_html, $tree );
 
 	if ( null !== $processor->get_last_error() ) {
-		if ( method_exists( WP_HTML_Processor::class, 'get_unsupported_exception' ) && $processor->get_unsupported_exception() ) {
+		if ( $processor->get_unsupported_exception() ) {
 			throw $processor->get_unsupported_exception();
-		} else {
+		} elseif ( $processor->get_last_error() ) {
 			// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
 			throw new Exception( $processor->get_last_error() );
+		} else {
+			throw new Exception( 'Unknown error.' );
 		}
 	}
 
+	// This could perhaps be ignored or surfaced in the response.
 	if ( $processor->paused_at_incomplete_token() ) {
-		throw new Exception( 'Paused at incomplete token' );
+		throw new Exception( 'Paused at incomplete token.' );
 	}
 
 	return array(
@@ -407,6 +389,7 @@ function get_tree( string $html, array $options ): array {
 		'doctypeName' => $doctype_name,
 		'doctypePublicId' => $doctype_public_identifier,
 		'doctypeSystemId' => $doctype_system_identifier,
+		'contextNode' => $context_node,
 	);
 }
 

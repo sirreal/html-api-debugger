@@ -3,9 +3,9 @@
  * Plugin Name:       HTML API Debugger
  * Plugin URI:        https://github.com/sirreal/html-api-debugger
  * Description:       Add a page to wp-admin for debugging the HTML API.
- * Version:           2.1
- * Requires at least: 6.6
- * Tested up to:      6.7
+ * Version:           2.2
+ * Requires at least: 6.7
+ * Tested up to:      6.8
  * Author:            Jon Surrell
  * Author URI:        https://profiles.wordpress.org/jonsurrell/
  * License:           GPLv2 or later
@@ -22,7 +22,7 @@ use Exception;
 require_once __DIR__ . '/html-api-integration.php';
 
 const SLUG    = 'html-api-debugger';
-const VERSION = '2.1';
+const VERSION = '2.2';
 
 /** Set up the plugin. */
 function init() {
@@ -44,8 +44,7 @@ function init() {
 						// phpcs:ignore Universal.Operators.DisallowShortTernary.Found
 						$html = $request->get_json_params()['html'] ?: '';
 						$options = array(
-							'quirks_mode' => $request->get_json_params()['quirksMode'] ?? false,
-							'full_parser' => $request->get_json_params()['fullParser'] ?? false,
+							'context_html' => $request->get_json_params()['contextHTML'] ?: null,
 						);
 						return prepare_html_result_object( $html, $options );
 					},
@@ -111,14 +110,19 @@ function init() {
 				function () {
 					require_once __DIR__ . '/interactivity.php';
 
+					$options = array(
+						'context_html' => null,
+					);
+
 					$html = '';
 					// phpcs:disable WordPress.Security.NonceVerification.Recommended
 					if ( isset( $_GET['html'] ) && is_string( $_GET['html'] ) ) {
 						$html = stripslashes( $_GET['html'] );
 					}
-
-					$options = array();
-					// @todo Add query args for other options
+					if ( isset( $_GET['contextHTML'] ) && is_string( $_GET['contextHTML'] ) ) {
+						$options['context_html'] = stripslashes( $_GET['contextHTML'] );
+					}
+					// phpcs:enable WordPress.Security.NonceVerification.Recommended
 
 					// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 					echo namespace\Interactivity\generate_page( $html, $options );
@@ -141,7 +145,7 @@ function prepare_html_result_object( string $html, array $options = null ): arra
 		'html' => $html,
 		'error' => null,
 		'result' => null,
-		'normalizedHtml' => HTML_API_Integration\get_normalized_html( $html ),
+		'normalizedHtml' => HTML_API_Integration\get_normalized_html( $html, $options ),
 	);
 
 	try {
