@@ -46,6 +46,10 @@ function generate_page( string $html, array $options ): string {
 			'htmlApiDoctypePublicId' => $htmlapi_response['result']['doctypePublicId'] ?? '[unknown]',
 			'htmlApiDoctypeSytemId' => $htmlapi_response['result']['doctypeSystemId'] ?? '[unknown]',
 			'normalizedHtml' => $htmlapi_response['normalizedHtml'] ?? '',
+
+			'playbackLength' => isset( $htmlapi_response['result']['playback'] )
+				? count( $htmlapi_response['result']['playback'] )
+				: 0,
 		)
 	);
 	ob_start();
@@ -157,8 +161,8 @@ function generate_page( string $html, array $options ): string {
 						type="range"
 						min="2"
 						style="width:100%"
-						data-wp-bind--max="state.htmlapiResponse.result.playback.length"
-						data-wp-bind--value="state.htmlapiResponse.result.playback.length"
+						data-wp-bind--max="state.playbackLength"
+						data-wp-bind--value="state.playbackLength"
 						data-wp-on--input="handlePlaybackChange"
 					>
 				</label>

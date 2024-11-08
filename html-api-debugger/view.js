@@ -56,6 +56,7 @@ let mutationObserver = null;
  * @property {any|undefined} playbackTree
  * @property {string|undefined} playbackHTML
  * @property {number|null} playbackPoint
+ * @property {number|null} playbackLength
  * @property {string|null} htmlApiDoctypeName
  * @property {string|null} htmlApiDoctypePublicId
  * @property {string|null} htmlApiDoctypeSystemId
@@ -134,6 +135,10 @@ const store = createStore(NS, {
 			return store.state.htmlapiResponse.result?.playback?.[
 				store.state.playbackPoint
 			]?.[0];
+		},
+
+		get playbackLength() {
+			return store.state.htmlapiResponse.result?.playback?.length;
 		},
 
 		get contextHTMLForUse() {
