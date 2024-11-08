@@ -99,6 +99,7 @@ let mutationObserver = null;
  * @property {()=>void} handleShowInvisibleClick
  * @property {()=>void} handleShowVirtualClick
  * @property {()=>void} onRenderedIframeLoad
+ * @property {()=>void} redrawDOMTreeFromIframe
  * @property {()=>void} render
  * @property {()=>void} watch
  * @property {()=>void} watchURL
@@ -301,6 +302,10 @@ const store = createStore(NS, {
 	},
 
 	run() {
+		RENDERED_IFRAME.addEventListener('load', store.onRenderedIframeLoad, {
+			passive: true,
+		});
+
 		// The HTML parser will replace null bytes from the HTML.
 		// Force print them if we have null bytes.
 		if (store.state.html.includes('\0')) {
@@ -318,11 +323,37 @@ const store = createStore(NS, {
 
 		mutationObserver = new MutationObserver(() => {
 			store.state.hasMutatedDom = true;
-			store.onRenderedIframeLoad();
+			store.redrawDOMTreeFromIframe();
 		});
 	},
 
 	onRenderedIframeLoad() {
+		store.redrawDOMTreeFromIframe();
+
+		// @ts-expect-error It better be defined!
+		const doc = RENDERED_IFRAME.contentWindow.document;
+
+		mutationObserver?.observe(doc, {
+			subtree: true,
+			childList: true,
+			attributes: true,
+			characterData: true,
+		});
+		Array.prototype.forEach.call(
+			doc.getElementsByTagNameNS('http://www.w3.org/1999/xhtml', 'template'),
+			/** @param {HTMLTemplateElement} template */
+			(template) => {
+				mutationObserver?.observe(template.content, {
+					subtree: true,
+					childList: true,
+					attributes: true,
+					characterData: true,
+				});
+			},
+		);
+	},
+
+	redrawDOMTreeFromIframe() {
 		// @ts-expect-error It better be defined!
 		const doc = RENDERED_IFRAME.contentWindow.document;
 
@@ -354,25 +385,6 @@ const store = createStore(NS, {
 				showInvisible: store.state.showInvisible,
 				showVirtual: store.state.showVirtual,
 				hoverInfo: store.state.hoverInfo,
-			},
-		);
-
-		mutationObserver?.observe(doc, {
-			subtree: true,
-			childList: true,
-			attributes: true,
-			characterData: true,
-		});
-		Array.prototype.forEach.call(
-			doc.getElementsByTagNameNS('http://www.w3.org/1999/xhtml', 'template'),
-			/** @param {HTMLTemplateElement} template */
-			(template) => {
-				mutationObserver?.observe(template.content, {
-					subtree: true,
-					childList: true,
-					attributes: true,
-					characterData: true,
-				});
 			},
 		);
 	},
@@ -539,8 +551,8 @@ const store = createStore(NS, {
 	render() {
 		// @ts-expect-error This should not be null.
 		const iframeDocument = RENDERED_IFRAME.contentWindow.document;
-
 		mutationObserver?.disconnect();
+
 		store.state.hasMutatedDom = false;
 
 		const html =

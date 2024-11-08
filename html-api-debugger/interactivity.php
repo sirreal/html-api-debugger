@@ -58,7 +58,7 @@ function generate_page( string $html, array $options ): string {
 	data-wp-interactive="<?php echo esc_attr( \HTML_API_Debugger\SLUG ); ?>"
 	data-wp-watch--main="watch"
 	data-wp-watch--url="watchURL"
-	data-wp-run="run"
+	data-wp-init="run"
 	class="html-api-debugger-container html-api-debugger--grid"
 >
 	<div>
@@ -75,7 +75,6 @@ function generate_page( string $html, array $options ): string {
 	<div>
 		<h2>Rendered output</h2>
 		<iframe
-			data-wp-on-async--load="onRenderedIframeLoad"
 			src="about:blank"
 			id="rendered_iframe"
 			referrerpolicy="no-referrer"
