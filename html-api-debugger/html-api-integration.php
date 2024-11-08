@@ -149,7 +149,9 @@ function get_tree( string $html, array $options ): array {
 			break;
 		}
 
-		// Breadcrumbs and depth are off by one because they include an extra context node.
+		// Depth needs and adjustment because:
+		// - Nodes in a full tree are all placed under a document node.
+		// - Nodes in a fragment tree start at the root.
 		if ( ( count( $cursor ) + 1 ) > ( $processor->get_current_depth() - ( $is_fragment_processor ? 1 : 0 ) ) ) {
 			array_pop( $cursor );
 		}
