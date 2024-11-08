@@ -19,10 +19,38 @@ function get_supports(): array {
  * Get the normalized HTML.
  *
  * @param string $html The HTML.
+ * @param array  $options The options.
  * @return string|null The normalized HTML or null if not supported.
  */
-function get_normalized_html( string $html ): ?string {
-	return WP_HTML_Processor::normalize( $html );
+function get_normalized_html( string $html, array $options ): ?string {
+	if (
+		method_exists( WP_HTML_Processor::class, 'create_fragment_at_current_node' ) &&
+		$options['context_html']
+	) {
+		$context_processor = WP_HTML_Processor::create_full_parser( $options['context_html'] );
+
+		while ( $context_processor->next_tag() ) {
+			$context_processor->set_bookmark( 'final_node' );
+		}
+		if ( $context_processor->has_bookmark( 'final_node' ) ) {
+			$context_processor->seek( 'final_node' );
+			/**
+			 * The main processor used for tree building.
+			 *
+			 * @var WP_HTML_Processor|null $processor
+			 * @disregard P1013
+			 */
+			$processor = $context_processor->create_fragment_at_current_node( $html );
+		}
+	} else {
+		$processor = WP_HTML_Processor::create_full_parser( $html );
+	}
+
+	if ( ! isset( $processor ) ) {
+		return null;
+	}
+
+	return $processor->serialize();
 }
 
 /**
