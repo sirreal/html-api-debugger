@@ -2,27 +2,6 @@
 namespace HTML_API_Debugger\Interactivity;
 
 /**
- * Make an "on" directive
- *
- * Depending on supported behavior, this can be sync or async.
- *
- * @param string $on The event name.
- * @param string $directive The directive name.
- */
-function wp_on_directive( string $on, string $directive ): void {
-	static $supports_async_on = null;
-	if ( null === $supports_async_on ) {
-		$supports_async_on = version_compare( get_bloginfo( 'version' ), '6.6', '>=' );
-	}
-
-	echo $supports_async_on ?
-		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-		"data-wp-on-async--{$on}=\"{$directive}\"" :
-		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-		"data-wp-on--{$on}=\"{$directive}\"";
-}
-
-/**
  * Generate the WP Admin page HTML.
  *
  * @param string $html The input html.
@@ -86,13 +65,13 @@ function generate_page( string $html, array $options ): string {
 			autocomplete="off"
 			spellcheck="false"
 			wrap="off"
-			<?php wp_on_directive( 'input', 'handleInput' ); ?>
+			data-wp-on-async--input="handleInput"
 		><?php echo "\n" . esc_textarea( str_replace( "\0", '', $html ) ); ?></textarea>
 	</div>
 	<div>
 		<h2>Rendered output</h2>
 		<iframe
-			<?php wp_on_directive( 'load', 'onRenderedIframeLoad' ); ?>
+			data-wp-on-async--load="onRenderedIframeLoad"
 			src="about:blank"
 			id="rendered_iframe"
 			referrerpolicy="no-referrer"
@@ -126,10 +105,8 @@ function generate_page( string $html, array $options ): string {
 		<div>
 			<h2>Interpreted by HTML API</h2>
 			<div
-				<?php
-					wp_on_directive( 'mouseover', 'handleSpanOver' );
-					wp_on_directive( 'mouseleave', 'clearSpan' );
-				?>
+				data-wp-on-async--mouseover="handleSpanOver"
+				data-wp-on-async--mouseleave="clearSpan"
 			>
 				<pre class="error-holder" data-wp-bind--hidden="!state.htmlapiResponse.error" data-wp-text="state.htmlapiResponse.error"></pre>
 				<div data-wp-bind--hidden="state.htmlapiResponse.error">
@@ -146,16 +123,16 @@ function generate_page( string $html, array $options ): string {
 	<div class="full-width">
 		<div>
 			<div>
-				<label>Show closers <input type="checkbox" data-wp-bind--checked="state.showClosers" <?php wp_on_directive( 'input', 'handleShowClosersClick' ); ?>></label>
-				<label>Show invisible <input type="checkbox" data-wp-bind--checked="state.showInvisible" <?php wp_on_directive( 'input', 'handleShowInvisibleClick' ); ?>></label>
-				<span><label>Show virtual <input type="checkbox" data-wp-bind--checked="state.showVirtual" <?php wp_on_directive( 'input', 'handleShowVirtualClick' ); ?>></label></span>
+				<label>Show closers <input type="checkbox" data-wp-bind--checked="state.showClosers" data-wp-on-async--input="handleShowClosersClick"></label>
+				<label>Show invisible <input type="checkbox" data-wp-bind--checked="state.showInvisible" data-wp-on-async--input="handleShowInvisibleClick"></label>
+				<span><label>Show virtual <input type="checkbox" data-wp-bind--checked="state.showVirtual" data-wp-on-async--input="handleShowVirtualClick"></label></span>
 				<div data-wp-bind--hidden="!state.htmlapiResponse.supports.create_fragment_advanced">
 					<label>Context html
 						<textarea
 							class="context-html"
 							placeholder="Provide a fragment context, for example:&#x0A;<!DOCTYPE html><body>"
 							rows="2"
-							<?php wp_on_directive( 'input', 'handleContextHtmlInput' ); ?>
+							data-wp-on-async--input="handleContextHtmlInput"
 						><?php echo "\n" . esc_textarea( str_replace( "\0", '', $options['context_html'] ?? '' ) ); ?></textarea>
 				</label>
 				</div>
@@ -163,7 +140,7 @@ function generate_page( string $html, array $options ): string {
 			<div>
 				<label>
 					Hover information
-					<select <?php wp_on_directive( 'change', 'hoverInfoChange' ); ?>>
+					<select data-wp-on-async--change="hoverInfoChange">
 						<option data-wp-bind--selected="state.hoverBreadcrumbs" value="breadcrumbs">(depth) Breadcrumbs…</option>
 						<option data-wp-bind--selected="state.hoverInsertion" value="insertionMode">Insertion mode</option>
 					</select>
@@ -198,18 +175,18 @@ function generate_page( string $html, array $options ): string {
 					<option value="6.7">6.7</option>
 				</select>
 			</label>
-			<button <?php wp_on_directive( 'click', 'handleCopyClick' ); ?> type="button">Copy shareable playground link</button><br>
+			<button data-wp-on-async--click="handleCopyClick" type="button">Copy shareable playground link</button><br>
 		</p>
 		<p>
 			<label>
 				<code>WordPress/develop</code> PR number:
-				<input type="number" min="1" <?php wp_on_directive( 'input', 'handleCopyCorePrInput' ); ?>>
+				<input type="number" min="1" data-wp-on-async--input="handleCopyCorePrInput">
 			</label>
 			<label>
 				<code>WordPress/gutenberg</code> PR number:
-				<input type="number" min="1" <?php wp_on_directive( 'input', 'handleCopyGutenbergPrInput' ); ?>>
+				<input type="number" min="1" data-wp-on-async--input="handleCopyGutenbergPrInput">
 			</label>
-			<button <?php wp_on_directive( 'click', 'handleCopyPrClick' ); ?>>Copy shareable playground link to PR</button>
+			<button data-wp-on-async--click="handleCopyPrClick">Copy shareable playground link to PR</button>
 			<span data-wp-bind--hidden="!state.previewCoreLink">
 				<a
 					data-wp-bind--href="state.previewCoreLink.href"
