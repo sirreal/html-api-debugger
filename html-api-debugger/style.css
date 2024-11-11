@@ -23,6 +23,11 @@
 		display: none;
 	}
 
+	.iframe-container {
+		display: flex;
+		flex-direction: column;
+	}
+
 	.full-width {
 		grid-column: 1 / -1;
 	}
@@ -118,6 +123,8 @@
 	border: 1px solid black;
 	width: 100%;
 	min-height: 200px;
+
+	flex-grow: 1;
 }
 
 #html_api_result_holder,

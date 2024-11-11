@@ -72,7 +72,7 @@ function generate_page( string $html, array $options ): string {
 			data-wp-on-async--input="handleInput"
 		><?php echo "\n" . esc_textarea( str_replace( "\0", '', $html ) ); ?></textarea>
 	</div>
-	<div>
+	<div class="iframe-container">
 		<h2>Rendered output</h2>
 		<iframe
 			src="about:blank"
