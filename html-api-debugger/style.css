@@ -108,44 +108,8 @@
 		box-shadow: 0 0 4px 2px hotpink;
 	}
 
-	@supports (anchor-name: --foo) {
-		#processed-html {
-			position: relative;
-
-			&.has-highlighted-span::before {
-				content: "";
-				position: absolute;
-				display: block;
-
-				transition-timing-function: ease;
-				transition-duration: 175ms;
-				transition-property: left, top, width, height;
-
-				transform: translate3d(
-					anchor(--highlight-span left),
-					anchor(--highlight-span top),
-					0
-				);
-
-				left: anchor(--highlight-span left);
-				top: anchor(--highlight-span top);
-
-				width: anchor-size(--highlight-span width);
-				height: anchor-size(--highlight-span height);
-
-				outline: 2px solid #0000ff77;
-			}
-		}
-
-		.highlight-span {
-			anchor-name: --highlight-span;
-		}
-	}
-
-	@supports not (anchor-name: --foo) {
-		.highlight-span {
-			outline: 2px solid #0000ff77;
-		}
+	.highlight-span {
+		outline: 2px solid #0000ff77;
 	}
 }
 
