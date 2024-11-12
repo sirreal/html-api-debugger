@@ -50,7 +50,12 @@ function get_normalized_html( string $html, array $options ): ?string {
 		return null;
 	}
 
-	return $processor->serialize();
+	// Ignore warnings from serialization.
+	// phpcs:ignore WordPress.PHP.DevelopmentFunctions
+	set_error_handler( function () { }, E_USER_WARNING );
+	$result = $processor->serialize();
+	restore_error_handler();
+	return $result;
 }
 
 /**
