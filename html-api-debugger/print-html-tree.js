@@ -190,7 +190,8 @@ export function printHtmlApiTreeText(tree, options = {}) {
 	 */
 	const go = (node, prepend) => {
 		// No support for closers at this time.
-		const childNodes = node.childNodes.filter(
+		const childNodes = Array.prototype.filter.call(
+			node.childNodes,
 			/** @param {any} n */
 			(n) => !n._closer,
 		);

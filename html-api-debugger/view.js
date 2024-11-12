@@ -646,10 +646,30 @@ const store = createStore(NS, {
 	handleCopyTreeClick: function* (e) {
 		const useDomTree =
 			/** @type {HTMLButtonElement} */ (e.target).name === 'tree__dom';
-		const tree = useDomTree
-			? // @ts-expect-error It's OK!
-				RENDERED_IFRAME.contentWindow.document
-			: (store.state.playbackTree ?? store.state.htmlapiResponse.result?.tree);
+		let tree;
+		if (useDomTree) {
+			const doc = RENDERED_IFRAME.contentWindow.document;
+
+			/** @type {Element|null} */
+			let contextElement = null;
+			if (store.state.contextHTMLForUse) {
+				const walker = doc.createTreeWalker(doc, NodeFilter.SHOW_ELEMENT);
+				while (walker.nextNode()) {
+					// @ts-expect-error It's an Element!
+					contextElement = walker.currentNode;
+				}
+				if (contextElement) {
+					store.state.DOM.contextNode = contextElement.nodeName;
+					contextElement.innerHTML =
+						store.state.playbackHTML ?? store.state.html;
+				}
+			}
+
+			tree = contextElement || doc;
+		} else {
+			tree =
+				store.state.playbackTree ?? store.state.htmlapiResponse.result?.tree;
+		}
 
 		const textualTree = printHtmlApiTreeText(tree, store.state.options);
 
