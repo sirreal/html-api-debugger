@@ -70,14 +70,33 @@ function get_tree( string $html, array $options ): array {
 
 	$is_fragment_processor = false;
 
+	$compat_mode               = 'BackCompat';
+	$doctype_name              = null;
+	$doctype_public_identifier = null;
+	$doctype_system_identifier = null;
+
 	if (
 		method_exists( WP_HTML_Processor::class, 'create_fragment_at_current_node' ) &&
 		$options['context_html']
 	) {
 		$context_processor = WP_HTML_Processor::create_full_parser( $options['context_html'] );
 
-		while ( $context_processor->next_tag() ) {
-			$context_processor->set_bookmark( 'final_node' );
+		while ( $context_processor->next_token() ) {
+			switch ( $context_processor->get_token_type() ) {
+				case '#doctype':
+					$doctype                   = $context_processor->get_doctype_info();
+					$doctype_name              = $doctype->name;
+					$doctype_public_identifier = $doctype->public_identifier;
+					$doctype_system_identifier = $doctype->system_identifier;
+					if ( $doctype->indicated_compatability_mode === 'no-quirks' ) {
+						$compat_mode = 'CSS1Compat';
+					}
+					break;
+
+				case '#tag':
+					$context_processor->set_bookmark( 'final_node' );
+					break;
+			}
 		}
 		if ( $context_processor->has_bookmark( 'final_node' ) ) {
 			$context_processor->seek( 'final_node' );
@@ -124,11 +143,7 @@ function get_tree( string $html, array $options ): array {
 		$cursor = array();
 	}
 
-	$compat_mode               = 'CSS1Compat';
-	$doctype_name              = null;
-	$doctype_public_identifier = null;
-	$doctype_system_identifier = null;
-	$context_node              = isset( $context_processor )
+	$context_node = isset( $context_processor )
 		? $context_processor->get_qualified_tag_name()
 		: null;
 
@@ -163,16 +178,13 @@ function get_tree( string $html, array $options ): array {
 		$token_type = $processor->get_token_type();
 
 		switch ( $token_type ) {
-			// @todo this should be set on the context processor if present.
 			case '#doctype':
-				$doctype = $processor->get_doctype_info();
-
+				$doctype                   = $processor->get_doctype_info();
 				$doctype_name              = $doctype->name;
 				$doctype_public_identifier = $doctype->public_identifier;
 				$doctype_system_identifier = $doctype->system_identifier;
-
-				if ( $doctype->indicated_compatability_mode === 'quirks' ) {
-					$compat_mode = 'BackCompat';
+				if ( $doctype->indicated_compatability_mode === 'no-quirks' ) {
+					$compat_mode = 'CSS1Compat';
 				}
 
 				$current['childNodes'][] = array(
