@@ -12,6 +12,9 @@ const RENDERED_IFRAME = /** @type {HTMLIFrameElement} */ (
 	document.getElementById('rendered_iframe')
 );
 
+/** @type {Element|null} */
+let CONTEXT_ELEMENT = null;
+
 const cfg = I.getConfig(NS);
 let { nonce } = cfg;
 
@@ -390,6 +393,7 @@ const store = createStore(NS, {
 			if (contextElement) {
 				store.state.DOM.contextNode = contextElement.nodeName;
 				contextElement.innerHTML = store.state.playbackHTML ?? store.state.html;
+				CONTEXT_ELEMENT = contextElement;
 			}
 		}
 
@@ -572,6 +576,7 @@ const store = createStore(NS, {
 			store.state.playbackHTML ??
 			store.state.html;
 
+		CONTEXT_ELEMENT = null;
 		iframeDocument.open();
 		iframeDocument.write(html);
 		iframeDocument.close();
@@ -646,21 +651,13 @@ const store = createStore(NS, {
 	handleCopyTreeClick: function* (e) {
 		const useDomTree =
 			/** @type {HTMLButtonElement} */ (e.target).name === 'tree__dom';
+
 		let tree;
 		if (useDomTree) {
-			const doc = RENDERED_IFRAME.contentWindow.document;
-
-			/** @type {Element|null} */
-			let contextElement = null;
-			if (store.state.contextHTMLForUse) {
-				const walker = doc.createTreeWalker(doc, NodeFilter.SHOW_ELEMENT);
-				while (walker.nextNode()) {
-					// @ts-expect-error It's an Element!
-					contextElement = walker.currentNode;
-				}
-			}
-
-			tree = contextElement || doc;
+			tree =
+				CONTEXT_ELEMENT ||
+				// @ts-expect-error It's an Element!
+				RENDERED_IFRAME.contentWindow.document;
 		} else {
 			tree =
 				store.state.playbackTree ?? store.state.htmlapiResponse.result?.tree;
