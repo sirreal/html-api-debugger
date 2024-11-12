@@ -658,11 +658,6 @@ const store = createStore(NS, {
 					// @ts-expect-error It's an Element!
 					contextElement = walker.currentNode;
 				}
-				if (contextElement) {
-					store.state.DOM.contextNode = contextElement.nodeName;
-					contextElement.innerHTML =
-						store.state.playbackHTML ?? store.state.html;
-				}
 			}
 
 			tree = contextElement || doc;
