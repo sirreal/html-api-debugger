@@ -1,4 +1,7 @@
-import { printHtmlApiTree } from '@html-api-debugger/print-html-tree';
+import {
+	printHtmlApiTree,
+	printHtmlApiTreeText,
+} from '@html-api-debugger/print-html-tree';
 import { replaceInvisible } from '@html-api-debugger/replace-invisible-chars';
 import * as I from '@wordpress/interactivity';
 
@@ -52,7 +55,20 @@ let mutationObserver = null;
  * @property {string} html
  *
  *
- * @typedef State
+ * @typedef Options
+ * @property {boolean} showClosers
+ * @property {boolean} showInvisible
+ * @property {boolean} showVirtual
+ * @property {'breadcrumbs'|'insertionMode'} hoverInfo
+ *
+ *
+ * @typedef  State
+ * @property {boolean} showClosers
+ * @property {boolean} showInvisible
+ * @property {boolean} showVirtual
+ * @property {'breadcrumbs'|'insertionMode'} hoverInfo
+ *
+ * @property {string|undefined} printedTree
  * @property {any|undefined} playbackTree
  * @property {string|undefined} playbackHTML
  * @property {number|null} playbackPoint
@@ -65,9 +81,6 @@ let mutationObserver = null;
  * @property {HtmlApiResponse} htmlapiResponse
  * @property {URL} playgroundLink
  * @property {string} html
- * @property {boolean} showClosers
- * @property {boolean} showInvisible
- * @property {boolean} showVirtual
  * @property {string} contextHTML
  * @property {string|null} contextHTMLForUse
  * @property {number|null} previewCorePrNumber
@@ -75,18 +88,15 @@ let mutationObserver = null;
  * @property {Link|null} previewCoreLink
  * @property {Link|null} previewGutenbergLink
  * @property {boolean} checkingForPRPlaygroundLink
- *
- * @property {'breadcrumbs'|'insertionMode'} hoverInfo
  * @property {boolean} hoverBreadcrumbs
  * @property {boolean} hoverInsertion
- *
  * @property {DOM} DOM
  * @property {boolean} hasMutatedDom
  * @property {HTMLAPISpan|false} span
  * @property {string} htmlForDisplay
-
-  *
-  *
+ * @property {Options} options
+ *
+ *
  * @typedef Store
  * @property {()=>Promise<void>} callAPI
  * @property {()=>void} clearSpan
@@ -119,6 +129,15 @@ const store = createStore(NS, {
 		playbackPoint: null,
 		previewCorePrNumber: null,
 		previewGutenbergPrNumber: null,
+
+		get options() {
+			return {
+				showClosers: store.state.showClosers,
+				showInvisible: store.state.showInvisible,
+				showVirtual: store.state.showVirtual,
+				hoverInfo: store.state.hoverInfo,
+			};
+		},
 
 		get playbackTree() {
 			if (store.state.playbackPoint === null) {
@@ -380,12 +399,7 @@ const store = createStore(NS, {
 			contextElement ?? doc,
 			// @ts-expect-error
 			document.getElementById('dom_tree'),
-			{
-				showClosers: store.state.showClosers,
-				showInvisible: store.state.showInvisible,
-				showVirtual: store.state.showVirtual,
-				hoverInfo: store.state.hoverInfo,
-			},
+			store.state.options,
 		);
 	},
 
@@ -578,12 +592,7 @@ const store = createStore(NS, {
 				tree,
 				// @ts-expect-error
 				document.getElementById('html_api_result_holder'),
-				{
-					showClosers: store.state.showClosers,
-					showInvisible: store.state.showInvisible,
-					showVirtual: store.state.showVirtual,
-					hoverInfo: store.state.hoverInfo,
-				},
+				store.state.options,
 			);
 		}
 	},

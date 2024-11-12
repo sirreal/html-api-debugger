@@ -171,3 +171,101 @@ export function printHtmlApiTree(node, ul, options = {}) {
 		ul.appendChild(li);
 	}
 }
+
+const LAST_CHILD = '└';
+const MIDDLE_CHILD = '├';
+const DESCENDER = '│';
+const HORIZONTAL = '─';
+
+/**
+ * @param {any} node
+ * @param {Options} options
+ * @returns {string}
+ */
+export function printHtmlApiTreeText(node, options = {}) {
+	let text = '';
+	/**
+	 * @param {any} node
+	 * @param {string} prepend
+	 */
+	const go = (node, prepend) => {
+		// No support for closers at this time.
+		const childNodes = node.childNodes.filter(
+			/** @param {any} n */
+			(n) => !n._closer,
+		);
+
+		for (let i = 0; i < childNodes.length; i += 1) {
+			const isLastChild = i === childNodes.length - 1;
+
+			let line = `${isLastChild ? LAST_CHILD : MIDDLE_CHILD}${HORIZONTAL}`;
+
+			if (childNodes[i].nodeType === Node.prototype.DOCUMENT_TYPE_NODE) {
+				line += 'DOCTYPE: ';
+			}
+			if (childNodes[i].nodeName) {
+				let nodeText = options.showInvisible
+					? replaceInvisible(childNodes[i].nodeName)
+					: childNodes[i].nodeName;
+				if (childNodes[i]._namespace && childNodes[i]._namespace !== 'html') {
+					nodeText = `${childNodes[i]._namespace}:${nodeText}`;
+				} else if (
+					childNodes[i].namespaceURI &&
+					childNodes[i].namespaceURI !== 'http://www.w3.org/1999/xhtml'
+				) {
+					const nsSuffix = childNodes[i].namespaceURI.split('/').at(-1);
+					const ns =
+						nsSuffix === 'svg'
+							? 'svg'
+							: nsSuffix === 'MathML'
+								? 'math'
+								: nsSuffix;
+					nodeText = `${ns}:${nodeText}`;
+				}
+
+				line += nodeText;
+			} else {
+				line += 'no name';
+			}
+
+			if (childNodes[i].nodeValue) {
+				line += ` ${
+					options.showInvisible
+						? replaceInvisible(childNodes[i].nodeValue)
+						: childNodes[i].nodeValue
+				}`;
+			}
+
+			if (childNodes[i].attributes) {
+				for (let j = 0; j < childNodes[i].attributes.length; j += 1) {
+					if (childNodes[i].attributes[j].specified) {
+						const attName = options.showInvisible
+							? replaceInvisible(childNodes[i].attributes[j].nodeName)
+							: childNodes[i].attributes[j].nodeName;
+						const attValue = options.showInvisible
+							? replaceInvisible(childNodes[i].attributes[j].nodeValue)
+							: childNodes[i].attributes[j].nodeValue;
+						line += ` ${attName}="${attValue}"`;
+					}
+				}
+			}
+
+			text += `${prepend}${line.replaceAll('\n', ' ')}\n`;
+
+			if (
+				childNodes[i].childNodes?.length ||
+				(childNodes[i].nodeName === 'TEMPLATE' && childNodes[i].content)
+			) {
+				const next = childNodes[i].childNodes?.length
+					? childNodes[i]
+					: childNodes[i].content;
+
+				go(next, `${prepend}${isLastChild ? ' ' : DESCENDER} `);
+			}
+		}
+	};
+
+	go(node, '');
+
+	return text;
+}
