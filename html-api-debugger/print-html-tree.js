@@ -178,11 +178,11 @@ const DESCENDER = '│';
 const HORIZONTAL = '─';
 
 /**
- * @param {any} node
+ * @param {any} tree
  * @param {Options} options
  * @returns {string}
  */
-export function printHtmlApiTreeText(node, options = {}) {
+export function printHtmlApiTreeText(tree, options = {}) {
 	let text = '';
 	/**
 	 * @param {any} node
@@ -265,7 +265,7 @@ export function printHtmlApiTreeText(node, options = {}) {
 		}
 	};
 
-	go(node, '');
+	go(tree, '');
 
 	return text;
 }

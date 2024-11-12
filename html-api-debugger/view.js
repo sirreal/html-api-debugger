@@ -67,8 +67,6 @@ let mutationObserver = null;
  * @property {boolean} showInvisible
  * @property {boolean} showVirtual
  * @property {'breadcrumbs'|'insertionMode'} hoverInfo
- *
- * @property {string|undefined} printedTree
  * @property {any|undefined} playbackTree
  * @property {string|undefined} playbackHTML
  * @property {number|null} playbackPoint
@@ -98,7 +96,7 @@ let mutationObserver = null;
  *
  *
  * @typedef Store
- * @property {()=>Promise<void>} callAPI
+ * @property {()=>void} callAPI
  * @property {()=>void} clearSpan
  * @property {()=>void} handleContextHtmlInput
  * @property {()=>void} handleCopyClick
@@ -637,6 +635,26 @@ const store = createStore(NS, {
 
 		try {
 			yield navigator.clipboard.writeText(playgroundLink.href);
+		} catch {
+			alert('Copy failed, make sure the browser window is focused.');
+		}
+	},
+
+	/**
+	 * @param {Event} e
+	 */
+	handleCopyTreeClick: function* (e) {
+		const useDomTree =
+			/** @type {HTMLButtonElement} */ (e.target).name === 'tree__dom';
+		const tree = useDomTree
+			? // @ts-expect-error It's OK!
+				RENDERED_IFRAME.contentWindow.document
+			: (store.state.playbackTree ?? store.state.htmlapiResponse.result?.tree);
+
+		const textualTree = printHtmlApiTreeText(tree, store.state.options);
+
+		try {
+			yield navigator.clipboard.writeText(textualTree);
 		} catch {
 			alert('Copy failed, make sure the browser window is focused.');
 		}
