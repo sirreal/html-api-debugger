@@ -7,7 +7,11 @@ Stable tag: 2.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Add a page to wp-admin for debugging the HTML API.
+Add a WP Admin page for debugging the HTML API.
+
+== Contributing ==
+
+Please file issues and pull requests on the [GitHub repository](https://github.com/sirreal/html-api-debugger).
 
 == Changelog ==
 
