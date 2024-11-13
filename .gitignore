@@ -2,3 +2,4 @@
 /vendor/
 /plugin-repo/
 /wordpress
+*.tsbuildinfo
