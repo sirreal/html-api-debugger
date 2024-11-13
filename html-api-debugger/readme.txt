@@ -1,5 +1,5 @@
 === HTML API Debugger ===
-Contributors: jonsurrell
+Contributors: jonsurrell, bernhard-reiter
 Tags: HTML API, development, debug
 Requires at least: 6.7
 Tested up to: 6.8
