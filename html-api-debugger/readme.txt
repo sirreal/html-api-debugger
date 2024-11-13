@@ -19,6 +19,7 @@ Please file issues and pull requests on the [GitHub repository](https://github.c
 * Drop support for WordPress 6.7.
 * Drop basic fragment parsing and quirks mode support.
 * Add advanced context and fragment parsing when supported (WordPress 6.8+).
+* Add functionality to copy textual representations of the generated trees.
 
 = 2.1 =
 * Add text-wrap styling fallback for unsupported browsers.
