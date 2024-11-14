@@ -116,6 +116,16 @@
 	.highlight-span {
 		outline: 2px solid #0000ff77;
 	}
+
+	.heading-and-button {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+
+		button {
+			height: 100%;
+		}
+	}
 }
 
 #rendered_iframe {

@@ -106,8 +106,10 @@ function generate_page( string $html, array $options ): string {
 	</details>
 	<div class="full-width html-api-debugger--grid">
 		<div>
-			<h2>Interpreted by HTML API</h2>
-			<div><button type="button" data-wp-on-async--click="handleCopyTreeClick" name="tree__html-api">Copy tree 📋</button></div>
+			<div class="heading-and-button">
+				<h2>Interpreted by HTML API</h2>
+				<button type="button" data-wp-on-async--click="handleCopyTreeClick" name="tree__html-api">Copy tree 📋</button>
+			</div>
 			<div
 				data-wp-on-async--mouseover="handleSpanOver"
 				data-wp-on-async--mouseleave="clearSpan"
@@ -119,8 +121,10 @@ function generate_page( string $html, array $options ): string {
 			</div>
 		</div>
 		<div>
-			<h2>Interpreted from DOM</h2>
-			<div><button type="button" data-wp-on-async--click="handleCopyTreeClick" name="tree__dom">Copy tree 📋</button></div>
+			<div class="heading-and-button">
+				<h2>Interpreted from DOM</h2>
+				<button type="button" data-wp-on-async--click="handleCopyTreeClick" name="tree__dom">Copy tree 📋</button>
+			</div>
 			<div data-wp-class--mutated="state.hasMutatedDom"><ul id="dom_tree" data-wp-ignore></ul></div>
 		</div>
 	</div>
