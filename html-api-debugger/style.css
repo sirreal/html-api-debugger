@@ -82,9 +82,9 @@
 		margin: 0;
 		outline: 1px dotted #111;
 		vertical-align: top;
-		word-break: break-all;
 		text-wrap: auto;
 		text-wrap: pretty;
+		overflow-wrap: break-word;
 	}
 
 	.mutated {
@@ -171,11 +171,19 @@
 	.t2 .name {
 		color: black;
 		font-weight: bold;
+
+		text-wrap: auto;
+		text-wrap: pretty;
+		overflow-wrap: break-word;
 	}
 
 	.t2 .value {
 		color: blue;
 		font-weight: normal;
+
+		text-wrap: auto;
+		text-wrap: pretty;
+		overflow-wrap: break-word;
 	}
 
 	.t3 code,

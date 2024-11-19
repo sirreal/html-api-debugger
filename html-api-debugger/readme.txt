@@ -16,6 +16,8 @@ Please file issues and pull requests on the [GitHub repository](https://github.c
 == Changelog ==
 
 = 2.3 =
+* Inline tree copy buttons.
+* Add line breaks to overflowing attribute names and values.
 
 = 2.2 =
 * Drop support for WordPress 6.6.
