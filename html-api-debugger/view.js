@@ -35,6 +35,7 @@ let mutationObserver = null;
  *
  * @typedef DOM
  * @property {string|undefined} renderingMode
+ * @property {string|undefined} documentTitle
  * @property {string|undefined} doctypeName
  * @property {string|undefined} doctypeSystemId
  * @property {string|undefined} doctypePublicId
@@ -53,7 +54,7 @@ let mutationObserver = null;
  * @typedef HtmlApiResponse
  * @property {any} error
  * @property {Supports} supports
- * @property {{tree: any, compatMode:string, doctypeName:string, doctypePublicId:string, doctypeSystemId:string, playback: ReadonlyArray<[string,any]> }|null} result
+ * @property {{tree: any, compatMode: string, documentTitle: string|null, doctypeName: string|null, doctypePublicId: string|null, doctypeSystemId: string|null, playback: ReadonlyArray<[string,any]> }|null} result
  * @property {string|null} normalizedHtml
  * @property {string} html
  *
@@ -74,6 +75,7 @@ let mutationObserver = null;
  * @property {string|undefined} playbackHTML
  * @property {number|null} playbackPoint
  * @property {number|null} playbackLength
+ * @property {string|null} htmlApiDocumentTitle
  * @property {string|null} htmlApiDoctypeName
  * @property {string|null} htmlApiDoctypePublicId
  * @property {string|null} htmlApiDoctypeSystemId
@@ -194,12 +196,20 @@ const store = createStore(NS, {
 			localStorage.getItem(`${NS}-hoverInfo`)
 		),
 
+		get htmlApiDocumentTitle() {
+			return store.state.showInvisible
+				? store.state.htmlapiResponse.result?.documentTitle &&
+						replaceInvisible(store.state.htmlapiResponse.result.documentTitle)
+				: store.state.htmlapiResponse.result?.documentTitle;
+		},
+
 		get htmlApiDoctypeName() {
 			return store.state.showInvisible
 				? store.state.htmlapiResponse.result?.doctypeName &&
 						replaceInvisible(store.state.htmlapiResponse.result.doctypeName)
 				: store.state.htmlapiResponse.result?.doctypeName;
 		},
+
 		get htmlApiDoctypePublicId() {
 			return store.state.showInvisible
 				? store.state.htmlapiResponse.result?.doctypePublicId &&
@@ -377,6 +387,7 @@ const store = createStore(NS, {
 		// @ts-expect-error It better be defined!
 		const doc = RENDERED_IFRAME.contentWindow.document;
 
+		store.state.DOM.documentTitle = doc.title;
 		store.state.DOM.renderingMode = doc.compatMode;
 		store.state.DOM.doctypeName = doc.doctype?.name;
 		store.state.DOM.doctypeSystemId = doc.doctype?.systemId;

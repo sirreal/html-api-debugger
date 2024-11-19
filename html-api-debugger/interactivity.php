@@ -24,6 +24,7 @@ function generate_page( string $html, array $options ): string {
 		array(
 			'DOM' => array(
 				'renderingMode' => '',
+				'documentTitle' => '',
 				'doctypeName' => '',
 				'doctypeSystemId' => '',
 				'doctypePublicId' => '',
@@ -42,9 +43,10 @@ function generate_page( string $html, array $options ): string {
 			'hoverInsertion' => false,
 			'checkingForPRPlaygroundLink' => false,
 
-			'htmlApiDoctypeName' => $htmlapi_response['result']['doctypeName'] ?? '[unknown]',
-			'htmlApiDoctypePublicId' => $htmlapi_response['result']['doctypePublicId'] ?? '[unknown]',
-			'htmlApiDoctypeSytemId' => $htmlapi_response['result']['doctypeSystemId'] ?? '[unknown]',
+			'htmlApiDocumentTitle' => $htmlapi_response['result']['documentTitle'] ?? null,
+			'htmlApiDoctypeName' => $htmlapi_response['result']['doctypeName'] ?? null,
+			'htmlApiDoctypePublicId' => $htmlapi_response['result']['doctypePublicId'] ?? null,
+			'htmlApiDoctypeSytemId' => $htmlapi_response['result']['doctypeSystemId'] ?? null,
 			'normalizedHtml' => $htmlapi_response['normalizedHtml'] ?? '',
 
 			'playbackLength' => isset( $htmlapi_response['result']['playback'] )
@@ -90,6 +92,7 @@ function generate_page( string $html, array $options ): string {
 		<div class="html-api-debugger--grid">
 			<div>
 				Rendering mode:&nbsp;<code data-wp-text="state.htmlapiResponse.result.compatMode"></code><br>
+				Document title:&nbsp;<code data-wp-text="state.htmlApiDocumentTitle"></code><br>
 				Doctype name:&nbsp;<code data-wp-text="state.htmlApiDoctypeName"></code><br>
 				Doctype publicId:&nbsp;<code data-wp-text="state.htmlApiDoctypePublicId"></code><br>
 				Doctype systemId:&nbsp;<code data-wp-text="state.htmlApiDoctypeSystemId"></code><br>
@@ -97,6 +100,7 @@ function generate_page( string $html, array $options ): string {
 			</div>
 			<div>
 				Rendering mode:&nbsp;<code data-wp-text="state.DOM.renderingMode"></code><br>
+				Document title:&nbsp;<code data-wp-text="state.DOM.documentTitle"></code><br>
 				Doctype name:&nbsp;<code data-wp-text="state.DOM.doctypeName"></code><br>
 				Doctype publicId:&nbsp;<code data-wp-text="state.DOM.doctypePublicId"></code><br>
 				Doctype systemId:&nbsp;<code data-wp-text="state.DOM.doctypeSystemId"></code><br>

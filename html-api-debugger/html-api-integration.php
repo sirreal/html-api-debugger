@@ -76,6 +76,7 @@ function get_tree( string $html, array $options ): array {
 	$is_fragment_processor = false;
 
 	$compat_mode               = 'BackCompat';
+	$document_title            = null;
 	$doctype_name              = null;
 	$doctype_public_identifier = null;
 	$doctype_system_identifier = null;
@@ -99,10 +100,19 @@ function get_tree( string $html, array $options ): array {
 					break;
 
 				case '#tag':
+					if ( $document_title === null && $context_processor->get_tag() === 'TITLE' && $context_processor->get_namespace() === 'html' ) {
+						$document_title = $context_processor->get_modifiable_text();
+					}
+
 					$context_processor->set_bookmark( 'final_node' );
 					break;
 			}
 		}
+
+		if ( $document_title === null ) {
+			$document_title = '';
+		}
+
 		if ( $context_processor->has_bookmark( 'final_node' ) ) {
 			$context_processor->seek( 'final_node' );
 			/**
@@ -204,6 +214,10 @@ function get_tree( string $html, array $options ): array {
 
 			case '#tag':
 				$tag_name = $processor->get_qualified_tag_name();
+
+				if ( $document_title === null && $tag_name === 'TITLE' && $processor->get_namespace() === 'html' ) {
+					$document_title = $processor->get_modifiable_text();
+				}
 
 				$attributes      = array();
 				$attribute_names = $processor->get_attribute_names_with_prefix( '' );
@@ -399,13 +413,24 @@ function get_tree( string $html, array $options ): array {
 		throw new Exception( 'Paused at incomplete token.' );
 	}
 
+	/*
+	 * Strip and collapse ASCII whitespace.
+	 *
+	 * https://html.spec.whatwg.org/multipage/dom.html#document.title
+	 * https://infra.spec.whatwg.org/#strip-and-collapse-ascii-whitespace
+	 */
+	$document_title = trim( preg_replace( "/[\t\n\f\r ]+/", ' ', $document_title ), "\t\n\f\r " );
+
 	return array(
 		'tree' => $tree,
 		'playback' => $playback,
 		'compatMode' => $compat_mode,
+		'documentTitle' => $document_title,
+
 		'doctypeName' => $doctype_name,
 		'doctypePublicId' => $doctype_public_identifier,
 		'doctypeSystemId' => $doctype_system_identifier,
+
 		'contextNode' => $context_node,
 	);
 }

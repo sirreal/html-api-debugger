@@ -16,6 +16,7 @@ Please file issues and pull requests on the [GitHub repository](https://github.c
 == Changelog ==
 
 = 2.4 =
+* Display document title.
 
 = 2.3 =
 * Inline tree copy buttons.
