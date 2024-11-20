@@ -419,7 +419,9 @@ function get_tree( string $html, array $options ): array {
 	 * https://html.spec.whatwg.org/multipage/dom.html#document.title
 	 * https://infra.spec.whatwg.org/#strip-and-collapse-ascii-whitespace
 	 */
-	$document_title = trim( preg_replace( "/[\t\n\f\r ]+/", ' ', $document_title ), "\t\n\f\r " );
+	if ( null !== $document_title ) {
+		$document_title = trim( preg_replace( "/[\t\n\f\r ]+/", ' ', $document_title ), "\t\n\f\r " );
+	}
 
 	return array(
 		'tree' => $tree,
