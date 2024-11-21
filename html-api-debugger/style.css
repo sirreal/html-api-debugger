@@ -32,6 +32,10 @@
 		grid-column: 1 / -1;
 	}
 
+	.matches-selector {
+		outline: 1px dotted hotpink;
+	}
+
 	pre {
 		background-color: #fff;
 		border: inset 1px;

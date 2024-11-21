@@ -147,7 +147,11 @@ function generate_page( string $html, array $options ): string {
 							rows="2"
 							data-wp-on-async--input="handleContextHtmlInput"
 						><?php echo "\n" . esc_textarea( str_replace( "\0", '', $options['context_html'] ?? '' ) ); ?></textarea>
-				</label>
+					</label>
+				</div>
+				<div>
+					<label>CSS Selectors <input placeholder="CSS selector: .my-class" data-wp-on-async--input="handleSelectorChange"></label>
+					<p data-wp-bind--hidden="!state.selectorErrorMessage" data-wp-text="state.selectorErrorMessage" class="error-holder"></p>
 				</div>
 			</div>
 			<div>
