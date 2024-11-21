@@ -7,6 +7,9 @@
 }
 
 .html-api-debugger-container {
+	--monospace-font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo,
+		Consolas, Liberation Mono, monospace;
+
 	width: 100%;
 	padding: 20px 20px 0 0;
 
@@ -36,6 +39,11 @@
 		outline: 1px dotted hotpink;
 	}
 
+	code,
+	pre {
+		font-family: var(--monospace-font-family);
+	}
+
 	pre {
 		background-color: #fff;
 		border: inset 1px;
@@ -53,12 +61,12 @@
 	#input_html {
 		width: 100%;
 		min-height: 200px;
-		font-family: monospace;
+		font-family: var(--monospace-font-family);
 	}
 
 	.context-html {
 		width: 100%;
-		font-family: monospace;
+		font-family: var(--monospace-font-family);
 
 		&:placeholder-shown {
 			font-style: italic;
@@ -146,7 +154,7 @@
 	border: inset 1px;
 	padding: 0.5em 0.5em 0.5em 1em;
 	color: black;
-	font-family: monospace;
+	font-family: var(--monospace-font-family);
 	background: white;
 	margin: 0;
 
@@ -169,7 +177,7 @@
 
 	.t2 {
 		font-style: normal;
-		font-family: monospace;
+		font-family: var(--monospace-font-family);
 	}
 
 	.t2 .name {
