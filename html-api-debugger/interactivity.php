@@ -63,7 +63,7 @@ function generate_page( string $html, array $options ): string {
 	data-wp-init="run"
 	class="html-api-debugger-container html-api-debugger--grid"
 >
-	<div data-wp-bind--hidden="!state.htmlapiResponse.supports.create_fragment_advanced">
+	<div data-wp-bind--hidden="!state.htmlapiResponse.supports.create_fragment_advanced" class="full-width">
 		<label>Context in which input HTML finds itself
 			<textarea
 				class="context-html"
