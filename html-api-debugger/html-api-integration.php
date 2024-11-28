@@ -67,6 +67,11 @@ function get_normalized_html( string $html, array $options ): ?string {
  * @param array  $options The options.
  */
 function get_tree( string $html, array $options ): array {
+	$selector = null;
+	if ( isset( $options['selector'] ) && class_exists( '\WP_CSS_Selector_List' ) ) {
+		$selector = \WP_CSS_Selector_List::from_selectors( $options['selector'] );
+	}
+
 	$processor_state = new ReflectionProperty( WP_HTML_Processor::class, 'state' );
 	$processor_state->setAccessible( true );
 
@@ -219,6 +224,8 @@ function get_tree( string $html, array $options ): array {
 					$document_title = $processor->get_modifiable_text();
 				}
 
+				$matches = $selector !== null && $selector->matches( $processor );
+
 				$attributes      = array();
 				$attribute_names = $processor->get_attribute_names_with_prefix( '' );
 				if ( null !== $attribute_names ) {
@@ -255,6 +262,7 @@ function get_tree( string $html, array $options ): array {
 					'_virtual' => $is_virtual(),
 					'_depth' => $processor->get_current_depth(),
 					'_namespace' => $namespace,
+					'_matches' => $matches,
 				);
 
 				// Self-contained tags contain their inner contents as modifiable text.

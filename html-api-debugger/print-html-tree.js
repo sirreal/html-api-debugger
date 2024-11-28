@@ -23,7 +23,10 @@ export function printHtmlApiTree(node, ul, options = {}) {
 		const li = document.createElement('li');
 		li.className = `t${node.childNodes[i].nodeType}`;
 
-		if (options.selector && node.childNodes[i].matches?.(options.selector)) {
+		if (
+			node.childNodes[i]._matches ||
+			(options.selector && node.childNodes[i].matches?.(options.selector))
+		) {
 			li.classList.add('matches-selector');
 		}
 

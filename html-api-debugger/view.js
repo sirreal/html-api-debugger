@@ -509,6 +509,7 @@ const store = createStore(NS, {
 				body: JSON.stringify({
 					html: store.state.html,
 					contextHTML: store.state.contextHTMLForUse,
+					selector: store.state.selector,
 				}),
 				headers: {
 					'Content-Type': 'application/json',
@@ -693,7 +694,7 @@ const store = createStore(NS, {
 	},
 
 	/** @param {InputEvent} e */
-	handleSelectorChange(e) {
+	handleSelectorChange: function* (e) {
 		const val = /** @type {HTMLInputElement} */ (e.target).value.trim() || null;
 		if (val) {
 			try {
@@ -701,6 +702,7 @@ const store = createStore(NS, {
 				document.createDocumentFragment().querySelector(val);
 				store.state.selector = val;
 				store.state.selectorErrorMessage = null;
+				yield store.callAPI();
 				return;
 			} catch (/** @type {unknown} */ e) {
 				if (e instanceof DOMException && e.name === 'SyntaxError') {
@@ -732,6 +734,7 @@ const store = createStore(NS, {
 			}
 		}
 		store.state.selector = null;
+		yield store.callAPI();
 	},
 });
 
