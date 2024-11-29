@@ -23,6 +23,9 @@ function get_supports(): array {
  * @return string|null The normalized HTML or null if not supported.
  */
 function get_normalized_html( string $html, array $options ): ?string {
+	$cfacn = new ReflectionMethod( WP_HTML_Processor::class, 'create_fragment_at_current_node' );
+	$cfacn->setAccessible( true );
+
 	if (
 		method_exists( WP_HTML_Processor::class, 'create_fragment_at_current_node' ) &&
 		$options['context_html']
@@ -40,7 +43,7 @@ function get_normalized_html( string $html, array $options ): ?string {
 			 * @var WP_HTML_Processor|null $processor
 			 * @disregard P1013
 			 */
-			$processor = $context_processor->create_fragment_at_current_node( $html );
+			$processor = $cfacn->invoke( $context_processor, $html );
 		}
 	} else {
 		$processor = WP_HTML_Processor::create_full_parser( $html );
@@ -72,6 +75,9 @@ function get_tree( string $html, array $options ): array {
 
 	$processor_bookmarks = new ReflectionProperty( WP_HTML_Processor::class, 'bookmarks' );
 	$processor_bookmarks->setAccessible( true );
+
+	$cfacn = new ReflectionMethod( WP_HTML_Processor::class, 'create_fragment_at_current_node' );
+	$cfacn->setAccessible( true );
 
 	$is_fragment_processor = false;
 
@@ -121,7 +127,7 @@ function get_tree( string $html, array $options ): array {
 			 * @var WP_HTML_Processor|null $processor
 			 * @disregard P1013
 			 */
-			$processor = $context_processor->create_fragment_at_current_node( $html );
+			$processor = $cfacn->invoke( $context_processor, $html );
 		}
 
 		if ( ! isset( $processor ) ) {
