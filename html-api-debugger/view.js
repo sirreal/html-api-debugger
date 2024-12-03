@@ -399,10 +399,23 @@ const store = createStore(NS, {
 		/** @type {Element|null} */
 		let contextElement = null;
 		if (store.state.contextHTMLForUse) {
-			const walker = doc.createTreeWalker(doc, NodeFilter.SHOW_ELEMENT);
-			while (walker.nextNode()) {
-				// @ts-expect-error It's an Element!
-				contextElement = walker.currentNode;
+			// An HTML document will always make HTML > HEAD + BODY.
+			// But that may not be the intended context.
+			// Guess the intended context in case the HEAD and BODY elements are empty.
+			if (doc.body.hasChildNodes() || doc.head.hasChildNodes()) {
+				const walker = doc.createTreeWalker(doc, NodeFilter.SHOW_ELEMENT);
+				while (walker.nextNode()) {
+					// @ts-expect-error It's an Element!
+					contextElement = walker.currentNode;
+				}
+			} else {
+				if (/<body\W/i.test(store.state.contextHTMLForUse)) {
+					contextElement = doc.body;
+				} else if (/<head\W/i.test(store.state.contextHTMLForUse)) {
+					contextElement = doc.head;
+				} else {
+					contextElement = doc.documentElement;
+				}
 			}
 			if (contextElement) {
 				store.state.DOM.contextNode = contextElement.nodeName;
