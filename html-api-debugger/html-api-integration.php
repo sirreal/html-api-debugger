@@ -71,8 +71,8 @@ function get_normalized_html( string $html, array $options ): ?string {
  */
 function get_tree( string $html, array $options ): array {
 	$selector = null;
-	if ( isset( $options['selector'] ) && class_exists( '\WP_CSS_Selector_List' ) ) {
-		$selector = \WP_CSS_Selector_List::from_selectors( $options['selector'] );
+	if ( isset( $options['selector'] ) && class_exists( '\WP_CSS_Selector' ) ) {
+		$selector = \WP_CSS_Selector::from_selectors( $options['selector'] );
 	}
 
 	$processor_state = new ReflectionProperty( WP_HTML_Processor::class, 'state' );
