@@ -152,7 +152,6 @@ function generate_page( string $html, array $options ): string {
 				<span><label>Show virtual <input type="checkbox" data-wp-bind--checked="state.showVirtual" data-wp-on-async--input="handleShowVirtualClick"></label></span>
 				<div>
 					<label>CSS Selectors <textarea placeholder="CSS selector: .my-class" data-wp-on-async--input="handleSelectorChange"></textarea></label>
-					<p data-wp-bind--hidden="!state.selectorErrorMessage" data-wp-text="state.selectorErrorMessage" class="error-holder"></p>
 				</div>
 			</div>
 			<div>
@@ -165,6 +164,13 @@ function generate_page( string $html, array $options ): string {
 				</label>
 			</div>
 		</div>
+
+		<div data-wp-bind--hidden="!state.htmlapiResponse.result.warnings.0">
+			<template data-wp-each="state.htmlapiResponse.result.warnings">
+				<p data-wp-text="context.item" class="error-holder"></p>
+			</template>
+		</div>
+		<p data-wp-bind--hidden="!state.selectorErrorMessage" data-wp-text="state.selectorErrorMessage" class="error-holder"></p>
 
 		<div>
 			<h2>Processed HTML</h2>

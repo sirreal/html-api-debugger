@@ -70,9 +70,23 @@ function get_normalized_html( string $html, array $options ): ?string {
  * @param array  $options The options.
  */
 function get_tree( string $html, array $options ): array {
+	/**
+	 * Messages generated during parse.
+	 *
+	 * @var string[]
+	 */
+	$warnings = array();
 	$selector = null;
-	if ( isset( $options['selector'] ) && class_exists( '\WP_CSS_Selector' ) ) {
-		$selector = \WP_CSS_Selector::from_selectors( $options['selector'] );
+	if ( isset( $options['selector'] ) && class_exists( '\WP_CSS_Complex_Selector_List' ) ) {
+		$selector = \WP_CSS_Complex_Selector_List::from_selectors( $options['selector'] );
+		if ( null === $selector ) {
+			$warnings[] = 'The provided selector is invalid or unsupported.';
+		}
+	} elseif ( isset( $options['selector'] ) && class_exists( '\WP_CSS_Compound_Selector_List' ) ) {
+		$selector = \WP_CSS_Compound_Selector_List::from_selectors( $options['selector'] );
+		if ( null === $selector ) {
+			$warnings[] = 'The provided selector is invalid or unsupported.';
+		}
 	}
 
 	$processor_state = new ReflectionProperty( WP_HTML_Processor::class, 'state' );
@@ -448,6 +462,7 @@ function get_tree( string $html, array $options ): array {
 		'doctypeSystemId' => $doctype_system_identifier,
 
 		'contextNode' => $context_node,
+		'warnings' => $warnings,
 	);
 }
 
