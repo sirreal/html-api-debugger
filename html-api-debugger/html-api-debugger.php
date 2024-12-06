@@ -45,6 +45,7 @@ function init() {
 						$html = $request->get_json_params()['html'] ?: '';
 						$options = array(
 							'context_html' => $request->get_json_params()['contextHTML'] ?: null,
+							'selector' => $request->get_json_params()['selector'] ?: null,
 						);
 						return prepare_html_result_object( $html, $options );
 					},
