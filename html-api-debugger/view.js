@@ -67,6 +67,7 @@ let mutationObserver = null;
  *
  *
  * @typedef  State
+ * @property {ReadonlyArray<string>} treeWarnings
  * @property {string|null} selector
  * @property {string|null} selectorErrorMessage
  * @property {boolean} showClosers
@@ -143,6 +144,10 @@ const store = createStore(NS, {
 				hoverInfo: store.state.hoverInfo,
 				selector: store.state.selector,
 			};
+		},
+
+		get treeWarnings() {
+			return store.state.htmlapiResponse.result?.warnings ?? [];
 		},
 
 		get playbackTree() {

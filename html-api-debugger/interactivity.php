@@ -47,6 +47,7 @@ function generate_page( string $html, array $options ): string {
 			'htmlApiDoctypeName' => $htmlapi_response['result']['doctypeName'] ?? null,
 			'htmlApiDoctypePublicId' => $htmlapi_response['result']['doctypePublicId'] ?? null,
 			'htmlApiDoctypeSytemId' => $htmlapi_response['result']['doctypeSystemId'] ?? null,
+			'treeWarnings' => $htmlapi_response['result']['warnings'] ?? array(),
 			'normalizedHtml' => $htmlapi_response['normalizedHtml'] ?? '',
 
 			'playbackLength' => isset( $htmlapi_response['result']['playback'] )
@@ -165,8 +166,8 @@ function generate_page( string $html, array $options ): string {
 			</div>
 		</div>
 
-		<div data-wp-bind--hidden="!state.htmlapiResponse.result.warnings.0">
-			<template data-wp-each="state.htmlapiResponse.result.warnings">
+		<div data-wp-bind--hidden="!state.treeWarnings.length">
+			<template data-wp-each="state.treeWarnings">
 				<p data-wp-text="context.item" class="error-holder"></p>
 			</template>
 		</div>
