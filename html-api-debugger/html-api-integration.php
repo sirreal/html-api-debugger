@@ -26,8 +26,10 @@ function get_supports(): array {
  * @return string|null The normalized HTML or null if not supported.
  */
 function get_normalized_html( string $html, array $options ): ?string {
-	$cfacn = new ReflectionMethod( WP_HTML_Processor::class, 'create_fragment_at_current_node' );
-	$cfacn->setAccessible( true );
+	if ( method_exists( WP_HTML_Processor::class, 'create_fragment_at_current_node' ) ) {
+		$cfacn = new ReflectionMethod( WP_HTML_Processor::class, 'create_fragment_at_current_node' );
+		$cfacn->setAccessible( true );
+	}
 
 	if (
 		method_exists( WP_HTML_Processor::class, 'create_fragment_at_current_node' ) &&
