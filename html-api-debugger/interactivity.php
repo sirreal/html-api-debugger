@@ -37,6 +37,7 @@ function generate_page( string $html, array $options ): string {
 			'showInvisible' => false,
 			'showVirtual' => false,
 			'contextHTML' => $options['context_html'] ?? '',
+			'selector' => $options['selector'] ?? '',
 
 			'hoverInfo' => 'breadcrumbs',
 			'hoverBreadcrumbs' => true,
@@ -47,6 +48,7 @@ function generate_page( string $html, array $options ): string {
 			'htmlApiDoctypeName' => $htmlapi_response['result']['doctypeName'] ?? null,
 			'htmlApiDoctypePublicId' => $htmlapi_response['result']['doctypePublicId'] ?? null,
 			'htmlApiDoctypeSytemId' => $htmlapi_response['result']['doctypeSystemId'] ?? null,
+			'treeWarnings' => $htmlapi_response['result']['warnings'] ?? array(),
 			'normalizedHtml' => $htmlapi_response['normalizedHtml'] ?? '',
 
 			'playbackLength' => isset( $htmlapi_response['result']['playback'] )
@@ -63,6 +65,17 @@ function generate_page( string $html, array $options ): string {
 	data-wp-init="run"
 	class="html-api-debugger-container html-api-debugger--grid"
 >
+	<div data-wp-bind--hidden="!state.htmlapiResponse.supports.create_fragment_advanced" class="full-width">
+		<label>Context in which input HTML finds itself
+			<textarea
+				class="context-html"
+				placeholder="Provide a fragment context, for example:&#x0A;<!DOCTYPE html><body>"
+				title="Leave blank to parse a full document."
+				rows="2"
+				data-wp-on-async--input="handleContextHtmlInput"
+			><?php echo "\n" . esc_textarea( str_replace( "\0", '', $options['context_html'] ?? '' ) ); ?></textarea>
+		</label>
+	</div>
 	<div>
 		<h2>Input HTML</h2>
 		<textarea
@@ -139,15 +152,8 @@ function generate_page( string $html, array $options ): string {
 				<label>Show closers <input type="checkbox" data-wp-bind--checked="state.showClosers" data-wp-on-async--input="handleShowClosersClick"></label>
 				<label>Show invisible <input type="checkbox" data-wp-bind--checked="state.showInvisible" data-wp-on-async--input="handleShowInvisibleClick"></label>
 				<span><label>Show virtual <input type="checkbox" data-wp-bind--checked="state.showVirtual" data-wp-on-async--input="handleShowVirtualClick"></label></span>
-				<div data-wp-bind--hidden="!state.htmlapiResponse.supports.create_fragment_advanced">
-					<label>Context html
-						<textarea
-							class="context-html"
-							placeholder="Provide a fragment context, for example:&#x0A;<!DOCTYPE html><body>"
-							rows="2"
-							data-wp-on-async--input="handleContextHtmlInput"
-						><?php echo "\n" . esc_textarea( str_replace( "\0", '', $options['context_html'] ?? '' ) ); ?></textarea>
-				</label>
+				<div data-wp-bind--hidden="!state.htmlapiResponse.supports.selectors">
+					<label>CSS Selectors <textarea placeholder="CSS selector: .my-class" data-wp-on-async--input="handleSelectorChange"><?php echo "\n" . esc_textarea( str_replace( "\0", '', $options['selector'] ?? '' ) ); ?></textarea></label>
 				</div>
 			</div>
 			<div>
@@ -160,6 +166,13 @@ function generate_page( string $html, array $options ): string {
 				</label>
 			</div>
 		</div>
+
+		<div data-wp-bind--hidden="!state.treeWarnings.length">
+			<template data-wp-each="state.treeWarnings">
+				<p data-wp-text="context.item" class="error-holder"></p>
+			</template>
+		</div>
+		<p data-wp-bind--hidden="!state.selectorErrorMessage" data-wp-text="state.selectorErrorMessage" class="error-holder"></p>
 
 		<div>
 			<h2>Processed HTML</h2>

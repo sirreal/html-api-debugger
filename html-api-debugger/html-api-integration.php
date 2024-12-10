@@ -12,6 +12,9 @@ use WP_HTML_Processor;
 function get_supports(): array {
 	return array(
 		'create_fragment_advanced' => method_exists( WP_HTML_Processor::class, 'create_fragment_at_current_node' ),
+		'selectors' =>
+			class_exists( '\WP_CSS_Complex_Selector_List' )
+			|| class_exists( '\WP_CSS_Compound_Selector_List' ),
 	);
 }
 
@@ -70,6 +73,25 @@ function get_normalized_html( string $html, array $options ): ?string {
  * @param array  $options The options.
  */
 function get_tree( string $html, array $options ): array {
+	/**
+	 * Messages generated during parse.
+	 *
+	 * @var string[]
+	 */
+	$warnings = array();
+	$selector = null;
+	if ( isset( $options['selector'] ) && class_exists( '\WP_CSS_Complex_Selector_List' ) ) {
+		$selector = \WP_CSS_Complex_Selector_List::from_selectors( $options['selector'] );
+		if ( null === $selector ) {
+			$warnings[] = 'The provided selector is invalid or unsupported.';
+		}
+	} elseif ( isset( $options['selector'] ) && class_exists( '\WP_CSS_Compound_Selector_List' ) ) {
+		$selector = \WP_CSS_Compound_Selector_List::from_selectors( $options['selector'] );
+		if ( null === $selector ) {
+			$warnings[] = 'The provided selector is invalid or unsupported.';
+		}
+	}
+
 	$processor_state = new ReflectionProperty( WP_HTML_Processor::class, 'state' );
 	$processor_state->setAccessible( true );
 
@@ -225,6 +247,8 @@ function get_tree( string $html, array $options ): array {
 					$document_title = $processor->get_modifiable_text();
 				}
 
+				$matches = $selector !== null && $selector->matches( $processor );
+
 				$attributes      = array();
 				$attribute_names = $processor->get_attribute_names_with_prefix( '' );
 				if ( null !== $attribute_names ) {
@@ -261,6 +285,7 @@ function get_tree( string $html, array $options ): array {
 					'_virtual' => $is_virtual(),
 					'_depth' => $processor->get_current_depth(),
 					'_namespace' => $namespace,
+					'_matches' => $matches,
 				);
 
 				// Self-contained tags contain their inner contents as modifiable text.
@@ -440,6 +465,7 @@ function get_tree( string $html, array $options ): array {
 		'doctypeSystemId' => $doctype_system_identifier,
 
 		'contextNode' => $context_node,
+		'warnings' => $warnings,
 	);
 }
 

@@ -45,6 +45,7 @@ function init() {
 						$html = $request->get_json_params()['html'] ?: '';
 						$options = array(
 							'context_html' => $request->get_json_params()['contextHTML'] ?: null,
+							'selector' => $request->get_json_params()['selector'] ?: null,
 						);
 						return prepare_html_result_object( $html, $options );
 					},
@@ -112,6 +113,7 @@ function init() {
 
 					$options = array(
 						'context_html' => null,
+						'selector' => null,
 					);
 
 					$html = '';
@@ -121,6 +123,9 @@ function init() {
 					}
 					if ( isset( $_GET['contextHTML'] ) && is_string( $_GET['contextHTML'] ) ) {
 						$options['context_html'] = stripslashes( $_GET['contextHTML'] );
+					}
+					if ( isset( $_GET['selector'] ) && is_string( $_GET['selector'] ) ) {
+						$options['selector'] = stripslashes( $_GET['selector'] );
 					}
 					// phpcs:enable WordPress.Security.NonceVerification.Recommended
 

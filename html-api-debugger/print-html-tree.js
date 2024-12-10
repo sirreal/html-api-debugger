@@ -5,6 +5,7 @@ import { replaceInvisible } from '@html-api-debugger/replace-invisible-chars';
  * @property {boolean} [showClosers]
  * @property {boolean} [showInvisible]
  * @property {boolean} [showVirtual]
+ * @property {string|null} [selector]
  * @property {'breadcrumbs'|'insertionMode'} [hoverInfo]
  */
 
@@ -21,6 +22,14 @@ export function printHtmlApiTree(node, ul, options = {}) {
 	for (let i = 0; i < node.childNodes.length; i += 1) {
 		const li = document.createElement('li');
 		li.className = `t${node.childNodes[i].nodeType}`;
+
+		if (
+			node.childNodes[i]._matches ||
+			(options.selector && node.childNodes[i].matches?.(options.selector))
+		) {
+			li.classList.add('matches-selector');
+		}
+
 		if (node.childNodes[i].nodeType === Node.prototype.DOCUMENT_TYPE_NODE) {
 			li.appendChild(document.createTextNode('DOCTYPE: '));
 		}

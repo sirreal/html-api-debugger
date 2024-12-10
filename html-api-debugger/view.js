@@ -49,6 +49,7 @@ let mutationObserver = null;
  *
  * @typedef Supports
  * @property {boolean} create_fragment_advanced
+ * @property {boolean} selectors
  *
  *
  * @typedef HtmlApiResponse
@@ -67,6 +68,9 @@ let mutationObserver = null;
  *
  *
  * @typedef  State
+ * @property {ReadonlyArray<string>} treeWarnings
+ * @property {string|null} selector
+ * @property {string|null} selectorErrorMessage
  * @property {boolean} showClosers
  * @property {boolean} showInvisible
  * @property {boolean} showVirtual
@@ -139,7 +143,14 @@ const store = createStore(NS, {
 				showInvisible: store.state.showInvisible,
 				showVirtual: store.state.showVirtual,
 				hoverInfo: store.state.hoverInfo,
+				selector: store.state.htmlapiResponse.supports.selectors
+					? store.state.selector
+					: '',
 			};
+		},
+
+		get treeWarnings() {
+			return store.state.htmlapiResponse.result?.warnings ?? [];
 		},
 
 		get playbackTree() {
@@ -252,6 +263,9 @@ const store = createStore(NS, {
 			}
 			if (store.state.contextHTMLForUse) {
 				searchParams.set('contextHTML', store.state.contextHTMLForUse);
+			}
+			if (store.state.selector) {
+				searchParams.set('selector', store.state.selector);
 			}
 			const base = '/wp-admin/admin.php';
 			const u = new URL(
@@ -396,10 +410,23 @@ const store = createStore(NS, {
 		/** @type {Element|null} */
 		let contextElement = null;
 		if (store.state.contextHTMLForUse) {
-			const walker = doc.createTreeWalker(doc, NodeFilter.SHOW_ELEMENT);
-			while (walker.nextNode()) {
-				// @ts-expect-error It's an Element!
-				contextElement = walker.currentNode;
+			// An HTML document will always make HTML > HEAD + BODY.
+			// But that may not be the intended context.
+			// Guess the intended context in case the HEAD and BODY elements are empty.
+			if (doc.body.hasChildNodes() || doc.head.hasChildNodes()) {
+				const walker = doc.createTreeWalker(doc, NodeFilter.SHOW_ELEMENT);
+				while (walker.nextNode()) {
+					// @ts-expect-error It's an Element!
+					contextElement = walker.currentNode;
+				}
+			} else {
+				if (/<body\W/i.test(store.state.contextHTMLForUse)) {
+					contextElement = doc.body;
+				} else if (/<head\W/i.test(store.state.contextHTMLForUse)) {
+					contextElement = doc.head;
+				} else {
+					contextElement = doc.documentElement;
+				}
 			}
 			if (contextElement) {
 				store.state.DOM.contextNode = contextElement.nodeName;
@@ -481,6 +508,7 @@ const store = createStore(NS, {
 		for (const [param, prop] of /** @type {const} */ ([
 			['html', 'html'],
 			['contextHTML', 'contextHTMLForUse'],
+			['selector', 'selector'],
 		])) {
 			if (store.state[prop]) {
 				u.searchParams.set(param, store.state[prop]);
@@ -506,6 +534,7 @@ const store = createStore(NS, {
 				body: JSON.stringify({
 					html: store.state.html,
 					contextHTML: store.state.contextHTMLForUse,
+					selector: store.state.selector,
 				}),
 				headers: {
 					'Content-Type': 'application/json',
@@ -687,6 +716,50 @@ const store = createStore(NS, {
 	handlePlaybackChange(e) {
 		const val = /** @type {HTMLInputElement} */ (e.target).valueAsNumber;
 		store.state.playbackPoint = val - 1;
+	},
+
+	/** @param {InputEvent} e */
+	handleSelectorChange: function* (e) {
+		const val = /** @type {HTMLInputElement} */ (e.target).value.trim() || null;
+		if (val) {
+			try {
+				// Test whether the selector is valid before setting it so it isn't applied.
+				document.createDocumentFragment().querySelector(val);
+				store.state.selector = val;
+				store.state.selectorErrorMessage = null;
+				yield store.callAPI();
+				return;
+			} catch (/** @type {unknown} */ e) {
+				if (e instanceof DOMException && e.name === 'SyntaxError') {
+					let msg = e.message;
+
+					/*
+					 * The error message includes methods about our test.
+					 * Chrome:
+					 * > Failed to execute 'querySelector' on 'DocumentFragment': 'foo >' is not a valid selector.
+					 * Firefox:
+					 * > DocumentFragment.querySelector: 'foo >' is not a valid selector
+					 * Safari:
+					 * > 'foo >' is not a valid selector.
+					 *
+					 * Try to strip the irrelevant parts.
+					 */
+					let idx = msg.indexOf(val);
+					if (idx > 0) {
+						if (msg[idx - 1] === '"' || msg[idx - 1] === "'") {
+							idx -= 1;
+						}
+						msg = msg.slice(idx);
+					}
+
+					store.state.selectorErrorMessage = msg;
+				} else {
+					throw e;
+				}
+			}
+		}
+		store.state.selector = null;
+		yield store.callAPI();
 	},
 });
 
