@@ -151,7 +151,7 @@ function generate_page( string $html, array $options ): string {
 				<label>Show closers <input type="checkbox" data-wp-bind--checked="state.showClosers" data-wp-on-async--input="handleShowClosersClick"></label>
 				<label>Show invisible <input type="checkbox" data-wp-bind--checked="state.showInvisible" data-wp-on-async--input="handleShowInvisibleClick"></label>
 				<span><label>Show virtual <input type="checkbox" data-wp-bind--checked="state.showVirtual" data-wp-on-async--input="handleShowVirtualClick"></label></span>
-				<div>
+				<div data-wp-bind-hidden="!state.htmlapiResponse.supports.selectors">
 					<label>CSS Selectors <textarea placeholder="CSS selector: .my-class" data-wp-on-async--input="handleSelectorChange"></textarea></label>
 				</div>
 			</div>

@@ -12,6 +12,9 @@ use WP_HTML_Processor;
 function get_supports(): array {
 	return array(
 		'create_fragment_advanced' => method_exists( WP_HTML_Processor::class, 'create_fragment_at_current_node' ),
+		'selectors' =>
+			class_exists( '\WP_CSS_Complex_Selector_List' )
+			|| class_exists( '\WP_CSS_Compound_Selector_List' ),
 	);
 }
 
