@@ -49,6 +49,7 @@ let mutationObserver = null;
  *
  * @typedef Supports
  * @property {boolean} create_fragment_advanced
+ * @property {boolean} selectors
  *
  *
  * @typedef HtmlApiResponse
@@ -260,6 +261,9 @@ const store = createStore(NS, {
 			}
 			if (store.state.contextHTMLForUse) {
 				searchParams.set('contextHTML', store.state.contextHTMLForUse);
+			}
+			if (store.state.selector) {
+				searchParams.set('selector', store.state.selector);
 			}
 			const base = '/wp-admin/admin.php';
 			const u = new URL(
@@ -502,6 +506,7 @@ const store = createStore(NS, {
 		for (const [param, prop] of /** @type {const} */ ([
 			['html', 'html'],
 			['contextHTML', 'contextHTMLForUse'],
+			['selector', 'selector'],
 		])) {
 			if (store.state[prop]) {
 				u.searchParams.set(param, store.state[prop]);

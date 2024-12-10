@@ -37,6 +37,7 @@ function generate_page( string $html, array $options ): string {
 			'showInvisible' => false,
 			'showVirtual' => false,
 			'contextHTML' => $options['context_html'] ?? '',
+			'selector' => $options['selector'] ?? '',
 
 			'hoverInfo' => 'breadcrumbs',
 			'hoverBreadcrumbs' => true,
@@ -152,7 +153,7 @@ function generate_page( string $html, array $options ): string {
 				<label>Show invisible <input type="checkbox" data-wp-bind--checked="state.showInvisible" data-wp-on-async--input="handleShowInvisibleClick"></label>
 				<span><label>Show virtual <input type="checkbox" data-wp-bind--checked="state.showVirtual" data-wp-on-async--input="handleShowVirtualClick"></label></span>
 				<div data-wp-bind-hidden="!state.htmlapiResponse.supports.selectors">
-					<label>CSS Selectors <textarea placeholder="CSS selector: .my-class" data-wp-on-async--input="handleSelectorChange"></textarea></label>
+					<label>CSS Selectors <textarea placeholder="CSS selector: .my-class" data-wp-on-async--input="handleSelectorChange"><?php echo "\n" . esc_textarea( str_replace( "\0", '', $options['selector'] ?? '' ) ); ?></textarea></label>
 				</div>
 			</div>
 			<div>
