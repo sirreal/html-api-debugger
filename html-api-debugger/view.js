@@ -143,7 +143,9 @@ const store = createStore(NS, {
 				showInvisible: store.state.showInvisible,
 				showVirtual: store.state.showVirtual,
 				hoverInfo: store.state.hoverInfo,
-				selector: store.state.selector,
+				selector: store.state.htmlapiResponse.supports.selectors
+					? store.state.selector
+					: '',
 			};
 		},
 
