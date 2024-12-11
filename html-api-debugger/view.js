@@ -69,7 +69,7 @@ let mutationObserver = null;
  *
  * @typedef  State
  * @property {ReadonlyArray<string>} treeWarnings
- * @property {string|null} selector
+ * @property {string} selector
  * @property {string|null} selectorErrorMessage
  * @property {boolean} showClosers
  * @property {boolean} showInvisible
@@ -354,8 +354,18 @@ const store = createStore(NS, {
 		// Force print them if we have null bytes.
 		if (store.state.html.includes('\0')) {
 			/** @type {HTMLTextAreaElement} */ (
-				document.getElementById('input_html')
+				document.getElementById('input-html')
 			).value = store.state.html;
+		}
+		if (store.state.contextHTML.includes('\0')) {
+			/** @type {HTMLTextAreaElement} */ (
+				document.getElementById('context-html')
+			).value = store.state.contextHTML;
+		}
+		if (store.state.selector.includes('\0')) {
+			/** @type {HTMLTextAreaElement} */ (
+				document.getElementById('selector-input')
+			).value = store.state.selector;
 		}
 
 		store.render();
