@@ -100,8 +100,10 @@ function get_tree( string $html, array $options ): array {
 	$processor_bookmarks = new ReflectionProperty( WP_HTML_Processor::class, 'bookmarks' );
 	$processor_bookmarks->setAccessible( true );
 
-	$cfacn = new ReflectionMethod( WP_HTML_Processor::class, 'create_fragment_at_current_node' );
-	$cfacn->setAccessible( true );
+	if ( method_exists( WP_HTML_Processor::class, 'create_fragment_at_current_node' ) ) {
+		$cfacn = new ReflectionMethod( WP_HTML_Processor::class, 'create_fragment_at_current_node' );
+		$cfacn->setAccessible( true );
+	}
 
 	$is_fragment_processor = false;
 

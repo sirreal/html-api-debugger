@@ -17,6 +17,7 @@ Please file issues and pull requests on the [GitHub repository](https://github.c
 
 = 2.6 =
 * Handle null bytes in selectors and context HTML.
+* Fix another error when using WordPress 6.7.
 
 = 2.5 =
 * Fix a crash when using WordPress 6.7.
