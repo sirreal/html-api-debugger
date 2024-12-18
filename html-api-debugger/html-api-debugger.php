@@ -78,7 +78,7 @@ function init() {
 
 	wp_enqueue_script_module(
 		'@html-api-debugger/main',
-		plugins_url( 'view.js', __FILE__ ),
+		plugins_url( 'main.js', __FILE__ ),
 		array(
 			'@wordpress/interactivity',
 			'@html-api-debugger/print-html-tree',
@@ -95,7 +95,7 @@ function init() {
 		function ( $hook_suffix ) {
 			if ( $hook_suffix === 'toplevel_page_' . SLUG ) {
 					wp_enqueue_style( SLUG, plugins_url( 'style.css', __FILE__ ), array(), VERSION );
-					wp_enqueue_script_module( '@html-api-debugger/view' );
+					wp_enqueue_script_module( '@html-api-debugger/main' );
 			}
 		}
 	);
