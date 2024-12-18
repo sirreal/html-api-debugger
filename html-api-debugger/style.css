@@ -58,7 +58,7 @@
 		font-size: inherit;
 	}
 
-	#input_html {
+	#input-html {
 		width: 100%;
 		min-height: 200px;
 		font-family: var(--monospace-font-family);

@@ -79,7 +79,7 @@ function generate_page( string $html, array $options ): string {
 	<div>
 		<h2>Input HTML</h2>
 		<textarea
-			id='input_html'
+			id="input-html"
 			autocapitalize="off"
 			autocomplete="off"
 			spellcheck="false"
@@ -153,7 +153,7 @@ function generate_page( string $html, array $options ): string {
 				<label>Show invisible <input type="checkbox" data-wp-bind--checked="state.showInvisible" data-wp-on-async--input="handleShowInvisibleClick"></label>
 				<span><label>Show virtual <input type="checkbox" data-wp-bind--checked="state.showVirtual" data-wp-on-async--input="handleShowVirtualClick"></label></span>
 				<div data-wp-bind--hidden="!state.htmlapiResponse.supports.selectors">
-					<label>CSS Selectors <textarea placeholder="CSS selector: .my-class" data-wp-on-async--input="handleSelectorChange"><?php echo "\n" . esc_textarea( str_replace( "\0", '', $options['selector'] ?? '' ) ); ?></textarea></label>
+					<label>CSS Selectors <textarea id="selector-input" placeholder="CSS selector: .my-class" data-wp-on-async--input="handleSelectorChange"><?php echo "\n" . esc_textarea( str_replace( "\0", '', $options['selector'] ?? '' ) ); ?></textarea></label>
 				</div>
 			</div>
 			<div>
