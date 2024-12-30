@@ -76,7 +76,7 @@ function init() {
 		VERSION
 	);
 
-	wp_enqueue_script_module(
+	wp_register_script_module(
 		'@html-api-debugger/main',
 		plugins_url( 'main.js', __FILE__ ),
 		array(
