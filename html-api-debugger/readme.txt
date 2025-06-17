@@ -3,7 +3,7 @@ Contributors: jonsurrell, bernhard-reiter
 Tags: HTML API, development, debug
 Requires at least: 6.7
 Tested up to: 6.8
-Stable tag: 2.6
+Stable tag: 2.7
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -17,6 +17,7 @@ Please file issues and pull requests on the [GitHub repository](https://github.c
 
 = 2.7 =
 * Preserve attribute value line breaks in tree views.
+* Prevent plugin module from being enqueued on all pages.
 
 = 2.6 =
 * Handle null bytes in selectors and context HTML.
