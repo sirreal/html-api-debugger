@@ -196,6 +196,7 @@
 		text-wrap: auto;
 		text-wrap: pretty;
 		overflow-wrap: break-word;
+		white-space: pre-wrap;
 	}
 
 	.t3 code,

@@ -15,6 +15,9 @@ Please file issues and pull requests on the [GitHub repository](https://github.c
 
 == Changelog ==
 
+= 2.7 =
+* Preserve attribute value line breaks in tree views.
+
 = 2.6 =
 * Handle null bytes in selectors and context HTML.
 * Fix another error when using WordPress 6.7.
