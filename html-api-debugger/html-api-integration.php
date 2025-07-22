@@ -37,9 +37,11 @@ function get_normalized_html( string $html, array $options ): ?string {
 	) {
 		$context_processor = WP_HTML_Processor::create_full_parser( $options['context_html'] );
 
+		add_filter( 'doing_it_wrong_trigger_error', __NAMESPACE__ . '\filter_doing_it_wrong_trigger_error', 10, 2 );
 		while ( $context_processor->next_tag() ) {
 			$context_processor->set_bookmark( 'final_node' );
 		}
+		remove_filter( 'doing_it_wrong_trigger_error', __NAMESPACE__ . '\filter_doing_it_wrong_trigger_error', 10 );
 		if ( $context_processor->has_bookmark( 'final_node' ) ) {
 			$context_processor->seek( 'final_node' );
 			/**
@@ -119,6 +121,7 @@ function get_tree( string $html, array $options ): array {
 	) {
 		$context_processor = WP_HTML_Processor::create_full_parser( $options['context_html'] );
 
+		add_filter( 'doing_it_wrong_trigger_error', __NAMESPACE__ . '\filter_doing_it_wrong_trigger_error', 10, 2 );
 		while ( $context_processor->next_token() ) {
 			switch ( $context_processor->get_token_type() ) {
 				case '#doctype':
@@ -140,6 +143,7 @@ function get_tree( string $html, array $options ): array {
 					break;
 			}
 		}
+		remove_filter( 'doing_it_wrong_trigger_error', __NAMESPACE__ . '\filter_doing_it_wrong_trigger_error', 10 );
 
 		if ( $document_title === null ) {
 			$document_title = '';
@@ -471,6 +475,22 @@ function get_tree( string $html, array $options ): array {
 		'contextNode' => $context_node,
 		'warnings' => $warnings,
 	);
+}
+
+/**
+ * Prevent set_bookmark on virtual context nodes from triggering a doing_it_wrong error.
+ * A context like `<body>` would trigger due to virtual nodes like `<head>` being created
+ * and bookmarked.
+ * Remove the noise when searching for context nodes.
+ *
+ * @param bool   $trigger_error Whether to trigger a doing_it_wrong error.
+ * @param string $function_name The name of the function being called.
+ */
+function filter_doing_it_wrong_trigger_error( $trigger_error, $function_name ) {
+	if ( $function_name === 'WP_HTML_Processor::set_bookmark' ) {
+		return false;
+	}
+	return $trigger_error;
 }
 
 const NODE_TYPE_ELEMENT                = 1;
