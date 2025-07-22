@@ -16,7 +16,7 @@ Please file issues and pull requests on the [GitHub repository](https://github.c
 == Changelog ==
 
 = 2.8 =
-* Silence _doing_it_wrong bookmark when providing from HTML context.
+* Silence _doing_it_wrong bookmark notices when providing from HTML context.
 
 = 2.7 =
 * Preserve attribute value line breaks in tree views.
