@@ -12,8 +12,8 @@
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.4",
 		"@tsconfig/strictest": "^2.0.5",
-		"@typescript/lib-dom": "npm:@types/web@^0.0.178",
-		"@wordpress/interactivity": "^6.11.0",
-		"typescript": "^5.6.3"
+		"@typescript/lib-dom": "npm:@types/web@^0.0.254",
+		"@wordpress/interactivity": "^6.27.0",
+		"typescript": "^5.8.3"
 	}
 }
