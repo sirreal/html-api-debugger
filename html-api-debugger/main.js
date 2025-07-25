@@ -55,7 +55,7 @@ let mutationObserver = null;
  * @typedef HtmlApiResponse
  * @property {any} error
  * @property {Supports} supports
- * @property {{tree: any, compatMode: string, documentTitle: string|null, doctypeName: string|null, doctypePublicId: string|null, doctypeSystemId: string|null, playback: ReadonlyArray<[string,any]> }|null} result
+ * @property {{tree: any, compatMode: string, documentTitle: string|null, doctypeName: string|null, doctypePublicId: string|null, doctypeSystemId: string|null, playback: ReadonlyArray<[string,any]>, warnings: ReadonlyArray<string> }|null} result
  * @property {string|null} normalizedHtml
  * @property {string} html
  *
@@ -768,7 +768,7 @@ const store = createStore(NS, {
 				}
 			}
 		}
-		store.state.selector = null;
+		store.state.selector = '';
 		yield store.callAPI();
 	},
 });
