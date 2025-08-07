@@ -129,9 +129,14 @@ function get_tree( string $html, array $options ): array {
 					$doctype_name              = $doctype->name;
 					$doctype_public_identifier = $doctype->public_identifier;
 					$doctype_system_identifier = $doctype->system_identifier;
-					if ( $doctype->indicated_compatability_mode !== 'quirks' ) {
+					if (
+						( property_exists( $doctype, 'indicated_compatibility_mode' )
+							? $doctype->indicated_compatibility_mode
+							: $doctype->indicated_compatability_mode ) !== 'quirks'
+					) {
 						$compat_mode = 'CSS1Compat';
 					}
+
 					break;
 
 				case '#tag':
@@ -234,7 +239,11 @@ function get_tree( string $html, array $options ): array {
 				$doctype_name              = $doctype->name;
 				$doctype_public_identifier = $doctype->public_identifier;
 				$doctype_system_identifier = $doctype->system_identifier;
-				if ( $doctype->indicated_compatability_mode !== 'quirks' ) {
+				if (
+					( property_exists( $doctype, 'indicated_compatibility_mode' )
+						? $doctype->indicated_compatibility_mode
+						: $doctype->indicated_compatability_mode ) !== 'quirks'
+				) {
 					$compat_mode = 'CSS1Compat';
 				}
 
