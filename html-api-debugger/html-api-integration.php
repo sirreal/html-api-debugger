@@ -136,7 +136,6 @@ function get_tree( string $html, array $options ): array {
 					) {
 						$compat_mode = 'CSS1Compat';
 					}
-
 					break;
 
 				case '#tag':
