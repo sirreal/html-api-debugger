@@ -17,6 +17,7 @@ Please file issues and pull requests on the [GitHub repository](https://github.c
 
 = 2.8 =
 * Silence _doing_it_wrong bookmark notices when providing from HTML context.
+* Adjust doctype info to account for typo fix.
 
 = 2.7 =
 * Preserve attribute value line breaks in tree views.
