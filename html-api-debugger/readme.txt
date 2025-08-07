@@ -3,7 +3,7 @@ Contributors: jonsurrell, bernhard-reiter
 Tags: HTML API, development, debug
 Requires at least: 6.7
 Tested up to: 6.8
-Stable tag: 2.7
+Stable tag: 2.8
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
