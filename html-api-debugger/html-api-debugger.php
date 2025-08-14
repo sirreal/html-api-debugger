@@ -44,7 +44,9 @@ function init() {
 						// phpcs:ignore Universal.Operators.DisallowShortTernary.Found
 						$html = $request->get_json_params()['html'] ?: '';
 						$options = array(
+							// phpcs:ignore Universal.Operators.DisallowShortTernary.Found
 							'context_html' => $request->get_json_params()['contextHTML'] ?: null,
+							// phpcs:ignore Universal.Operators.DisallowShortTernary.Found
 							'selector' => $request->get_json_params()['selector'] ?: null,
 						);
 						return prepare_html_result_object( $html, $options );
