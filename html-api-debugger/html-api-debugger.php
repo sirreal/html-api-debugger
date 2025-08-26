@@ -146,7 +146,7 @@ function init() {
  * @param string $html The HTML.
  * @param array  $options Options.
  */
-function prepare_html_result_object( string $html, array $options = null ): array {
+function prepare_html_result_object( string $html, ?array $options = null ): array {
 	$response = array(
 		'supports' => HTML_API_Integration\get_supports(),
 		'html' => $html,

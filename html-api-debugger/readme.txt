@@ -15,6 +15,9 @@ Please file issues and pull requests on the [GitHub repository](https://github.c
 
 == Changelog ==
 
+= 2.9 =
+* Fix implicit nullable parameter.
+
 = 2.8 =
 * Silence _doing_it_wrong bookmark notices when providing from HTML context.
 * Adjust doctype info to account for typo fix.
