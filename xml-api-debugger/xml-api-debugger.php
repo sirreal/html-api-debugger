@@ -149,7 +149,7 @@ function init() {
  * @param string $xml The XML.
  * @param array  $options Options.
  */
-function prepare_xml_result_object( string $xml, array $options = null ): array {
+function prepare_xml_result_object( string $xml, ?array $options = null ): array {
 	$response = array(
 		'supports' => XML_API_Integration\get_supports(),
 		'xml'     => $xml,
