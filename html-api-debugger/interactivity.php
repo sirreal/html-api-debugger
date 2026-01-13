@@ -52,7 +52,7 @@ function generate_page( string $html, array $options ): string {
 			'normalizedHtml' => $htmlapi_response['normalizedHtml'] ?? '',
 
 			'playbackLength' => isset( $htmlapi_response['result']['playback'] )
-				? count( $htmlapi_response['result']['playback'] )
+				? \count( $htmlapi_response['result']['playback'] )
 				: 0,
 		)
 	);

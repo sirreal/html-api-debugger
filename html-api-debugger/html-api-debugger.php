@@ -120,13 +120,13 @@ function init() {
 
 					$html = '';
 					// phpcs:disable WordPress.Security.NonceVerification.Recommended
-					if ( isset( $_GET['html'] ) && is_string( $_GET['html'] ) ) {
+					if ( isset( $_GET['html'] ) && \is_string( $_GET['html'] ) ) {
 						$html = stripslashes( $_GET['html'] );
 					}
-					if ( isset( $_GET['contextHTML'] ) && is_string( $_GET['contextHTML'] ) ) {
+					if ( isset( $_GET['contextHTML'] ) && \is_string( $_GET['contextHTML'] ) ) {
 						$options['context_html'] = stripslashes( $_GET['contextHTML'] );
 					}
-					if ( isset( $_GET['selector'] ) && is_string( $_GET['selector'] ) ) {
+					if ( isset( $_GET['selector'] ) && \is_string( $_GET['selector'] ) ) {
 						$options['selector'] = stripslashes( $_GET['selector'] );
 					}
 					// phpcs:enable WordPress.Security.NonceVerification.Recommended

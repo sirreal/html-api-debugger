@@ -5,6 +5,7 @@ use Exception;
 use ReflectionMethod;
 use ReflectionProperty;
 use WP_HTML_Processor;
+use WP_HTML_Tag_Processor;
 
 /**
  * Get information about HTML API supported features
@@ -222,7 +223,7 @@ function get_tree( string $html, array $options ): array {
 		// Depth needs and adjustment because:
 		// - Nodes in a full tree are all placed under a document node.
 		// - Nodes in a fragment tree start at the root.
-		if ( ( count( $cursor ) + 1 ) > ( $processor->get_current_depth() - ( $is_fragment_processor ? 1 : 0 ) ) ) {
+		if ( \count( $cursor ) + 1 > $processor->get_current_depth() - ( $is_fragment_processor ? 1 : 0 ) ) {
 			array_pop( $cursor );
 		}
 		$current = &$tree;
@@ -329,7 +330,7 @@ function get_tree( string $html, array $options ): array {
 					break;
 				}
 
-				$cursor[] = count( $current['childNodes'] ) - 1;
+				$cursor[] = \count( $current['childNodes'] ) - 1;
 				break;
 
 			case '#text':
@@ -400,13 +401,13 @@ function get_tree( string $html, array $options ): array {
 					'_depth' => $processor->get_current_depth(),
 				);
 				switch ( $processor->get_comment_type() ) {
-					case WP_HTML_Processor::COMMENT_AS_ABRUPTLY_CLOSED_COMMENT:
-					case WP_HTML_Processor::COMMENT_AS_HTML_COMMENT:
+					case WP_HTML_Tag_Processor::COMMENT_AS_ABRUPTLY_CLOSED_COMMENT:
+					case WP_HTML_Tag_Processor::COMMENT_AS_HTML_COMMENT:
 						$self['nodeName']  = $processor->get_token_name();
 						$self['nodeValue'] = $processor->get_modifiable_text();
 						break;
 
-					case WP_HTML_Processor::COMMENT_AS_PI_NODE_LOOKALIKE:
+					case WP_HTML_Tag_Processor::COMMENT_AS_PI_NODE_LOOKALIKE:
 						$self['nodeName']   = "{$processor->get_token_name()}({$processor->get_comment_type()})";
 						$self['childNodes'] = array(
 							array(
@@ -417,12 +418,12 @@ function get_tree( string $html, array $options ): array {
 						);
 						break;
 
-					case WP_HTML_Processor::COMMENT_AS_CDATA_LOOKALIKE:
+					case WP_HTML_Tag_Processor::COMMENT_AS_CDATA_LOOKALIKE:
 						$self['nodeName']  = "{$processor->get_token_name()}({$processor->get_comment_type()})";
 						$self['nodeValue'] = $processor->get_modifiable_text();
 						break;
 
-					case WP_HTML_Processor::COMMENT_AS_INVALID_HTML:
+					case WP_HTML_Tag_Processor::COMMENT_AS_INVALID_HTML:
 						$self['nodeName']  = "{$processor->get_token_name()}({$processor->get_comment_type()})";
 						$self['nodeValue'] = $processor->get_modifiable_text();
 						break;
