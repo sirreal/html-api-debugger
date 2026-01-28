@@ -14,6 +14,10 @@ export function replaceInvisible(s) {
 			// Include a newline with newline replacement
 			case 0x0a:
 				return '\u{240A}\n';
+
+			// Include a newline with newline replacement
+			case 0x09:
+				return '\u{2409}\t';
 		}
 
 		// There's a nice Control Pictures Block at 0x2400 offset for the matched range
