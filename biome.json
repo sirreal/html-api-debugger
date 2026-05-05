@@ -1,14 +1,13 @@
 {
 	"$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
-	"organizeImports": {
-		"enabled": true
-	},
+	"assist": { "actions": { "source": { "organizeImports": "on" } } },
 	"linter": {
 		"enabled": true,
 		"rules": {
 			"recommended": true,
 			"complexity": {
-				"useLiteralKeys": "off"
+				"useLiteralKeys": "off",
+				"noImportantStyles": "off"
 			}
 		}
 	},
@@ -19,6 +18,13 @@
 	},
 	"formatter": {},
 	"files": {
-		"ignore": ["vendor", "plugin-repo", "wordpress"]
+		"includes": [
+			"*",
+			"assets/**",
+			"html-api-debugger/**",
+			"!vendor",
+			"!plugin-repo",
+			"!wordpress"
+		]
 	}
 }
