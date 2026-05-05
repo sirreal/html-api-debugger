@@ -61,14 +61,14 @@ function init() {
 
 	wp_register_script_module(
 		'@html-api-debugger/replace-invisible-chars',
-		plugins_url( 'replace-invisible-chars.js', __FILE__ ),
+		plugins_url( 'replace-invisible-chars.mjs', __FILE__ ),
 		array(),
 		VERSION
 	);
 
 	wp_register_script_module(
 		'@html-api-debugger/print-html-tree',
-		plugins_url( 'print-html-tree.js', __FILE__ ),
+		plugins_url( 'print-html-tree.mjs', __FILE__ ),
 		array(
 			array(
 				'id' => '@html-api-debugger/replace-invisible-chars',
@@ -80,7 +80,7 @@ function init() {
 
 	wp_register_script_module(
 		'@html-api-debugger/main',
-		plugins_url( 'main.js', __FILE__ ),
+		plugins_url( 'main.mjs', __FILE__ ),
 		array(
 			'@wordpress/interactivity',
 			'@html-api-debugger/print-html-tree',
