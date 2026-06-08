@@ -279,10 +279,13 @@ function get_tree( string $html, array $options ): array {
 						if ( true === $val ) {
 							$val = '';
 						}
+						// The HTML API names foreign attributes like "xlink href"; the DOM uses "xlink:href".
+						$node_name = str_replace( ' ', ':', $processor->get_qualified_attribute_name( $attribute_name ) );
+
 						$attributes[] = array(
 							'nodeType' => NODE_TYPE_ATTRIBUTE,
 							'specified' => true,
-							'nodeName' => $processor->get_qualified_attribute_name( $attribute_name ),
+							'nodeName' => $node_name,
 							'nodeValue' => $val,
 						);
 					}

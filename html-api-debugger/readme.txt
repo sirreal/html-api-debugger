@@ -17,6 +17,7 @@ Please file issues and pull requests on the [GitHub repository](https://github.c
 
 = 2.9 =
 * Fix implicit nullable parameter.
+* Render adjusted foreign attribute names (xlink, xml, xmlns) with a colon (e.g. `xlink:href`) to match the DOM tree.
 
 = 2.8 =
 * Silence _doing_it_wrong bookmark notices when providing from HTML context.
