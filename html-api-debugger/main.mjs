@@ -8,6 +8,7 @@ import * as I from '@wordpress/interactivity';
 const NS = 'html-api-debugger';
 
 const DEBOUNCE_TIMEOUT = 150;
+const DEFAULT_HTML5_BODY_CONTEXT = '<!DOCTYPE html><body>';
 const RENDERED_IFRAME = /** @type {HTMLIFrameElement} */ (
 	document.getElementById('rendered_iframe')
 );
@@ -107,10 +108,11 @@ let mutationObserver = null;
  * @typedef Store
  * @property {()=>void} callAPI
  * @property {()=>void} clearSpan
- * @property {()=>void} handleContextHtmlInput
+ * @property {(e: InputEvent)=>void} handleContextHtmlInput
  * @property {()=>void} handleCopyClick
  * @property {()=>void} handleCopyPrClick
  * @property {()=>void} handleCopyPrInput
+ * @property {()=>void} handleDefaultBodyContextClick
  * @property {()=>void} handleInput
  * @property {()=>void} handleShowClosersClick
  * @property {()=>void} handleShowInvisibleClick
@@ -652,7 +654,18 @@ const store = createStore(NS, {
 
 	/** @param {InputEvent} e */
 	handleContextHtmlInput: function* (e) {
-		store.state.contextHTML = /** @type {HTMLInputElement} */ (e.target).value;
+		store.state.contextHTML = /** @type {HTMLTextAreaElement} */ (
+			e.target
+		).value;
+		yield store.callAPI();
+	},
+
+	handleDefaultBodyContextClick: function* () {
+		const contextHtmlElement = /** @type {HTMLTextAreaElement} */ (
+			document.getElementById('context-html')
+		);
+		contextHtmlElement.value = store.state.contextHTML =
+			DEFAULT_HTML5_BODY_CONTEXT;
 		yield store.callAPI();
 	},
 

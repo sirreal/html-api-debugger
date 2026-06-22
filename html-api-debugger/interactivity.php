@@ -66,15 +66,18 @@ function generate_page( string $html, array $options ): string {
 	class="html-api-debugger-container html-api-debugger--grid"
 >
 	<div data-wp-bind--hidden="!state.htmlapiResponse.supports.create_fragment_advanced" class="full-width">
-		<label>Context in which input HTML finds itself
-			<textarea
-				class="context-html"
-				placeholder="Provide a fragment context, for example:&#x0A;<!DOCTYPE html><body>"
-				title="Leave blank to parse a full document."
-				rows="2"
-				data-wp-on-async--input="handleContextHtmlInput"
-			><?php echo "\n" . esc_textarea( str_replace( "\0", '', $options['context_html'] ?? '' ) ); ?></textarea>
-		</label>
+		<div class="heading-and-button">
+			<label for="context-html">Context in which input HTML finds itself</label>
+			<button type="button" data-wp-on-async--click="handleDefaultBodyContextClick">Use HTML5 BODY context</button>
+		</div>
+		<textarea
+			id="context-html"
+			class="context-html"
+			placeholder="Provide a fragment context, for example:&#x0A;<!DOCTYPE html><body>"
+			title="Leave blank to parse a full document."
+			rows="2"
+			data-wp-on-async--input="handleContextHtmlInput"
+		><?php echo "\n" . esc_textarea( str_replace( "\0", '', $options['context_html'] ?? '' ) ); ?></textarea>
 	</div>
 	<div>
 		<h2>Input HTML</h2>

@@ -15,6 +15,8 @@ Please file issues and pull requests on the [GitHub repository](https://github.c
 
 == Changelog ==
 
+* Add "HTML5 Body" context button to allow setting default context.
+
 = 2.9 =
 * Fix implicit nullable parameter.
 * Render adjusted foreign attribute names (xlink, xml, xmlns) with a colon (e.g. `xlink:href`) to match the DOM tree.
