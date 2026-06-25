@@ -108,7 +108,8 @@ function get_tree( string $html, array $options ): array {
 		$cfacn->setAccessible( true );
 	}
 
-	$is_fragment_processor = false;
+	$is_fragment_processor  = false;
+	$processor_depth_offset = 0;
 
 	$compat_mode               = 'BackCompat';
 	$document_title            = null;
@@ -163,6 +164,9 @@ function get_tree( string $html, array $options ): array {
 			 * @disregard P1013
 			 */
 			$processor = $cfacn->invoke( $context_processor, $html );
+			if ( null !== $processor ) {
+				$processor_depth_offset = $processor->get_current_depth();
+			}
 		}
 
 		if ( ! isset( $processor ) ) {
@@ -190,13 +194,12 @@ function get_tree( string $html, array $options ): array {
 		'childNodes' => array(),
 	);
 
-	$cursor = array( 0 );
+	$cursor = array();
 
 	if ( $is_fragment_processor ) {
-		$tree   = array(
+		$tree = array(
 			'childNodes' => array(),
 		);
-		$cursor = array();
 	}
 
 	$context_node = isset( $context_processor )
@@ -220,18 +223,36 @@ function get_tree( string $html, array $options ): array {
 			break;
 		}
 
-		// Depth needs and adjustment because:
-		// - Nodes in a full tree are all placed under a document node.
-		// - Nodes in a fragment tree start at the root.
-		if ( \count( $cursor ) + 1 > $processor->get_current_depth() - ( $is_fragment_processor ? 1 : 0 ) ) {
+		$token_type = $processor->get_token_type();
+
+		/*
+		 * Fragment processors retain a synthetic HTML > context-node prefix in
+		 * their breadcrumbs. The debugger tree omits those nodes, so remove that
+		 * prefix before mapping the processor depth onto the local cursor.
+		 */
+		$processor_depth = $processor->get_current_depth();
+		if ( $processor_depth < $processor_depth_offset ) {
+			throw new Exception( 'Processor depth is shallower than the fragment context depth.' );
+		}
+
+		$token_depth = $processor_depth - $processor_depth_offset;
+		if ( '#doctype' === $token_type ) {
+			$token_parent_depth = 0;
+		} elseif ( '#tag' === $token_type && $processor->is_tag_closer() ) {
+			$token_parent_depth = $token_depth;
+		} else {
+			$token_parent_depth = max( 0, $token_depth - 1 );
+		}
+
+		$cursor_count = \count( $cursor );
+		while ( $cursor_count > $token_parent_depth ) {
 			array_pop( $cursor );
+			--$cursor_count;
 		}
 		$current = &$tree;
 		foreach ( $cursor as $path ) {
 			$current = &$current['childNodes'][ $path ];
 		}
-
-		$token_type = $processor->get_token_type();
 
 		switch ( $token_type ) {
 			case '#doctype':
