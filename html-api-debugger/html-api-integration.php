@@ -231,6 +231,13 @@ function get_tree( string $html, array $options ): array {
 		 * prefix before mapping the processor depth onto the local cursor.
 		 */
 		$processor_depth = $processor->get_current_depth();
+		/*
+		 * Invariant assertion, not an expected runtime path. The fragment's
+		 * context node is never popped (the processor's root-node guard stops
+		 * before popping it), so the content depth can never drop below the
+		 * captured offset. This throw exists only to surface upstream HTML API
+		 * changes that would violate that prefix invariant.
+		 */
 		if ( $processor_depth < $processor_depth_offset ) {
 			throw new Exception( 'Processor depth is shallower than the fragment context depth.' );
 		}

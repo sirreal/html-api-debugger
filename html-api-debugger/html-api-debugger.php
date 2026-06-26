@@ -5,6 +5,7 @@
  * Description:       Add a page to wp-admin for debugging the HTML API.
  * Version:           2.9
  * Requires at least: 6.7
+ * Requires PHP:      8.2
  * Tested up to:      6.8
  * Author:            Jon Surrell
  * Author URI:        https://profiles.wordpress.org/jonsurrell/
