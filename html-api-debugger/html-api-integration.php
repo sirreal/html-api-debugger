@@ -236,9 +236,7 @@ function get_tree( string $html, array $options ): array {
 		}
 
 		$token_depth = $processor_depth - $processor_depth_offset;
-		if ( '#doctype' === $token_type ) {
-			$token_parent_depth = 0;
-		} elseif ( '#tag' === $token_type && $processor->is_tag_closer() ) {
+		if ( '#tag' === $token_type && $processor->is_tag_closer() ) {
 			$token_parent_depth = $token_depth;
 		} else {
 			$token_parent_depth = max( 0, $token_depth - 1 );
