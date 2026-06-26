@@ -67,30 +67,61 @@ if ( ! file_exists( "{$include_dir}/html-api/class-wp-html-processor.php" ) ) {
 }
 
 if ( ! class_exists( 'WP_HTML_Processor' ) ) {
-	require "{$include_dir}/class-wp-token-map.php";
+	$required_files = array(
+		"{$include_dir}/class-wp-token-map.php",
+		"{$include_dir}/html-api/class-wp-html-text-replacement.php",
+		"{$include_dir}/html-api/class-wp-html-span.php",
+		"{$include_dir}/html-api/class-wp-html-attribute-token.php",
+		"{$include_dir}/html-api/class-wp-html-doctype-info.php",
+		"{$include_dir}/html-api/class-wp-html-unsupported-exception.php",
+		"{$include_dir}/html-api/class-wp-html-decoder.php",
+		"{$include_dir}/html-api/class-wp-html-tag-processor.php",
+		"{$include_dir}/html-api/class-wp-html-token.php",
+		"{$include_dir}/html-api/class-wp-html-stack-event.php",
+		"{$include_dir}/html-api/class-wp-html-open-elements.php",
+		"{$include_dir}/html-api/class-wp-html-active-formatting-elements.php",
+		"{$include_dir}/html-api/class-wp-html-processor-state.php",
+		"{$include_dir}/html-api/class-wp-html-processor.php",
+	);
 
-	foreach (
-		array(
-			'class-wp-html-text-replacement.php',
-			'class-wp-html-span.php',
-			'class-wp-html-attribute-token.php',
-			'class-wp-html-doctype-info.php',
-			'class-wp-html-unsupported-exception.php',
-			'class-wp-html-decoder.php',
-			'class-wp-html-tag-processor.php',
-			'class-wp-html-token.php',
-			'class-wp-html-stack-event.php',
-			'class-wp-html-open-elements.php',
-			'class-wp-html-active-formatting-elements.php',
-			'class-wp-html-processor-state.php',
-			'class-wp-html-processor.php',
-		) as $file
-	) {
-		require "{$include_dir}/html-api/{$file}";
+	// Verify every dependency exists before requiring any of them so a moved or
+	// renamed file produces a clear message instead of a fatal mid-bootstrap.
+	$missing_files = array();
+	foreach ( $required_files as $file ) {
+		if ( ! file_exists( $file ) ) {
+			$missing_files[] = $file;
+		}
+	}
+
+	if ( $missing_files ) {
+		fwrite( STDERR, "Cannot bootstrap the HTML API from WP_CORE_DIR; the following required files are missing:\n" );
+		fwrite( STDERR, '  - ' . implode( "\n  - ", $missing_files ) . "\n" );
+		fwrite( STDERR, "This WordPress version may be incompatible with the regression harness.\n" );
+		exit( 2 );
+	}
+
+	foreach ( $required_files as $file ) {
+		require $file;
 	}
 }
 
-require dirname( __DIR__ ) . '/html-api-debugger/html-api-integration.php';
+// Bail clearly if the HTML API still is not available after bootstrap.
+if ( ! class_exists( 'WP_HTML_Processor' ) ) {
+	fwrite( STDERR, "Bootstrap completed but WP_HTML_Processor is undefined; the HTML API may have changed in this WordPress version.\n" );
+	exit( 2 );
+}
+
+$integration_file = dirname( __DIR__ ) . '/html-api-debugger/html-api-integration.php';
+if ( ! file_exists( $integration_file ) ) {
+	fwrite( STDERR, "Missing plugin integration file: {$integration_file}\n" );
+	exit( 2 );
+}
+require $integration_file;
+
+if ( ! function_exists( 'HTML_API_Debugger\HTML_API_Integration\get_tree' ) ) {
+	fwrite( STDERR, "Plugin integration loaded but HTML_API_Debugger\\HTML_API_Integration\\get_tree() is undefined.\n" );
+	exit( 2 );
+}
 
 /**
  * Convert a debugger tree into stable text lines.

@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test (PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      # Run every PHP version even if one fails so we see the full matrix.
+      fail-fast: false
+      matrix:
+        # Floor is the lowest PHP still in security support (Requires PHP: 8.2);
+        # 8.5 is the current latest. Keep in sync with the plugin's Requires PHP.
+        php: ['8.2', '8.3', '8.4', '8.5']
+
+    steps:
+      - name: Checkout plugin
+        uses: actions/checkout@v4
+
+      # The regression harness needs WordPress core's HTML API sources.
+      # Pin to a specific tag for reproducible runs. Bump this DELIBERATELY
+      # (not via automation): 7.0.0 is the latest stable release as of 2026-06
+      # (latest 6.x is 6.9.4). A shallow checkout keeps the clone small.
+      - name: Checkout WordPress source
+        uses: actions/checkout@v4
+        with:
+          repository: WordPress/wordpress-develop
+          ref: '7.0.0'
+          path: wordpress-develop
+          fetch-depth: 1
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-progress
+
+      - name: Run tests (regression harness + phpcs)
+        env:
+          WP_CORE_DIR: ${{ github.workspace }}/wordpress-develop/src
+        run: composer test

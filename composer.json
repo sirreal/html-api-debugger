@@ -8,5 +8,18 @@
 		"allow-plugins": {
 			"dealerdirect/phpcodesniffer-composer-installer": true
 		}
+	},
+	"scripts": {
+		"test": [
+			"@test:harness",
+			"@test:phpcs"
+		],
+		"test:harness": "php tests/html-api-integration-regression.php",
+		"test:phpcs": "phpcs"
+	},
+	"scripts-descriptions": {
+		"test": "Run the HTML API regression harness and phpcs (requires WP_CORE_DIR for the harness).",
+		"test:harness": "Run the HTML API integration regression harness (requires WP_CORE_DIR).",
+		"test:phpcs": "Run phpcs against the plugin source using phpcs.xml."
 	}
 }
