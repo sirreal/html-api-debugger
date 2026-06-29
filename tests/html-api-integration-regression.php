@@ -114,7 +114,9 @@ function html_api_debugger_test_tree_lines( array $node, int $depth = 0 ): array
 		}
 
 		$lines[] = $line;
-		array_push( $lines, ...html_api_debugger_test_tree_lines( $child, $depth + 1 ) );
+		foreach ( html_api_debugger_test_tree_lines( $child, $depth + 1 ) as $l ) {
+			$lines[] = $l;
+		}
 	}
 
 	return $lines;
