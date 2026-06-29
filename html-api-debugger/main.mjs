@@ -535,28 +535,22 @@ const store = createStore( NS, {
 	watchURL() {
 		const u = new URL( document.location.href );
 		let shouldReplace = false;
-		for ( const [ param, prop ] of /** @type {const} */ ( [
-			[ 'html', 'html' ],
-			[ 'contextHTML', 'contextHTMLForUse' ],
-			[ 'selector', 'selector' ],
+		for ( const [ param, getValue ] of /** @type {const} */ ( [
+			[ 'html', () => store.state.html ],
+			[ 'contextHTML', () => store.state.contextHTMLForUse ],
+			[ 'selector', () => store.state.selector ],
+			[ HTML_OPTIONS_PARAM, getExplicitHtmlOptions ],
 		] ) ) {
-			if ( store.state[ prop ] ) {
-				u.searchParams.set( param, store.state[ prop ] );
-				shouldReplace = true;
+			const value = getValue();
+			if ( value ) {
+				if ( u.searchParams.get( param ) !== value ) {
+					u.searchParams.set( param, value );
+					shouldReplace = true;
+				}
 			} else if ( u.searchParams.has( param ) ) {
 				u.searchParams.delete( param );
 				shouldReplace = true;
 			}
-		}
-		const htmlOptions = getExplicitHtmlOptions();
-		if ( htmlOptions ) {
-			if ( u.searchParams.get( HTML_OPTIONS_PARAM ) !== htmlOptions ) {
-				u.searchParams.set( HTML_OPTIONS_PARAM, htmlOptions );
-				shouldReplace = true;
-			}
-		} else if ( u.searchParams.has( HTML_OPTIONS_PARAM ) ) {
-			u.searchParams.delete( HTML_OPTIONS_PARAM );
-			shouldReplace = true;
 		}
 		if ( shouldReplace ) {
 			history.replaceState( null, '', u );
@@ -864,18 +858,21 @@ function getStoredBooleanConfigurationValue( option ) {
 	return Boolean( localStorage.getItem( `${ NS }-${ option }` ) );
 }
 
-/** @returns {string} */
-function getExplicitHtmlOptions() {
+/**
+ * @param {( option: BooleanConfigurationOption ) => boolean|null} getValue
+ * @returns {string}
+ */
+function buildHtmlOptions( getValue ) {
 	let htmlOptions = '';
 	for ( const [
 		enabledCode,
 		disabledCode,
 		option,
 	] of BOOLEAN_CONFIGURATION_OPTIONS ) {
-		const override = booleanConfigurationOverrides[ option ];
-		if ( override === true ) {
+		const value = getValue( option );
+		if ( value === true ) {
 			htmlOptions += enabledCode;
-		} else if ( override === false ) {
+		} else if ( value === false ) {
 			htmlOptions += disabledCode;
 		}
 	}
@@ -883,20 +880,15 @@ function getExplicitHtmlOptions() {
 }
 
 /** @returns {string} */
+function getExplicitHtmlOptions() {
+	return buildHtmlOptions(
+		( option ) => booleanConfigurationOverrides[ option ],
+	);
+}
+
+/** @returns {string} */
 function getResolvedHtmlOptions() {
-	let htmlOptions = '';
-	for ( const [
-		enabledCode,
-		disabledCode,
-		option,
-	] of BOOLEAN_CONFIGURATION_OPTIONS ) {
-		if ( store.state[ option ] ) {
-			htmlOptions += enabledCode;
-		} else {
-			htmlOptions += disabledCode;
-		}
-	}
-	return htmlOptions;
+	return buildHtmlOptions( ( option ) => Boolean( store.state[ option ] ) );
 }
 
 /** @param {BooleanConfigurationOption} stateKey */
