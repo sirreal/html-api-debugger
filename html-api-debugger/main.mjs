@@ -10,13 +10,13 @@ const NS = 'html-api-debugger';
 const DEBOUNCE_TIMEOUT = 150;
 const DEFAULT_HTML5_BODY_CONTEXT = '<!DOCTYPE html><body>';
 const RENDERED_IFRAME = /** @type {HTMLIFrameElement} */ (
-	document.getElementById('rendered_iframe')
+	document.getElementById( 'rendered_iframe' )
 );
 
 /** @type {Element|null} */
 let CONTEXT_ELEMENT = null;
 
-const cfg = I.getConfig(NS);
+const cfg = I.getConfig( NS );
 let { nonce } = cfg;
 
 /** @type {AbortController|null} */
@@ -125,15 +125,15 @@ let mutationObserver = null;
  * @property {State} state
  */
 
-const createStore = /** @type {typeof I.store<Store>} */ (I.store);
+const createStore = /** @type {typeof I.store<Store>} */ ( I.store );
 
 /** @type {Store} */
-const store = createStore(NS, {
+const store = createStore( NS, {
 	// @ts-expect-error Server provided state is not included here.
 	state: {
-		showClosers: Boolean(localStorage.getItem(`${NS}-showClosers`)),
-		showInvisible: Boolean(localStorage.getItem(`${NS}-showInvisible`)),
-		showVirtual: Boolean(localStorage.getItem(`${NS}-showVirtual`)),
+		showClosers: Boolean( localStorage.getItem( `${ NS }-showClosers` ) ),
+		showInvisible: Boolean( localStorage.getItem( `${ NS }-showInvisible` ) ),
+		showVirtual: Boolean( localStorage.getItem( `${ NS }-showVirtual` ) ),
 
 		playbackPoint: null,
 		previewCorePrNumber: null,
@@ -156,21 +156,21 @@ const store = createStore(NS, {
 		},
 
 		get playbackTree() {
-			if (store.state.playbackPoint === null) {
+			if ( store.state.playbackPoint === null ) {
 				return undefined;
 			}
 			return store.state.htmlapiResponse.result?.playback?.[
 				store.state.playbackPoint
-			]?.[1];
+			]?.[ 1 ];
 		},
 
 		get playbackHTML() {
-			if (store.state.playbackPoint === null) {
+			if ( store.state.playbackPoint === null ) {
 				return undefined;
 			}
 			return store.state.htmlapiResponse.result?.playback?.[
 				store.state.playbackPoint
-			]?.[0];
+			]?.[ 0 ];
 		},
 
 		get playbackLength() {
@@ -185,68 +185,72 @@ const store = createStore(NS, {
 
 		/** @type {Link|null} */
 		get previewCoreLink() {
-			if (!store.state.previewCorePrNumber) {
+			if ( ! store.state.previewCorePrNumber ) {
 				return null;
 			}
 			return {
-				href: `https://github.com/WordPress/wordpress-develop/pull/${store.state.previewCorePrNumber}`,
-				text: `wordpress-develop #${store.state.previewCorePrNumber}`,
+				href: `https://github.com/WordPress/wordpress-develop/pull/${ store.state.previewCorePrNumber }`,
+				text: `wordpress-develop #${ store.state.previewCorePrNumber }`,
 			};
 		},
 
 		/** @type {Link|null} */
 		get previewGutenbergLink() {
-			if (!store.state.previewGutenbergPrNumber) {
+			if ( ! store.state.previewGutenbergPrNumber ) {
 				return null;
 			}
 			return {
-				href: `https://github.com/WordPress/gutenberg/pull/${store.state.previewGutenbergPrNumber}`,
-				text: `Gutenberg #${store.state.previewGutenbergPrNumber}`,
+				href: `https://github.com/WordPress/gutenberg/pull/${ store.state.previewGutenbergPrNumber }`,
+				text: `Gutenberg #${ store.state.previewGutenbergPrNumber }`,
 			};
 		},
 
 		hoverInfo: /** @type {typeof store.state.hoverInfo} */ (
-			localStorage.getItem(`${NS}-hoverInfo`)
+			localStorage.getItem( `${ NS }-hoverInfo` )
 		),
 
 		get htmlApiDocumentTitle() {
 			return store.state.showInvisible
 				? store.state.htmlapiResponse.result?.documentTitle &&
-						replaceInvisible(store.state.htmlapiResponse.result.documentTitle)
+						replaceInvisible( store.state.htmlapiResponse.result.documentTitle )
 				: store.state.htmlapiResponse.result?.documentTitle;
 		},
 
 		get htmlApiDoctypeName() {
 			return store.state.showInvisible
 				? store.state.htmlapiResponse.result?.doctypeName &&
-						replaceInvisible(store.state.htmlapiResponse.result.doctypeName)
+						replaceInvisible( store.state.htmlapiResponse.result.doctypeName )
 				: store.state.htmlapiResponse.result?.doctypeName;
 		},
 
 		get htmlApiDoctypePublicId() {
 			return store.state.showInvisible
 				? store.state.htmlapiResponse.result?.doctypePublicId &&
-						replaceInvisible(store.state.htmlapiResponse.result.doctypePublicId)
+						replaceInvisible(
+							store.state.htmlapiResponse.result.doctypePublicId,
+						)
 				: store.state.htmlapiResponse.result?.doctypePublicId;
 		},
 		get htmlApiDoctypeSystemId() {
 			return store.state.showInvisible
 				? store.state.htmlapiResponse.result?.doctypeSystemId &&
-						replaceInvisible(store.state.htmlapiResponse.result.doctypeSystemId)
+						replaceInvisible(
+							store.state.htmlapiResponse.result.doctypeSystemId,
+						)
 				: store.state.htmlapiResponse.result?.doctypeSystemId;
 		},
 
 		get normalizedHtml() {
-			if (!store.state.htmlapiResponse.normalizedHtml) {
+			if ( ! store.state.htmlapiResponse.normalizedHtml ) {
 				return '';
 			}
 			return store.state.showInvisible
-				? replaceInvisible(store.state.htmlapiResponse.normalizedHtml)
+				? replaceInvisible( store.state.htmlapiResponse.normalizedHtml )
 				: store.state.htmlapiResponse.normalizedHtml;
 		},
 
 		get formattedHtmlapiResponse() {
-			return JSON.stringify(store.state.htmlapiResponse, undefined, 2);
+			return JSON.stringify( store.state.htmlapiResponse, undefined, 2 );
 		},
 
 		get hoverBreadcrumbs() {
@@ -259,114 +263,114 @@ const store = createStore(NS, {
 
 		get playgroundLink() {
 			// We'll embed a path in a URL.
-			const searchParams = new URLSearchParams({ page: NS });
-			if (store.state.html) {
-				searchParams.set('html', store.state.html);
+			const searchParams = new URLSearchParams( { page: NS } );
+			if ( store.state.html ) {
+				searchParams.set( 'html', store.state.html );
 			}
-			if (store.state.contextHTMLForUse) {
-				searchParams.set('contextHTML', store.state.contextHTMLForUse);
+			if ( store.state.contextHTMLForUse ) {
+				searchParams.set( 'contextHTML', store.state.contextHTMLForUse );
 			}
-			if (store.state.selector) {
-				searchParams.set('selector', store.state.selector);
+			if ( store.state.selector ) {
+				searchParams.set( 'selector', store.state.selector );
 			}
 			const base = '/wp-admin/admin.php';
 			const u = new URL(
 				'https://playground.wordpress.net/?plugin=html-api-debugger',
 			);
-			u.searchParams.set('url', `${base}?${searchParams.toString()}`);
+			u.searchParams.set( 'url', `${ base }?${ searchParams.toString() }` );
 			return u;
 		},
 
 		get htmlForDisplay() {
 			/** @type {string | undefined} */
 			const html = store.state.playbackHTML ?? store.state.htmlapiResponse.html;
-			if (!html) {
+			if ( ! html ) {
 				return '';
 			}
-			return store.state.showInvisible ? replaceInvisible(html) : html;
+			return store.state.showInvisible ? replaceInvisible( html ) : html;
 		},
 	},
 
 	clearSpan() {
 		const el = /** @type {HTMLElement} */ (
-			document.getElementById('processed-html')
+			document.getElementById( 'processed-html' )
 		);
-		el.classList.remove('has-highlighted-span');
+		el.classList.remove( 'has-highlighted-span' );
 		el.textContent = store.state.htmlForDisplay;
 	},
 
 	/** @param {MouseEvent} e */
-	handleSpanOver(e) {
-		const target = /** @type {HTMLElement} */ (e.target);
+	handleSpanOver( e ) {
+		const target = /** @type {HTMLElement} */ ( e.target );
 
 		const html = store.state.playbackHTML ?? store.state.htmlapiResponse.html;
-		if (!html) {
+		if ( ! html ) {
 			return;
 		}
 
 		/** @type {HTMLElement|null} */
-		const spanElement = target.dataset['spanStart']
+		const spanElement = target.dataset[ 'spanStart' ]
 			? target
-			: target.closest('[data-span-start]');
+			: target.closest( '[data-span-start]' );
 
-		if (!spanElement) {
+		if ( ! spanElement ) {
 			return;
 		}
 
 		const { spanStart: spanStartVal, spanLength: spanLengthVal } =
 			spanElement.dataset;
-		if (!spanStartVal || !spanLengthVal) {
+		if ( ! spanStartVal || ! spanLengthVal ) {
 			return;
 		}
-		const spanStart = Number(spanStartVal);
-		const spanLength = Number(spanLengthVal);
+		const spanStart = Number( spanStartVal );
+		const spanLength = Number( spanLengthVal );
 
-		const buf = new TextEncoder().encode(html);
+		const buf = new TextEncoder().encode( html );
 		const decoder = new TextDecoder();
 
 		const spanEnd = spanStart + spanLength;
 		/** @type {readonly [Text,Text,Text]} */
 		// @ts-expect-error trust me!
-		const [before, current, after] = /** @type {const} */ ([
-			decoder.decode(buf.slice(0, spanStart)),
-			decoder.decode(buf.slice(spanStart, spanEnd)),
-			decoder.decode(buf.slice(spanEnd)),
-		]).map((text) => {
-			const t = store.state.showInvisible ? replaceInvisible(text) : text;
-			return document.createTextNode(t);
-		});
+		const [ before, current, after ] = /** @type {const} */ ( [
+			decoder.decode( buf.slice( 0, spanStart ) ),
+			decoder.decode( buf.slice( spanStart, spanEnd ) ),
+			decoder.decode( buf.slice( spanEnd ) ),
+		] ).map( ( text ) => {
+			const t = store.state.showInvisible ? replaceInvisible( text ) : text;
+			return document.createTextNode( t );
+		} );
 
-		const highlightCurrent = document.createElement('span');
+		const highlightCurrent = document.createElement( 'span' );
 		highlightCurrent.className = 'highlight-span';
-		highlightCurrent.appendChild(current);
+		highlightCurrent.appendChild( current );
 
 		const el = /** @type {HTMLElement} */ (
-			document.getElementById('processed-html')
+			document.getElementById( 'processed-html' )
 		);
-		el.classList.add('has-highlighted-span');
-		el.replaceChildren(before, highlightCurrent, after);
+		el.classList.add( 'has-highlighted-span' );
+		el.replaceChildren( before, highlightCurrent, after );
 	},
 
 	run() {
-		RENDERED_IFRAME.addEventListener('load', store.onRenderedIframeLoad, {
+		RENDERED_IFRAME.addEventListener( 'load', store.onRenderedIframeLoad, {
 			passive: true,
-		});
+		} );
 
 		// The HTML parser will replace null bytes from the HTML.
 		// Force print them if we have null bytes.
-		if (store.state.html.includes('\0')) {
+		if ( store.state.html.includes( '\0' ) ) {
 			/** @type {HTMLTextAreaElement} */ (
-				document.getElementById('input-html')
+				document.getElementById( 'input-html' )
 			).value = store.state.html;
 		}
-		if (store.state.contextHTML.includes('\0')) {
+		if ( store.state.contextHTML.includes( '\0' ) ) {
 			/** @type {HTMLTextAreaElement} */ (
-				document.getElementById('context-html')
+				document.getElementById( 'context-html' )
 			).value = store.state.contextHTML;
 		}
-		if (store.state.selector.includes('\0')) {
+		if ( store.state.selector.includes( '\0' ) ) {
 			/** @type {HTMLTextAreaElement} */ (
-				document.getElementById('selector-input')
+				document.getElementById( 'selector-input' )
 			).value = store.state.selector;
 		}
 
@@ -377,10 +381,10 @@ const store = createStore(NS, {
 		// Let's clean up the URL
 		store.watchURL();
 
-		mutationObserver = new MutationObserver(() => {
+		mutationObserver = new MutationObserver( () => {
 			store.state.hasMutatedDom = true;
 			store.redrawDOMTreeFromIframe();
-		});
+		} );
 	},
 
 	onRenderedIframeLoad() {
@@ -389,22 +393,22 @@ const store = createStore(NS, {
 		// @ts-expect-error It better be defined!
 		const doc = RENDERED_IFRAME.contentWindow.document;
 
-		mutationObserver?.observe(doc, {
+		mutationObserver?.observe( doc, {
 			subtree: true,
 			childList: true,
 			attributes: true,
 			characterData: true,
-		});
+		} );
 		Array.prototype.forEach.call(
-			doc.getElementsByTagNameNS('http://www.w3.org/1999/xhtml', 'template'),
+			doc.getElementsByTagNameNS( 'http://www.w3.org/1999/xhtml', 'template' ),
 			/** @param {HTMLTemplateElement} template */
-			(template) => {
-				mutationObserver?.observe(template.content, {
+			( template ) => {
+				mutationObserver?.observe( template.content, {
 					subtree: true,
 					childList: true,
 					attributes: true,
 					characterData: true,
-				});
+				} );
 			},
 		);
 	},
@@ -421,26 +425,26 @@ const store = createStore(NS, {
 
 		/** @type {Element|null} */
 		let contextElement = null;
-		if (store.state.contextHTMLForUse) {
+		if ( store.state.contextHTMLForUse ) {
 			// An HTML document will always make HTML > HEAD + BODY.
 			// But that may not be the intended context.
 			// Guess the intended context in case the HEAD and BODY elements are empty.
-			if (doc.body.hasChildNodes() || doc.head.hasChildNodes()) {
-				const walker = doc.createTreeWalker(doc, NodeFilter.SHOW_ELEMENT);
-				while (walker.nextNode()) {
+			if ( doc.body.hasChildNodes() || doc.head.hasChildNodes() ) {
+				const walker = doc.createTreeWalker( doc, NodeFilter.SHOW_ELEMENT );
+				while ( walker.nextNode() ) {
 					// @ts-expect-error It's an Element!
 					contextElement = walker.currentNode;
 				}
 			} else {
-				if (/<body\W/i.test(store.state.contextHTMLForUse)) {
+				if ( /<body\W/i.test( store.state.contextHTMLForUse ) ) {
 					contextElement = doc.body;
-				} else if (/<head\W/i.test(store.state.contextHTMLForUse)) {
+				} else if ( /<head\W/i.test( store.state.contextHTMLForUse ) ) {
 					contextElement = doc.head;
 				} else {
 					contextElement = doc.documentElement;
 				}
 			}
-			if (contextElement) {
+			if ( contextElement ) {
 				store.state.DOM.contextNode = contextElement.nodeName;
 				contextElement.innerHTML = store.state.playbackHTML ?? store.state.html;
 				CONTEXT_ELEMENT = contextElement;
@@ -450,33 +454,33 @@ const store = createStore(NS, {
 		printHtmlApiTree(
 			contextElement ?? doc,
 			// @ts-expect-error
-			document.getElementById('dom_tree'),
+			document.getElementById( 'dom_tree' ),
 			store.state.options,
 		);
 	},
 
 	/** @param {InputEvent} e */
-	handleInput: function* (e) {
-		const val = /** @type {HTMLTextAreaElement} */ (e.target).value;
+	handleInput: function* ( e ) {
+		const val = /** @type {HTMLTextAreaElement} */ ( e.target ).value;
 
 		store.state.html = val;
 
-		const u = new URL(document.location.href);
-		u.searchParams.set('html', val);
-		history.replaceState(null, '', u);
+		const u = new URL( document.location.href );
+		u.searchParams.set( 'html', val );
+		history.replaceState( null, '', u );
 
-		debounceInputAbortController?.abort('debounced');
+		debounceInputAbortController?.abort( 'debounced' );
 		debounceInputAbortController = new AbortController();
 		try {
-			yield new Promise((resolve, reject) => {
-				const t = setTimeout(resolve, DEBOUNCE_TIMEOUT);
-				debounceInputAbortController?.signal.addEventListener('abort', () => {
-					clearInterval(t);
-					reject(debounceInputAbortController?.signal.reason);
-				});
-			});
-		} catch (e) {
-			if (e === 'debounced') {
+			yield new Promise( ( resolve, reject ) => {
+				const t = setTimeout( resolve, DEBOUNCE_TIMEOUT );
+				debounceInputAbortController?.signal.addEventListener( 'abort', () => {
+					clearInterval( t );
+					reject( debounceInputAbortController?.signal.reason );
+				} );
+			} );
+		} catch ( e ) {
+			if ( e === 'debounced' ) {
 				return;
 			}
 			throw e;
@@ -486,28 +490,28 @@ const store = createStore(NS, {
 	},
 
 	handleCopyClick: function* () {
-		const url = new URL(store.state.playgroundLink);
+		const url = new URL( store.state.playgroundLink );
 
 		// @ts-expect-error This better exist.
-		const wpVersion = document.getElementById('htmlapi-wp-version').value;
-		url.searchParams.set('wp', wpVersion);
+		const wpVersion = document.getElementById( 'htmlapi-wp-version' ).value;
+		url.searchParams.set( 'wp', wpVersion );
 
 		try {
-			yield navigator.clipboard.writeText(url.href);
+			yield navigator.clipboard.writeText( url.href );
 		} catch {
-			alert('Copy failed, make sure the browser window is focused.');
+			alert( 'Copy failed, make sure the browser window is focused.' );
 		}
 	},
 
-	handleShowInvisibleClick: getToggleHandler('showInvisible'),
-	handleShowClosersClick: getToggleHandler('showClosers'),
-	handleShowVirtualClick: getToggleHandler('showVirtual'),
+	handleShowInvisibleClick: getToggleHandler( 'showInvisible' ),
+	handleShowClosersClick: getToggleHandler( 'showClosers' ),
+	handleShowVirtualClick: getToggleHandler( 'showVirtual' ),
 
 	/** @param {Event} e */
-	hoverInfoChange: (e) => {
+	hoverInfoChange: ( e ) => {
 		// @ts-expect-error
 		store.state.hoverInfo = e.target.value;
-		localStorage.setItem(`${NS}-hoverInfo`, store.state.hoverInfo);
+		localStorage.setItem( `${ NS }-hoverInfo`, store.state.hoverInfo );
 	},
 
 	watch() {
@@ -515,91 +519,91 @@ const store = createStore(NS, {
 	},
 
 	watchURL() {
-		const u = new URL(document.location.href);
+		const u = new URL( document.location.href );
 		let shouldReplace = false;
-		for (const [param, prop] of /** @type {const} */ ([
-			['html', 'html'],
-			['contextHTML', 'contextHTMLForUse'],
-			['selector', 'selector'],
-		])) {
-			if (store.state[prop]) {
-				u.searchParams.set(param, store.state[prop]);
+		for ( const [ param, prop ] of /** @type {const} */ ( [
+			[ 'html', 'html' ],
+			[ 'contextHTML', 'contextHTMLForUse' ],
+			[ 'selector', 'selector' ],
+		] ) ) {
+			if ( store.state[ prop ] ) {
+				u.searchParams.set( param, store.state[ prop ] );
 				shouldReplace = true;
-			} else if (u.searchParams.has(param)) {
-				u.searchParams.delete(param);
+			} else if ( u.searchParams.has( param ) ) {
+				u.searchParams.delete( param );
 				shouldReplace = true;
 			}
 		}
-		if (shouldReplace) {
-			history.replaceState(null, '', u);
+		if ( shouldReplace ) {
+			history.replaceState( null, '', u );
 		}
 	},
 
 	callAPI: function* () {
-		inFlightRequestAbortController?.abort('request superseded');
+		inFlightRequestAbortController?.abort( 'request superseded' );
 		inFlightRequestAbortController = new AbortController();
 		let data;
 		try {
 			/** @type {Response} */
-			const response = yield fetch(cfg.restEndpoint, {
+			const response = yield fetch( cfg.restEndpoint, {
 				method: 'POST',
-				body: JSON.stringify({
+				body: JSON.stringify( {
 					html: store.state.html,
 					contextHTML: store.state.contextHTMLForUse,
 					selector: store.state.selector,
-				}),
+				} ),
 				headers: {
 					'Content-Type': 'application/json',
 					'X-WP-Nonce': nonce,
 				},
 				signal: inFlightRequestAbortController.signal,
-			});
+			} );
 
-			if (response.headers.has('X-WP-Nonce')) {
-				nonce = response.headers.get('X-WP-Nonce');
+			if ( response.headers.has( 'X-WP-Nonce' ) ) {
+				nonce = response.headers.get( 'X-WP-Nonce' );
 			}
-			if (!response.ok) {
+			if ( ! response.ok ) {
 				throw response;
 			}
 
 			// @ts-expect-error It's fine.
 			data = yield response.json();
-		} catch (/** @type {any} */ err) {
-			if (err === 'request superseded' || err instanceof DOMException) {
+		} catch ( /** @type {any} */ err ) {
+			if ( err === 'request superseded' || err instanceof DOMException ) {
 				return;
 			}
 
 			store.state.htmlapiResponse.result = null;
 
-			if (err instanceof Response) {
+			if ( err instanceof Response ) {
 				yield err
 					.json()
-					.then((j) => {
+					.then( ( j ) => {
 						let msg = '';
-						if (j?.code) {
+						if ( j?.code ) {
 							msg = j.code;
 						}
-						if (j?.data?.error) {
-							if (msg) {
+						if ( j?.data?.error ) {
+							if ( msg ) {
 								msg += ': ';
 							}
-							msg += `${j.data.error.message} in ${j.data.error.file}:${j.data.error.line}`;
+							msg += `${ j.data.error.message } in ${ j.data.error.file }:${ j.data.error.line }`;
 						}
-						if (msg) {
+						if ( msg ) {
 							store.state.htmlapiResponse.error = msg;
 						} else {
 							// Fallback to catch
 							throw 'no msg';
 						}
-					})
-					.catch(() =>
-						err.text().then((t) => {
+					} )
+					.catch( () =>
+						err.text().then( ( t ) => {
 							store.state.htmlapiResponse.error = t;
-						}),
+						} ),
 					)
-					.catch(() => {
+					.catch( () => {
 						store.state.htmlapiResponse.error = 'unknown error';
-					});
+					} );
 				return;
 			}
 			throw err;
@@ -609,9 +613,9 @@ const store = createStore(NS, {
 		store.state.playbackPoint = null;
 		store.clearSpan();
 
-		if (data.error) {
+		if ( data.error ) {
 			/** @type {HTMLUListElement} */ (
-				document.getElementById('html_api_result_holder')
+				document.getElementById( 'html_api_result_holder' )
 			).innerHTML = '';
 		}
 	},
@@ -630,30 +634,30 @@ const store = createStore(NS, {
 
 		CONTEXT_ELEMENT = null;
 		iframeDocument.open();
-		iframeDocument.write(html);
+		iframeDocument.write( html );
 		iframeDocument.close();
 
 		const tree =
 			store.state.playbackTree ?? store.state.htmlapiResponse.result?.tree;
 
 		const processedHtmlEl = /** @type {HTMLElement} */ (
-			document.getElementById('processed-html')
+			document.getElementById( 'processed-html' )
 		);
-		processedHtmlEl.classList.remove('has-highlighted-span');
+		processedHtmlEl.classList.remove( 'has-highlighted-span' );
 		processedHtmlEl.textContent = store.state.htmlForDisplay;
 
-		if (tree) {
+		if ( tree ) {
 			printHtmlApiTree(
 				tree,
 				// @ts-expect-error
-				document.getElementById('html_api_result_holder'),
+				document.getElementById( 'html_api_result_holder' ),
 				store.state.options,
 			);
 		}
 	},
 
 	/** @param {InputEvent} e */
-	handleContextHtmlInput: function* (e) {
+	handleContextHtmlInput: function* ( e ) {
 		store.state.contextHTML = /** @type {HTMLTextAreaElement} */ (
 			e.target
 		).value;
@@ -662,7 +666,7 @@ const store = createStore(NS, {
 
 	handleDefaultBodyContextClick: function* () {
 		const contextHtmlElement = /** @type {HTMLTextAreaElement} */ (
-			document.getElementById('context-html')
+			document.getElementById( 'context-html' )
 		);
 		contextHtmlElement.value = store.state.contextHTML =
 			DEFAULT_HTML5_BODY_CONTEXT;
@@ -670,9 +674,9 @@ const store = createStore(NS, {
 	},
 
 	/** @param {InputEvent} e */
-	handleCopyCorePrInput(e) {
-		const val = /** @type {HTMLInputElement} */ (e.target).valueAsNumber;
-		if (Number.isFinite(val) && val > 0) {
+	handleCopyCorePrInput( e ) {
+		const val = /** @type {HTMLInputElement} */ ( e.target ).valueAsNumber;
+		if ( Number.isFinite( val ) && val > 0 ) {
 			store.state.previewCorePrNumber = val;
 			return;
 		}
@@ -680,9 +684,9 @@ const store = createStore(NS, {
 	},
 
 	/** @param {InputEvent} e */
-	handleCopyGutenbergPrInput(e) {
-		const val = /** @type {HTMLInputElement} */ (e.target).valueAsNumber;
-		if (Number.isFinite(val) && val > 0) {
+	handleCopyGutenbergPrInput( e ) {
+		const val = /** @type {HTMLInputElement} */ ( e.target ).valueAsNumber;
+		if ( Number.isFinite( val ) && val > 0 ) {
 			store.state.previewGutenbergPrNumber = val;
 			return;
 		}
@@ -693,30 +697,30 @@ const store = createStore(NS, {
 		const corePrNumber = store.state.previewCorePrNumber;
 		const gbPrNumber = store.state.previewGutenbergPrNumber;
 
-		const playgroundLink = new URL(store.state.playgroundLink);
-		if (corePrNumber) {
-			playgroundLink.searchParams.set('core-pr', String(corePrNumber));
+		const playgroundLink = new URL( store.state.playgroundLink );
+		if ( corePrNumber ) {
+			playgroundLink.searchParams.set( 'core-pr', String( corePrNumber ) );
 		}
-		if (gbPrNumber) {
-			playgroundLink.searchParams.set('gutenberg-pr', String(gbPrNumber));
+		if ( gbPrNumber ) {
+			playgroundLink.searchParams.set( 'gutenberg-pr', String( gbPrNumber ) );
 		}
 
 		try {
-			yield navigator.clipboard.writeText(playgroundLink.href);
+			yield navigator.clipboard.writeText( playgroundLink.href );
 		} catch {
-			alert('Copy failed, make sure the browser window is focused.');
+			alert( 'Copy failed, make sure the browser window is focused.' );
 		}
 	},
 
 	/**
 	 * @param {Event} e
 	 */
-	handleCopyTreeClick: function* (e) {
+	handleCopyTreeClick: function* ( e ) {
 		const useDomTree =
-			/** @type {HTMLButtonElement} */ (e.target).name === 'tree__dom';
+			/** @type {HTMLButtonElement} */ ( e.target ).name === 'tree__dom';
 
 		let tree;
-		if (useDomTree) {
+		if ( useDomTree ) {
 			tree =
 				CONTEXT_ELEMENT ||
 				// @ts-expect-error It's an Element!
@@ -726,34 +730,35 @@ const store = createStore(NS, {
 				store.state.playbackTree ?? store.state.htmlapiResponse.result?.tree;
 		}
 
-		const textualTree = printHtmlApiTreeText(tree, store.state.options);
+		const textualTree = printHtmlApiTreeText( tree, store.state.options );
 
 		try {
-			yield navigator.clipboard.writeText(textualTree);
+			yield navigator.clipboard.writeText( textualTree );
 		} catch {
-			alert('Copy failed, make sure the browser window is focused.');
+			alert( 'Copy failed, make sure the browser window is focused.' );
 		}
 	},
 
 	/** @param {InputEvent} e */
-	handlePlaybackChange(e) {
-		const val = /** @type {HTMLInputElement} */ (e.target).valueAsNumber;
+	handlePlaybackChange( e ) {
+		const val = /** @type {HTMLInputElement} */ ( e.target ).valueAsNumber;
 		store.state.playbackPoint = val - 1;
 	},
 
 	/** @param {InputEvent} e */
-	handleSelectorChange: function* (e) {
-		const val = /** @type {HTMLInputElement} */ (e.target).value.trim() || null;
-		if (val) {
+	handleSelectorChange: function* ( e ) {
+		const val =
+			/** @type {HTMLInputElement} */ ( e.target ).value.trim() || null;
+		if ( val ) {
 			try {
 				// Test whether the selector is valid before setting it so it isn't applied.
-				document.createDocumentFragment().querySelector(val);
+				document.createDocumentFragment().querySelector( val );
 				store.state.selector = val;
 				store.state.selectorErrorMessage = null;
 				yield store.callAPI();
 				return;
-			} catch (/** @type {unknown} */ e) {
-				if (e instanceof DOMException && e.name === 'SyntaxError') {
+			} catch ( /** @type {unknown} */ e ) {
+				if ( e instanceof DOMException && e.name === 'SyntaxError' ) {
 					let msg = e.message;
 
 					/*
@@ -767,12 +772,12 @@ const store = createStore(NS, {
 					 *
 					 * Try to strip the irrelevant parts.
 					 */
-					let idx = msg.indexOf(val);
-					if (idx > 0) {
-						if (msg[idx - 1] === '"' || msg[idx - 1] === "'") {
+					let idx = msg.indexOf( val );
+					if ( idx > 0 ) {
+						if ( msg[ idx - 1 ] === '"' || msg[ idx - 1 ] === "'" ) {
 							idx -= 1;
 						}
-						msg = msg.slice(idx);
+						msg = msg.slice( idx );
 					}
 
 					store.state.selectorErrorMessage = msg;
@@ -784,24 +789,24 @@ const store = createStore(NS, {
 		store.state.selector = '';
 		yield store.callAPI();
 	},
-});
+} );
 
 /** @param {keyof State} stateKey */
-function getToggleHandler(stateKey) {
+function getToggleHandler( stateKey ) {
 	/**
 	 * @param {Event} e
 	 * @returns {void}
 	 */
-	return (e) => {
+	return ( e ) => {
 		// @ts-expect-error
-		if (e.target.checked) {
+		if ( e.target.checked ) {
 			// @ts-expect-error
-			store.state[stateKey] = true;
-			localStorage.setItem(`${NS}-${stateKey}`, '1');
+			store.state[ stateKey ] = true;
+			localStorage.setItem( `${ NS }-${ stateKey }`, '1' );
 		} else {
 			// @ts-expect-error
-			store.state[stateKey] = false;
-			localStorage.removeItem(`${NS}-${stateKey}`);
+			store.state[ stateKey ] = false;
+			localStorage.removeItem( `${ NS }-${ stateKey }` );
 		}
 	};
 }
