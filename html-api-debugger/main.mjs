@@ -130,11 +130,15 @@ let mutationObserver = null;
 
 const createStore = /** @type {typeof I.store<Store>} */ ( I.store );
 
+const HTML_OPTIONS_PARAM = 'html-opts';
+
 const BOOLEAN_CONFIGURATION_OPTIONS = /** @type {const} */ ( [
-	[ 'C', 'showClosers' ],
-	[ 'I', 'showInvisible' ],
-	[ 'V', 'showVirtual' ],
+	[ 'C', 'c', 'showClosers' ],
+	[ 'I', 'i', 'showInvisible' ],
+	[ 'V', 'v', 'showVirtual' ],
 ] );
+
+const booleanConfigurationOverrides = getInitialBooleanConfigurationOverrides();
 
 /** @type {Store} */
 const store = createStore( NS, {
@@ -282,10 +286,7 @@ const store = createStore( NS, {
 			if ( store.state.selector ) {
 				searchParams.set( 'selector', store.state.selector );
 			}
-			const options = getEnabledOptions();
-			if ( options ) {
-				searchParams.set( 'options', options );
-			}
+			searchParams.set( HTML_OPTIONS_PARAM, getResolvedHtmlOptions() );
 			const base = '/wp-admin/admin.php';
 			const u = new URL(
 				'https://playground.wordpress.net/?plugin=html-api-debugger',
@@ -547,14 +548,14 @@ const store = createStore( NS, {
 				shouldReplace = true;
 			}
 		}
-		const options = getEnabledOptions();
-		if ( options ) {
-			if ( u.searchParams.get( 'options' ) !== options ) {
-				u.searchParams.set( 'options', options );
+		const htmlOptions = getExplicitHtmlOptions();
+		if ( htmlOptions ) {
+			if ( u.searchParams.get( HTML_OPTIONS_PARAM ) !== htmlOptions ) {
+				u.searchParams.set( HTML_OPTIONS_PARAM, htmlOptions );
 				shouldReplace = true;
 			}
-		} else if ( u.searchParams.has( 'options' ) ) {
-			u.searchParams.delete( 'options' );
+		} else if ( u.searchParams.has( HTML_OPTIONS_PARAM ) ) {
+			u.searchParams.delete( HTML_OPTIONS_PARAM );
 			shouldReplace = true;
 		}
 		if ( shouldReplace ) {
@@ -819,27 +820,83 @@ const store = createStore( NS, {
  * @returns {boolean}
  */
 function getInitialBooleanConfigurationValue( option ) {
-	const options = new URL( document.location.href ).searchParams.get(
-		'options',
-	);
-	if ( ! options ) {
-		return false;
+	const override = booleanConfigurationOverrides[ option ];
+	if ( override !== null ) {
+		return override;
 	}
-	return BOOLEAN_CONFIGURATION_OPTIONS.some(
-		( [ code, optionName ] ) =>
-			optionName === option && options.includes( code ),
-	);
+	return getStoredBooleanConfigurationValue( option );
+}
+
+/**
+ * @returns {Record<BooleanConfigurationOption, boolean|null>}
+ */
+function getInitialBooleanConfigurationOverrides() {
+	const overrides =
+		/** @type {Record<BooleanConfigurationOption, boolean|null>} */ ( {
+			showClosers: null,
+			showInvisible: null,
+			showVirtual: null,
+		} );
+	const searchParams = new URL( document.location.href ).searchParams;
+	if ( ! searchParams.has( HTML_OPTIONS_PARAM ) ) {
+		return overrides;
+	}
+
+	const htmlOptions = searchParams.get( HTML_OPTIONS_PARAM ) ?? '';
+	for ( const value of htmlOptions ) {
+		for ( const [
+			enabledCode,
+			disabledCode,
+			option,
+		] of BOOLEAN_CONFIGURATION_OPTIONS ) {
+			if ( value === enabledCode ) {
+				overrides[ option ] = true;
+			} else if ( value === disabledCode ) {
+				overrides[ option ] = false;
+			}
+		}
+	}
+	return overrides;
+}
+
+/** @param {BooleanConfigurationOption} option */
+function getStoredBooleanConfigurationValue( option ) {
+	return Boolean( localStorage.getItem( `${ NS }-${ option }` ) );
 }
 
 /** @returns {string} */
-function getEnabledOptions() {
-	let options = '';
-	for ( const [ code, option ] of BOOLEAN_CONFIGURATION_OPTIONS ) {
-		if ( store.state[ option ] ) {
-			options += code;
+function getExplicitHtmlOptions() {
+	let htmlOptions = '';
+	for ( const [
+		enabledCode,
+		disabledCode,
+		option,
+	] of BOOLEAN_CONFIGURATION_OPTIONS ) {
+		const override = booleanConfigurationOverrides[ option ];
+		if ( override === true ) {
+			htmlOptions += enabledCode;
+		} else if ( override === false ) {
+			htmlOptions += disabledCode;
 		}
 	}
-	return options;
+	return htmlOptions;
+}
+
+/** @returns {string} */
+function getResolvedHtmlOptions() {
+	let htmlOptions = '';
+	for ( const [
+		enabledCode,
+		disabledCode,
+		option,
+	] of BOOLEAN_CONFIGURATION_OPTIONS ) {
+		if ( store.state[ option ] ) {
+			htmlOptions += enabledCode;
+		} else {
+			htmlOptions += disabledCode;
+		}
+	}
+	return htmlOptions;
 }
 
 /** @param {BooleanConfigurationOption} stateKey */
@@ -852,6 +909,12 @@ function getToggleHandler( stateKey ) {
 		const isChecked = /** @type {HTMLInputElement} */ ( e.target ).checked;
 
 		store.state[ stateKey ] = isChecked;
+		booleanConfigurationOverrides[ stateKey ] = isChecked;
+		if ( isChecked ) {
+			localStorage.setItem( `${ NS }-${ stateKey }`, '1' );
+		} else {
+			localStorage.removeItem( `${ NS }-${ stateKey }` );
+		}
 		store.watchURL();
 	};
 }
