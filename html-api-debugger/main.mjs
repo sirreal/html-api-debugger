@@ -68,6 +68,9 @@ let mutationObserver = null;
  * @property {'breadcrumbs'|'insertionMode'} hoverInfo
  *
  *
+ * @typedef {'showClosers'|'showInvisible'|'showVirtual'} BooleanConfigurationOption
+ *
+ *
  * @typedef  State
  * @property {ReadonlyArray<string>} treeWarnings
  * @property {string} selector
@@ -127,13 +130,19 @@ let mutationObserver = null;
 
 const createStore = /** @type {typeof I.store<Store>} */ ( I.store );
 
+const BOOLEAN_CONFIGURATION_OPTIONS = /** @type {const} */ ( [
+	[ 'C', 'showClosers' ],
+	[ 'I', 'showInvisible' ],
+	[ 'V', 'showVirtual' ],
+] );
+
 /** @type {Store} */
 const store = createStore( NS, {
 	// @ts-expect-error Server provided state is not included here.
 	state: {
-		showClosers: Boolean( localStorage.getItem( `${ NS }-showClosers` ) ),
-		showInvisible: Boolean( localStorage.getItem( `${ NS }-showInvisible` ) ),
-		showVirtual: Boolean( localStorage.getItem( `${ NS }-showVirtual` ) ),
+		showClosers: getInitialBooleanConfigurationValue( 'showClosers' ),
+		showInvisible: getInitialBooleanConfigurationValue( 'showInvisible' ),
+		showVirtual: getInitialBooleanConfigurationValue( 'showVirtual' ),
 
 		playbackPoint: null,
 		previewCorePrNumber: null,
@@ -272,6 +281,10 @@ const store = createStore( NS, {
 			}
 			if ( store.state.selector ) {
 				searchParams.set( 'selector', store.state.selector );
+			}
+			const options = getEnabledOptions();
+			if ( options ) {
+				searchParams.set( 'options', options );
 			}
 			const base = '/wp-admin/admin.php';
 			const u = new URL(
@@ -534,6 +547,16 @@ const store = createStore( NS, {
 				shouldReplace = true;
 			}
 		}
+		const options = getEnabledOptions();
+		if ( options ) {
+			if ( u.searchParams.get( 'options' ) !== options ) {
+				u.searchParams.set( 'options', options );
+				shouldReplace = true;
+			}
+		} else if ( u.searchParams.has( 'options' ) ) {
+			u.searchParams.delete( 'options' );
+			shouldReplace = true;
+		}
 		if ( shouldReplace ) {
 			history.replaceState( null, '', u );
 		}
@@ -791,22 +814,44 @@ const store = createStore( NS, {
 	},
 } );
 
-/** @param {keyof State} stateKey */
+/**
+ * @param {BooleanConfigurationOption} option
+ * @returns {boolean}
+ */
+function getInitialBooleanConfigurationValue( option ) {
+	const options = new URL( document.location.href ).searchParams.get(
+		'options',
+	);
+	if ( ! options ) {
+		return false;
+	}
+	return BOOLEAN_CONFIGURATION_OPTIONS.some(
+		( [ code, optionName ] ) =>
+			optionName === option && options.includes( code ),
+	);
+}
+
+/** @returns {string} */
+function getEnabledOptions() {
+	let options = '';
+	for ( const [ code, option ] of BOOLEAN_CONFIGURATION_OPTIONS ) {
+		if ( store.state[ option ] ) {
+			options += code;
+		}
+	}
+	return options;
+}
+
+/** @param {BooleanConfigurationOption} stateKey */
 function getToggleHandler( stateKey ) {
 	/**
 	 * @param {Event} e
 	 * @returns {void}
 	 */
 	return ( e ) => {
-		// @ts-expect-error
-		if ( e.target.checked ) {
-			// @ts-expect-error
-			store.state[ stateKey ] = true;
-			localStorage.setItem( `${ NS }-${ stateKey }`, '1' );
-		} else {
-			// @ts-expect-error
-			store.state[ stateKey ] = false;
-			localStorage.removeItem( `${ NS }-${ stateKey }` );
-		}
+		const isChecked = /** @type {HTMLInputElement} */ ( e.target ).checked;
+
+		store.state[ stateKey ] = isChecked;
+		store.watchURL();
 	};
 }
