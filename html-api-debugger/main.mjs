@@ -9,6 +9,17 @@ const NS = 'html-api-debugger';
 
 const DEBOUNCE_TIMEOUT = 150;
 const DEFAULT_HTML5_BODY_CONTEXT = '<!DOCTYPE html><body>';
+const DEFAULT_LAYOUT = { variant: 'default', page: NS, label: 'Current' };
+const LAYOUT_VARIANTS = [
+	DEFAULT_LAYOUT,
+	{
+		variant: 'workbench',
+		page: `${ NS }-workbench`,
+		label: 'Workbench layout',
+	},
+	{ variant: 'compare', page: `${ NS }-compare`, label: 'Compare layout' },
+	{ variant: 'focus', page: `${ NS }-focus`, label: 'Focus layout' },
+];
 const RENDERED_IFRAME = /** @type {HTMLIFrameElement} */ (
 	document.getElementById( 'rendered_iframe' )
 );
@@ -352,6 +363,14 @@ const store = createStore( NS, {
 	},
 
 	run() {
+		syncLayoutVariant();
+
+		for ( const icon of document.querySelectorAll(
+			'.html-api-debugger-copy-button span[aria-hidden="true"]',
+		) ) {
+			icon.remove();
+		}
+
 		RENDERED_IFRAME.addEventListener( 'load', store.onRenderedIframeLoad, {
 			passive: true,
 		} );
@@ -716,8 +735,12 @@ const store = createStore( NS, {
 	 * @param {Event} e
 	 */
 	handleCopyTreeClick: function* ( e ) {
-		const useDomTree =
-			/** @type {HTMLButtonElement} */ ( e.target ).name === 'tree__dom';
+		const target = e.target instanceof HTMLElement ? e.target : null;
+		const button =
+			e.currentTarget instanceof HTMLButtonElement
+				? e.currentTarget
+				: target?.closest( 'button' );
+		const useDomTree = button?.name === 'tree__dom';
 
 		let tree;
 		if ( useDomTree ) {
@@ -809,4 +832,46 @@ function getToggleHandler( stateKey ) {
 			localStorage.removeItem( `${ NS }-${ stateKey }` );
 		}
 	};
+}
+
+/** Apply the layout variant requested by the admin page slug. */
+function syncLayoutVariant() {
+	const page = new URL( document.location.href ).searchParams.get( 'page' );
+	const layout =
+		LAYOUT_VARIANTS.find( ( candidate ) => candidate.page === page ) ??
+		DEFAULT_LAYOUT;
+	const container = document.querySelector( '.html-api-debugger-container' );
+
+	if ( ! container ) {
+		return;
+	}
+
+	for ( const candidate of LAYOUT_VARIANTS ) {
+		container.classList.remove( `${ NS }-layout-${ candidate.variant }` );
+	}
+	container.classList.add( `${ NS }-layout-${ layout.variant }` );
+
+	const header = container.querySelector( '.html-api-debugger-page-header' );
+	if ( ! header || header.querySelector( '.html-api-debugger-layout-nav' ) ) {
+		return;
+	}
+
+	const nav = document.createElement( 'nav' );
+	nav.className = 'nav-tab-wrapper html-api-debugger-layout-nav';
+	nav.ariaLabel = 'HTML API Debugger layouts';
+
+	for ( const candidate of LAYOUT_VARIANTS ) {
+		const url = new URL( document.location.href );
+		url.searchParams.set( 'page', candidate.page );
+
+		const link = document.createElement( 'a' );
+		link.className = `nav-tab${
+			candidate.variant === layout.variant ? ' nav-tab-active' : ''
+		}`;
+		link.href = url.href;
+		link.textContent = candidate.label;
+		nav.appendChild( link );
+	}
+
+	header.appendChild( nav );
 }

@@ -95,9 +95,9 @@ function init() {
 	add_action(
 		'admin_enqueue_scripts',
 		function ( $hook_suffix ) {
-			if ( $hook_suffix === 'toplevel_page_' . SLUG ) {
-					wp_enqueue_style( SLUG, plugins_url( 'style.css', __FILE__ ), array(), VERSION );
-					wp_enqueue_script_module( '@html-api-debugger/main' );
+			if ( is_html_api_debugger_admin_page( $hook_suffix ) ) {
+				wp_enqueue_style( SLUG, plugins_url( 'style.css', __FILE__ ), array(), VERSION );
+				wp_enqueue_script_module( '@html-api-debugger/main' );
 			}
 		}
 	);
@@ -111,33 +111,96 @@ function init() {
 				'edit_posts',
 				SLUG,
 				function () {
-					require_once __DIR__ . '/interactivity.php';
-
-					$options = array(
-						'context_html' => null,
-						'selector' => null,
-					);
-
-					$html = '';
-					// phpcs:disable WordPress.Security.NonceVerification.Recommended
-					if ( isset( $_GET['html'] ) && \is_string( $_GET['html'] ) ) {
-						$html = stripslashes( $_GET['html'] );
-					}
-					if ( isset( $_GET['contextHTML'] ) && \is_string( $_GET['contextHTML'] ) ) {
-						$options['context_html'] = stripslashes( $_GET['contextHTML'] );
-					}
-					if ( isset( $_GET['selector'] ) && \is_string( $_GET['selector'] ) ) {
-						$options['selector'] = stripslashes( $_GET['selector'] );
-					}
-					// phpcs:enable WordPress.Security.NonceVerification.Recommended
-
-					// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-					echo namespace\Interactivity\generate_page( $html, $options );
+					render_admin_page();
 				},
 				include __DIR__ . '/icon.php'
 			);
+
+			foreach ( get_layout_variants() as $variant => $config ) {
+				add_submenu_page(
+					SLUG,
+					$config['page_title'],
+					$config['menu_title'],
+					'edit_posts',
+					SLUG . '-' . $variant,
+					function () use ( $variant ) {
+						render_admin_page( $variant );
+					}
+				);
+			}
 		}
 	);
+}
+
+/**
+ * Get alternative layout variants.
+ *
+ * @return array<string,array{page_title:string,menu_title:string}>
+ */
+function get_layout_variants(): array {
+	return array(
+		'workbench' => array(
+			'page_title' => 'HTML API Debugger: Workbench',
+			'menu_title' => 'Workbench layout',
+		),
+		'compare' => array(
+			'page_title' => 'HTML API Debugger: Compare',
+			'menu_title' => 'Compare layout',
+		),
+		'focus' => array(
+			'page_title' => 'HTML API Debugger: Focus',
+			'menu_title' => 'Focus layout',
+		),
+	);
+}
+
+/**
+ * Determine whether the current admin page belongs to this plugin.
+ *
+ * @param string $hook_suffix The admin hook suffix.
+ */
+function is_html_api_debugger_admin_page( string $hook_suffix ): bool {
+	if ( $hook_suffix === 'toplevel_page_' . SLUG ) {
+		return true;
+	}
+
+	foreach ( array_keys( get_layout_variants() ) as $variant ) {
+		if ( $hook_suffix === SLUG . '_page_' . SLUG . '-' . $variant ) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+/**
+ * Render an admin page variant.
+ *
+ * @param string $variant The layout variant.
+ */
+function render_admin_page( string $variant = 'default' ): void {
+	require_once __DIR__ . '/interactivity.php';
+
+	$options = array(
+		'context_html' => null,
+		'selector' => null,
+	);
+
+	$html = '';
+	// phpcs:disable WordPress.Security.NonceVerification.Recommended
+	if ( isset( $_GET['html'] ) && \is_string( $_GET['html'] ) ) {
+		$html = stripslashes( $_GET['html'] );
+	}
+	if ( isset( $_GET['contextHTML'] ) && \is_string( $_GET['contextHTML'] ) ) {
+		$options['context_html'] = stripslashes( $_GET['contextHTML'] );
+	}
+	if ( isset( $_GET['selector'] ) && \is_string( $_GET['selector'] ) ) {
+		$options['selector'] = stripslashes( $_GET['selector'] );
+	}
+	// phpcs:enable WordPress.Security.NonceVerification.Recommended
+
+	// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+	echo namespace\Interactivity\generate_page( $html, $options, $variant );
 }
 
 /**
