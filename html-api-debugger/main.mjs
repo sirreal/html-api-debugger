@@ -547,6 +547,12 @@ const store = createStore( NS, {
 				shouldReplace = true;
 			}
 		}
+		for ( const [ , option ] of BOOLEAN_CONFIGURATION_OPTIONS ) {
+			if ( u.searchParams.has( option ) ) {
+				u.searchParams.delete( option );
+				shouldReplace = true;
+			}
+		}
 		const options = getEnabledOptions();
 		if ( options ) {
 			if ( u.searchParams.get( 'options' ) !== options ) {
