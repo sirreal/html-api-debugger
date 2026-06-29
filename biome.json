@@ -4,7 +4,7 @@
 	"linter": {
 		"enabled": true,
 		"rules": {
-			"recommended": true,
+			"preset": "recommended",
 			"complexity": {
 				"useLiteralKeys": "off",
 				"noImportantStyles": "off"
@@ -13,7 +13,8 @@
 	},
 	"javascript": {
 		"formatter": {
-			"quoteStyle": "single"
+			"quoteStyle": "single",
+			"delimiterSpacing": true
 		}
 	},
 	"formatter": {},
