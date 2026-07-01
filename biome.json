@@ -21,7 +21,7 @@
 	"files": {
 		"includes": [
 			"*",
-			"assets/**",
+			"assets/**/*.json",
 			"html-api-debugger/**",
 			"!vendor",
 			"!plugin-repo",
