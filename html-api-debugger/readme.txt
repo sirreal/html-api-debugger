@@ -15,6 +15,7 @@ Please file issues and pull requests on the [GitHub repository](https://github.c
 
 == Changelog ==
 
+* Preserve HTML tree visibility options in shared URLs.
 * Add "HTML5 Body" context button to allow setting default context.
 * Fix fragment tree depth so nodes following atomic elements (`textarea`, `script`, `style`) nest correctly to match the DOM tree.
 
