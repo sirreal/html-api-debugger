@@ -40,6 +40,13 @@ export function printHtmlApiTree( node, ul, options = {} ) {
 				? replaceInvisible( node.childNodes[ i ].nodeName )
 				: node.childNodes[ i ].nodeName;
 			if (
+				node.childNodes[ i ].nodeType ===
+				Node.prototype.PROCESSING_INSTRUCTION_NODE
+			) {
+				nodeText = `#processing-instruction(${ nodeText })`;
+			}
+
+			if (
 				node.childNodes[ i ]._namespace &&
 				node.childNodes[ i ]._namespace !== 'html'
 			) {
@@ -226,6 +233,14 @@ export function printHtmlApiTreeText( tree, options = {} ) {
 				let nodeText = options.showInvisible
 					? replaceInvisible( childNodes[ i ].nodeName )
 					: childNodes[ i ].nodeName;
+
+				if (
+					node.childNodes[ i ].nodeType ===
+					Node.prototype.PROCESSING_INSTRUCTION_NODE
+				) {
+					nodeText = `#processing-instruction(${ nodeText })`;
+				}
+
 				if (
 					childNodes[ i ]._namespace &&
 					childNodes[ i ]._namespace !== 'html'
