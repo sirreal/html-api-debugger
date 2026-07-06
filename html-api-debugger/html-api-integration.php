@@ -435,7 +435,7 @@ function get_tree( string $html, array $options ): array {
 					case WP_HTML_Tag_Processor::COMMENT_AS_ABRUPTLY_CLOSED_COMMENT:
 					case WP_HTML_Tag_Processor::COMMENT_AS_HTML_COMMENT:
 						$self['nodeName']  = $processor->get_token_name();
-						$self['nodeValue'] = $processor->get_modifiable_text();
+						$self['nodeValue'] = $processor->get_full_comment_text();
 						break;
 
 					case WP_HTML_Tag_Processor::COMMENT_AS_PI_NODE_LOOKALIKE:
@@ -444,19 +444,19 @@ function get_tree( string $html, array $options ): array {
 							array(
 								'nodeType'  => NODE_TYPE_PROCESSING_INSTRUCTION,
 								'nodeName' => $processor->get_tag(),
-								'nodeValue' => $processor->get_modifiable_text(),
+								'nodeValue' => $processor->get_full_comment_text(),
 							),
 						);
 						break;
 
 					case WP_HTML_Tag_Processor::COMMENT_AS_CDATA_LOOKALIKE:
 						$self['nodeName']  = "{$processor->get_token_name()}({$processor->get_comment_type()})";
-						$self['nodeValue'] = $processor->get_modifiable_text();
+						$self['nodeValue'] = $processor->get_full_comment_text();
 						break;
 
 					case WP_HTML_Tag_Processor::COMMENT_AS_INVALID_HTML:
 						$self['nodeName']  = "{$processor->get_token_name()}({$processor->get_comment_type()})";
-						$self['nodeValue'] = $processor->get_modifiable_text();
+						$self['nodeValue'] = $processor->get_full_comment_text();
 						break;
 
 					default:
