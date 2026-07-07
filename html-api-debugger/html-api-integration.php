@@ -408,6 +408,20 @@ function get_tree( string $html, array $options ): array {
 				$current['childNodes'][] = $self;
 				break;
 
+			case '#processing-instruction':
+				$self                    = array(
+					'nodeType' => NODE_TYPE_PROCESSING_INSTRUCTION,
+					'nodeName' => $processor->get_tag(),
+					'nodeValue' => $processor->get_modifiable_text(),
+					'_span' => $bookmark,
+					'_mode' => $processor_state->getValue( $processor )->insertion_mode,
+					'_bc' => $processor->get_breadcrumbs(),
+					'_virtual' => $is_virtual(),
+					'_depth' => $processor->get_current_depth(),
+				);
+				$current['childNodes'][] = $self;
+				break;
+
 			case '#funky-comment':
 				$self                    = array(
 					'nodeType' => NODE_TYPE_COMMENT,
