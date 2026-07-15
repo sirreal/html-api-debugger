@@ -300,4 +300,116 @@ assert.equal(
 	'new-after-failure',
 );
 
+let rejectUrlWrite = false;
+const transactionalRequests = [];
+const transactionalUrl = new URL(
+	`${ admin }&format=v1&html64=QQ&context64=&selector=&opts=`,
+);
+const transactionalController = new ByteRuntimeController( {
+	url: transactionalUrl,
+	supports: { create_fragment_advanced: true },
+	request: ( body ) => {
+		const wait = deferred();
+		transactionalRequests.push( { body, wait } );
+		return wait.promise;
+	},
+	replaceUrl: () => {
+		if ( rejectUrlWrite ) {
+			throw new Error( 'history rejected URL' );
+		}
+	},
+	confirmConversion: () => true,
+} );
+const existingRequest = transactionalController.start();
+rejectUrlWrite = true;
+assert.throws(
+	() => transactionalController.editSource( 'html', 'B' ),
+	/history rejected URL/u,
+);
+assert.deepEqual( transactionalController.htmlBytes, Uint8Array.of( 0x41 ) );
+assert.equal( transactionalController.getCanonicalUrl().href, transactionalUrl.href );
+assert.equal( transactionalRequests.length, 1 );
+assert.equal( transactionalController.isProcessing, true );
+assert.throws(
+	() => transactionalController.editSource( 'context', '<body>' ),
+	/history rejected URL/u,
+);
+assert.deepEqual( transactionalController.contextBytes, new Uint8Array() );
+assert.throws(
+	() => transactionalController.setSelector( '.failed' ),
+	/history rejected URL/u,
+);
+assert.equal( transactionalController.selector, '' );
+assert.throws(
+	() => transactionalController.setOpts( 'C' ),
+	/history rejected URL/u,
+);
+assert.equal( transactionalController.opts, '' );
+assert.equal( transactionalRequests.length, 1 );
+transactionalRequests[0].wait.resolve(
+	responseFor( transactionalRequests[0].body, 'existing' ),
+);
+await existingRequest;
+
+const malformedWriteFailure = new ByteRuntimeController( {
+	url: new URL( `${ admin }&format=v1&html64=_w&context64=&selector=&opts=` ),
+	supports: { create_fragment_advanced: true },
+	request: async () => {
+		throw new Error( 'must not request' );
+	},
+	replaceUrl: () => {
+		throw new Error( 'history rejected conversion' );
+	},
+	confirmConversion: () => true,
+} );
+assert.throws(
+	() => malformedWriteFailure.requestTextEditing( 'html' ),
+	/history rejected conversion/u,
+);
+assert.deepEqual( malformedWriteFailure.htmlBytes, Uint8Array.of( 0xff ) );
+assert.equal(
+	malformedWriteFailure.getCanonicalUrl().searchParams.get( 'html64' ),
+	'_w',
+);
+assert.equal( malformedWriteFailure.isProcessing, false );
+
+const canonicalizationWriteFailure = new ByteRuntimeController( {
+	url: new URL( admin ),
+	supports: { create_fragment_advanced: true },
+	request: async () => null,
+	replaceUrl: () => {
+		throw new Error( 'history rejected canonical URL' );
+	},
+	confirmConversion: () => false,
+} );
+assert.match( canonicalizationWriteFailure.urlError, /history rejected canonical URL/u );
+
+const conversionRaceRequests = [];
+const conversionRaceController = new ByteRuntimeController( {
+	url: new URL( `${ admin }&format=v1&html64=_w&context64=&selector=&opts=` ),
+	supports: { create_fragment_advanced: true },
+	request: ( body ) => {
+		const wait = deferred();
+		conversionRaceRequests.push( { body, wait } );
+		return wait.promise;
+	},
+	replaceUrl: () => {},
+	confirmConversion: () => true,
+} );
+const staleConversion = conversionRaceController.requestTextEditing( 'html' );
+const conversionWinningEdit = conversionRaceController.editSource( 'html', 'B' );
+conversionRaceRequests[1].wait.resolve(
+	responseFor( conversionRaceRequests[1].body, 'edit-after-conversion' ),
+);
+await conversionWinningEdit;
+conversionRaceRequests[0].wait.resolve(
+	responseFor( conversionRaceRequests[0].body, 'stale-conversion' ),
+);
+assert.equal( await staleConversion, null );
+assert.equal(
+	conversionRaceController.projectedResponse.result.tree.nodeName,
+	'edit-after-conversion',
+);
+assert.deepEqual( conversionRaceController.htmlBytes, Uint8Array.of( 0x42 ) );
+
 console.log( 'All runtime controller tests passed.' );

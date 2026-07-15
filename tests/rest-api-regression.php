@@ -153,9 +153,12 @@ namespace {
 	html_api_debugger_rest_assert_same( 'context whitespace is preserved', " \n", $test_processing_calls[3][1]['context_html'] );
 	html_api_debugger_rest_assert_same( 'selector whitespace is preserved', ' div ', $test_processing_calls[3][1]['selector'] );
 
+	HTML_API_Debugger\handle_byte_htmlapi_request( html_api_debugger_rest_request( 'x', '0' ) );
+	html_api_debugger_rest_assert_same( 'zero context remains fragment context', '0', $test_processing_calls[4][1]['context_html'] );
+
 	HTML_API_Debugger\handle_byte_htmlapi_request( html_api_debugger_rest_request( 'x' ) );
-	html_api_debugger_rest_assert_same( 'empty context means document mode', null, $test_processing_calls[4][1]['context_html'] );
-	html_api_debugger_rest_assert_same( 'empty selector means no selector', null, $test_processing_calls[4][1]['selector'] );
+	html_api_debugger_rest_assert_same( 'empty context means document mode', null, $test_processing_calls[5][1]['context_html'] );
+	html_api_debugger_rest_assert_same( 'empty selector means no selector', null, $test_processing_calls[5][1]['selector'] );
 
 	$valid_params = array(
 		'html64' => 'eA',

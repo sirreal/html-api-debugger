@@ -130,29 +130,23 @@ for ( const [ start, length ] of [
 	assert.throws( () => splitByteSpan( spanBytes, start, length ), TypeError );
 }
 
-function fakeContextDocument( walkedElements = [], bodyHasNodes = false, headHasNodes = false ) {
-	const body = { name: 'BODY', hasChildNodes: () => bodyHasNodes };
-	const head = { name: 'HEAD', hasChildNodes: () => headHasNodes };
-	const documentElement = { name: 'HTML' };
-	let offset = -1;
-	const walker = {
-		currentNode: documentElement,
-		nextNode() {
-			offset += 1;
-			if ( offset >= walkedElements.length ) {
-				return false;
-			}
-			this.currentNode = walkedElements[ offset ];
-			return true;
-		},
+function fakeElement( localName, children = [], hasOtherNodes = false ) {
+	return {
+		localName,
+		children,
+		hasChildNodes: () => hasOtherNodes || children.length > 0,
 	};
+}
+
+function fakeContextDocument( {
+	body = fakeElement( 'body' ),
+	head = fakeElement( 'head' ),
+	documentElement = null,
+} = {} ) {
 	return {
 		body,
 		head,
-		documentElement,
-		createTreeWalker() {
-			return walker;
-		},
+		documentElement: documentElement ?? fakeElement( 'html', [ head, body ] ),
 	};
 }
 
@@ -190,11 +184,10 @@ assert.equal(
 	'doctype-only context falls back to the document element',
 );
 
-const nestedContext = { name: 'SPAN' };
-const populatedContextDocument = fakeContextDocument(
-	[ { name: 'HTML' }, { name: 'BODY' }, { name: 'MAIN' }, nestedContext ],
-	true,
-);
+const nestedContext = fakeElement( 'span' );
+const populatedContextDocument = fakeContextDocument( {
+	body: fakeElement( 'body', [ fakeElement( 'main', [ nestedContext ] ) ] ),
+} );
 assert.equal(
 	resolveFragmentTarget(
 		/** @type {any} */ ( populatedContextDocument ),
@@ -202,6 +195,127 @@ assert.equal(
 	),
 	nestedContext,
 	'populated context uses the final parsed element',
+);
+
+const titledHead = fakeElement( 'head', [ fakeElement( 'title' ) ] );
+const titledDocument = fakeContextDocument( { head: titledHead } );
+assert.equal(
+	resolveFragmentTarget(
+		/** @type {any} */ ( titledDocument ),
+		'<!doctype html><head><!-- <body> --><title>x</title>',
+	),
+	titledHead.children[ 0 ],
+	'comment text cannot author BODY',
+);
+assert.equal(
+	resolveFragmentTarget(
+		/** @type {any} */ ( titledDocument ),
+		'<!doctype html><head><title>x</title></head><body>',
+	),
+	titledDocument.body,
+	'an explicit empty BODY outranks a populated HEAD',
+);
+assert.equal(
+	resolveFragmentTarget(
+		/** @type {any} */ ( titledDocument ),
+		'<title></title x="</title><body>',
+	),
+	titledHead.children[ 0 ],
+	'an incomplete appropriate RCDATA end tag consumes through EOF',
+);
+
+for ( const context of [
+	'<body-foo>',
+	'<div data-context="<body>">',
+	'<style><body></style>',
+	'<textarea><body></textarea>',
+	'<plaintext><body>',
+	'<template><body></template>',
+	'<!DOCTYPE html SYSTEM "x<body">',
+] ) {
+	assert.equal(
+		resolveFragmentTarget( /** @type {any} */ ( emptyContextDocument ), context ),
+		emptyContextDocument.documentElement,
+		`${ context } cannot falsely author BODY`,
+	);
+}
+
+assert.equal(
+	resolveFragmentTarget(
+		/** @type {any} */ ( emptyContextDocument ),
+		'<!doctype html><!--><body>',
+	),
+	emptyContextDocument.body,
+	'an abrupt empty comment exposes the following authored BODY',
+);
+assert.equal(
+	resolveFragmentTarget(
+		/** @type {any} */ ( emptyContextDocument ),
+		'<body a=b">',
+	),
+	emptyContextDocument.body,
+	'a quote in an unquoted attribute does not swallow the tag closer',
+);
+for ( const context of [
+	'<body =">',
+	'<!doctype html><head><meta ="x><body></body><!--">',
+	'<!DOCTYPE html SYSTEM "x><body>">',
+] ) {
+	assert.equal(
+		resolveFragmentTarget( /** @type {any} */ ( emptyContextDocument ), context ),
+		emptyContextDocument.body,
+		`${ context } consumes a leading equals sign as an attribute name`,
+	);
+}
+
+const scriptHeadDocument = fakeContextDocument( {
+	head: fakeElement( 'head', [ fakeElement( 'script' ) ] ),
+} );
+for ( const context of [
+	'<!doctype html><head><script><!x<script></script><body></script>',
+	'<!doctype html><head><script><!-x<script></script><body></script>',
+] ) {
+	assert.equal(
+		resolveFragmentTarget( /** @type {any} */ ( scriptHeadDocument ), context ),
+		scriptHeadDocument.body,
+		`${ context } returns from escape start to script data`,
+	);
+}
+
+const textBodyDocument = fakeContextDocument( {
+	body: fakeElement( 'body', [], true ),
+} );
+assert.equal(
+	resolveFragmentTarget( /** @type {any} */ ( textBodyDocument ), '0' ),
+	textBodyDocument.body,
+	'implicit BODY text selects BODY',
+);
+
+const templateLeaf = fakeElement( 'strong' );
+const template = fakeElement( 'template' );
+template.content = { children: [ fakeElement( 'em' ), templateLeaf ] };
+const foreignRealmTemplateDocument = fakeContextDocument( {
+	body: fakeElement( 'body', [ fakeElement( 'main' ), template ] ),
+} );
+assert.equal(
+	resolveFragmentTarget(
+		/** @type {any} */ ( foreignRealmTemplateDocument ),
+		'<!doctype html><body><main></main><template><em></em><strong>',
+	),
+	templateLeaf,
+	'template content is traversed without realm-specific instanceof checks',
+);
+
+const framesetDocument = fakeContextDocument( {
+	body: fakeElement( 'frameset' ),
+} );
+assert.equal(
+	resolveFragmentTarget(
+		/** @type {any} */ ( framesetDocument ),
+		'<!doctype html><frameset>',
+	),
+	framesetDocument.body,
+	'empty FRAMESET remains the context root',
 );
 assert.throws(
 	() =>

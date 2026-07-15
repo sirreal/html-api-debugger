@@ -13,6 +13,8 @@ import * as ByteTransportLive from './byte-transport.mjs?ver=3.0';
 import * as RuntimeControllerLive from './runtime-controller.mjs?ver=3.0';
 // @ts-expect-error TypeScript does not resolve browser URL query strings.
 import * as RuntimeWiringLive from './runtime-wiring.mjs?ver=3.0';
+// @ts-expect-error TypeScript does not resolve browser URL query strings.
+import * as UiTransactionsLive from './ui-transactions.mjs?ver=3.0';
 
 const { ByteDocumentPreview, resolveFragmentTarget } =
 	/** @type {typeof import('./byte-preview.mjs')} */ ( BytePreviewLive );
@@ -28,6 +30,8 @@ const {
 	DisposedRuntimeBoundaryError,
 	SupersededRuntimeOperationError,
 } = /** @type {typeof import('./runtime-wiring.mjs')} */ ( RuntimeWiringLive );
+const { beginUiOperation, settleUiConversion } =
+	/** @type {typeof import('./ui-transactions.mjs')} */ ( UiTransactionsLive );
 
 const NS = 'html-api-debugger';
 const DEFAULT_HTML5_BODY_CONTEXT = '<!DOCTYPE html><body>';
@@ -309,32 +313,54 @@ const store = createStore( NS, {
 		/** @param {InputEvent} event */
 		handleInput: function* ( event ) {
 			const text = /** @type {HTMLTextAreaElement} */ ( event.target ).value;
-			const operation = controller.editSource( 'html', text );
-			store.state.playbackPoint = null;
-			store.state.processedView = 'text';
-			touchState();
-			renderPreview();
-			yield settleControllerOperation( operation );
+			const started = beginUiOperation(
+				() => controller.editSource( 'html', text ),
+				() => {
+					store.state.playbackPoint = null;
+					store.state.processedView = 'text';
+					touchState();
+					renderPreview();
+				},
+				reportControllerError,
+			);
+			if ( ! started.started ) {
+				return;
+			}
+			yield settleControllerOperation( started.value );
 		},
 		/** @param {InputEvent} event */
 		handleContextHtmlInput: function* ( event ) {
 			const text = /** @type {HTMLTextAreaElement} */ ( event.target ).value;
-			const operation = controller.editSource( 'context', text );
-			store.state.playbackPoint = null;
-			touchState();
-			renderPreview();
-			yield settleControllerOperation( operation );
+			const started = beginUiOperation(
+				() => controller.editSource( 'context', text ),
+				() => {
+					store.state.playbackPoint = null;
+					touchState();
+					renderPreview();
+				},
+				reportControllerError,
+			);
+			if ( ! started.started ) {
+				return;
+			}
+			yield settleControllerOperation( started.value );
 		},
 		handleDefaultBodyContextClick: function* () {
-			const operation = controller.editSource(
-				'context',
-				DEFAULT_HTML5_BODY_CONTEXT,
+			const started = beginUiOperation(
+				() =>
+					controller.editSource( 'context', DEFAULT_HTML5_BODY_CONTEXT ),
+				() => {
+					store.state.contextView = 'text';
+					store.state.playbackPoint = null;
+					touchState();
+					renderPreview();
+				},
+				reportControllerError,
 			);
-			store.state.contextView = 'text';
-			store.state.playbackPoint = null;
-			touchState();
-			renderPreview();
-			yield settleControllerOperation( operation );
+			if ( ! started.started ) {
+				return;
+			}
+			yield settleControllerOperation( started.value );
 		},
 		/** @param {InputEvent} event */
 		handleSelectorChange: function* ( event ) {
@@ -350,10 +376,22 @@ const store = createStore( NS, {
 					throw error;
 				}
 			}
-			store.state.selector = selector;
-			store.state.selectorErrorMessage = null;
-			touchState();
-			yield settleControllerOperation( controller.setSelector( selector ) );
+			const started = beginUiOperation(
+				() => controller.setSelector( selector ),
+				() => {
+					store.state.selector = controller.selector;
+					store.state.selectorErrorMessage = null;
+					touchState();
+				},
+				( error ) => {
+					store.state.selector = controller.selector;
+					reportControllerError( error );
+				},
+			);
+			if ( ! started.started ) {
+				return;
+			}
+			yield settleControllerOperation( started.value );
 		},
 		handleShowInvisibleClick: getToggleHandler( 'showInvisible' ),
 		handleShowClosersClick: getToggleHandler( 'showClosers' ),
@@ -543,7 +581,9 @@ function touchState() {
 
 /** @param {Promise<unknown>} operation */
 async function settleControllerOperation( operation ) {
-	beginPendingResponse();
+	if ( controller.isProcessing ) {
+		beginPendingResponse();
+	}
 	try {
 		const result = await operation;
 		if ( result !== null ) {
@@ -563,6 +603,15 @@ async function settleControllerOperation( operation ) {
 		renderHtmlApiOutput();
 		renderPreview();
 	}
+}
+
+/** @param {unknown} error */
+function reportControllerError( error ) {
+	store.state.transportError = describeError( error );
+	store.state.processing = controller.isProcessing;
+	touchState();
+	renderHtmlApiOutput();
+	renderPreview();
 }
 
 function applyControllerResponse() {
@@ -603,17 +652,24 @@ function setResultViewDefault() {
 async function convertSourceToText( kind ) {
 	store.state.transportError = null;
 	try {
+		const wasMalformed = ! isValidUtf8( sourceBytes( kind ) );
 		const operation = controller.requestTextEditing( kind );
-		if ( controller.isProcessing ) {
+		const conversionStarted =
+			wasMalformed && isValidUtf8( sourceBytes( kind ) );
+		if ( conversionStarted ) {
+			store.state[ `${ kind }View` ] = 'text';
 			beginPendingResponse();
+			touchState();
+			renderPreview();
 		}
-		const text = await operation;
-		if ( text === null ) {
+		const applied = await settleUiConversion( operation, () => {
+			store.state[ `${ kind }View` ] = 'text';
+			store.state.playbackPoint = null;
+			applyControllerResponse();
+		} );
+		if ( ! applied ) {
 			return;
 		}
-		store.state[ `${ kind }View` ] = 'text';
-		store.state.playbackPoint = null;
-		applyControllerResponse();
 	} catch ( error ) {
 		store.state.transportError = describeError( error );
 	} finally {
@@ -841,14 +897,27 @@ function getToggleHandler( stateKey ) {
 	/** @param {Event} event */
 	return ( event ) => {
 		const checked = /** @type {HTMLInputElement} */ ( event.target ).checked;
-		store.state[ stateKey ] = checked;
-		booleanConfigurationOverrides[ stateKey ] = checked;
-		if ( checked ) {
-			localStorage.setItem( `${ NS }-${ stateKey }`, '1' );
-		} else {
-			localStorage.removeItem( `${ NS }-${ stateKey }` );
-		}
-		controller.setOpts( getExplicitHtmlOptions() );
-		touchState();
+		const previousOverride = booleanConfigurationOverrides[ stateKey ];
+		beginUiOperation(
+			() => {
+				booleanConfigurationOverrides[ stateKey ] = checked;
+				try {
+					controller.setOpts( getExplicitHtmlOptions() );
+				} catch ( error ) {
+					booleanConfigurationOverrides[ stateKey ] = previousOverride;
+					throw error;
+				}
+			},
+			() => {
+				store.state[ stateKey ] = checked;
+				if ( checked ) {
+					localStorage.setItem( `${ NS }-${ stateKey }`, '1' );
+				} else {
+					localStorage.removeItem( `${ NS }-${ stateKey }` );
+				}
+				touchState();
+			},
+			reportControllerError,
+		);
 	};
 }

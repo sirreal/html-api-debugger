@@ -1,0 +1,138 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Fragment context browser regression</title>
+<pre id="result">RUNNING</pre>
+<script type="module">
+	import { resolveFragmentTarget } from '../html-api-debugger/byte-preview.mjs';
+
+	const output = document.getElementById( 'result' );
+
+	function assertName( documentToTest, source, expected, label ) {
+		const actual = resolveFragmentTarget( documentToTest, source ).nodeName;
+		if ( actual !== expected ) {
+			throw new Error( `${ label }: expected ${ expected }, got ${ actual }` );
+		}
+	}
+
+	function parseDetached( source, Parser = DOMParser ) {
+		return new Parser().parseFromString( source, 'text/html' );
+	}
+
+	async function parseNavigated( source ) {
+		const iframe = document.createElement( 'iframe' );
+		iframe.hidden = true;
+		iframe.setAttribute( 'sandbox', 'allow-scripts allow-same-origin' );
+		const loaded = new Promise( ( resolve ) => {
+			iframe.addEventListener( 'load', resolve, { once: true } );
+		} );
+		iframe.srcdoc = source;
+		document.body.append( iframe );
+		await loaded;
+		return iframe;
+	}
+
+	try {
+		const detachedCases = [
+			[ '<!doctype html><head>', 'HEAD', 'empty HEAD' ],
+			[ '<!doctype html><body>', 'BODY', 'empty BODY' ],
+			[ '<!doctype html><html>', 'HTML', 'empty HTML' ],
+			[ '0', 'BODY', 'implicit BODY text' ],
+			[
+				'<!doctype html><head><!-- <body> --><title>x</title>',
+				'TITLE',
+				'comment cannot author BODY',
+			],
+			[
+				'<!doctype html><head><title>x</title></head><body>',
+				'BODY',
+				'authored empty BODY outranks populated HEAD',
+			],
+			[
+				'<!doctype html><body><template><main><template><span>',
+				'SPAN',
+				'nested template content',
+			],
+			[
+				'<!doctype html><body><template><span></template><main>',
+				'MAIN',
+				'later sibling after template',
+			],
+		];
+		for ( const [ source, expected, label ] of detachedCases ) {
+			assertName( parseDetached( source ), source, expected, label );
+		}
+
+		const realmIframe = await parseNavigated( '<!doctype html>' );
+		const ForeignParser = realmIframe.contentWindow.DOMParser;
+		const foreignSource = '<!doctype html><body><template><em></em><strong>';
+		assertName(
+			parseDetached( foreignSource, ForeignParser ),
+			foreignSource,
+			'STRONG',
+			'foreign-realm template content',
+		);
+		realmIframe.remove();
+
+		const liveCases = [
+			[ '<noscript><body>', 'NOSCRIPT', 'scripting-enabled NOSCRIPT' ],
+			[
+				'<!doctype html><head><script><!--<script><\/script><body><\/script>',
+				'SCRIPT',
+				'double-escaped SCRIPT data',
+			],
+			[
+				'<!doctype html><head><script><!x<script><\/script><body><\/script>',
+				'BODY',
+				'SCRIPT escape-start fallback',
+			],
+			[
+				'<!doctype html><head><script><!-x<script><\/script><body><\/script>',
+				'BODY',
+				'SCRIPT escape-start-dash fallback',
+			],
+			[ '<!doctype html><!--><body>', 'BODY', 'abrupt empty comment' ],
+			[ '<body a=b">', 'BODY', 'quote in unquoted attribute value' ],
+			[ '<body =">', 'BODY', 'equals-sign attribute name' ],
+			[
+				'<title></title x="</title><body>',
+				'TITLE',
+				'incomplete appropriate RCDATA end tag',
+			],
+			[
+				'<!doctype html><head><meta ="x><body></body><!--">',
+				'BODY',
+				'equals-sign attribute does not swallow BODY',
+			],
+			[
+				'<!DOCTYPE html SYSTEM "x><body>">',
+				'BODY',
+				'abrupt quoted DOCTYPE system identifier',
+			],
+			[
+				'<!DOCTYPE html SYSTEM "x<body">',
+				'HTML',
+				'markup text inside quoted DOCTYPE system identifier',
+			],
+			[ '<!doctype html><template><body></template>', 'TEMPLATE', 'BODY token in TEMPLATE' ],
+			[ '<!doctype html><frameset>', 'FRAMESET', 'empty FRAMESET' ],
+		];
+		for ( const [ source, expected, label ] of liveCases ) {
+			const iframe = await parseNavigated( source );
+			assertName( iframe.contentDocument, source, expected, label );
+			iframe.remove();
+		}
+
+		document.body.dataset.result = 'pass';
+		output.textContent = 'PASS';
+		void fetch( '/__fragment_context_result__/pass', { mode: 'no-cors' } ).catch(
+			() => {},
+		);
+	} catch ( error ) {
+		document.body.dataset.result = 'fail';
+		output.textContent = `FAIL\n${ error.stack ?? error }`;
+		void fetch( '/__fragment_context_result__/fail', { mode: 'no-cors' } ).catch(
+			() => {},
+		);
+		throw error;
+	}
+</script>

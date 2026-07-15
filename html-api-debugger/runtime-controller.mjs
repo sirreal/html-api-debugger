@@ -179,9 +179,15 @@ export class ByteRuntimeController {
 	 * @param {'html'|'context'} kind Source kind.
 	 * @param {string} text Unicode editor value.
 	 */
-	async editSource( kind, text ) {
+	editSource( kind, text ) {
+		const previous = this.#getSourceBytes( kind ).slice();
 		this.#setSourceBytes( kind, encodeUtf8( text ) );
-		this.#rewriteUrl();
+		try {
+			this.#rewriteUrl();
+		} catch ( error ) {
+			this.#setSourceBytes( kind, previous );
+			throw error;
+		}
 		return this.process();
 	}
 
@@ -191,10 +197,10 @@ export class ByteRuntimeController {
 	 * @param {'html'|'context'} kind Source kind.
 	 * @returns {Promise<string|null>} Editable text, or null when conversion is cancelled.
 	 */
-	async requestTextEditing( kind ) {
+	requestTextEditing( kind ) {
 		const bytes = this.#getSourceBytes( kind );
 		if ( isValidUtf8( bytes ) ) {
-			return decodeUtf8( bytes );
+			return Promise.resolve( decodeUtf8( bytes ) );
 		}
 
 		if (
@@ -202,18 +208,22 @@ export class ByteRuntimeController {
 				'Editing this malformed UTF-8 will replace invalid bytes and change the source.',
 			)
 		) {
-			return null;
+			return Promise.resolve( null );
 		}
 
 		const text = projectUtf8( bytes );
 		this.#setSourceBytes( kind, encodeUtf8( text ) );
-		this.#rewriteUrl();
-		await this.process();
-		return text;
+		try {
+			this.#rewriteUrl();
+		} catch ( error ) {
+			this.#setSourceBytes( kind, bytes );
+			throw error;
+		}
+		return this.process().then( ( result ) => ( result === null ? null : text ) );
 	}
 
 	/** @param {string} selector */
-	async setSelector( selector ) {
+	setSelector( selector ) {
 		const previous = this.#selector;
 		this.#selector = selector;
 		try {
@@ -366,7 +376,8 @@ export class ByteRuntimeController {
 	}
 
 	#rewriteUrl() {
-		this.#url = this.getCanonicalUrl();
-		this.#replaceUrl( new URL( this.#url.href ) );
+		const nextUrl = this.getCanonicalUrl();
+		this.#replaceUrl( new URL( nextUrl.href ) );
+		this.#url = nextUrl;
 	}
 }
