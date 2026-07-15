@@ -20,6 +20,8 @@ use WP_REST_Request;
 use Exception;
 
 require_once __DIR__ . '/html-api-integration.php';
+require_once __DIR__ . '/byte-transport.php';
+require_once __DIR__ . '/rest-api.php';
 
 const SLUG    = 'html-api-debugger';
 const VERSION = '2.9';
@@ -35,6 +37,18 @@ function init() {
 	add_action(
 		'rest_api_init',
 		function () {
+			register_rest_route(
+				SLUG . '/v2',
+				'/htmlapi',
+				array(
+					'methods' => 'POST',
+					'callback' => __NAMESPACE__ . '\\handle_byte_htmlapi_request',
+					'permission_callback' => function () {
+						return current_user_can( 'edit_posts' );
+					},
+				)
+			);
+
 			register_rest_route(
 				SLUG . '/v1',
 				'/htmlapi',
