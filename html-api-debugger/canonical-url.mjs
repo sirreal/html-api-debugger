@@ -1,5 +1,5 @@
 // @ts-expect-error TypeScript does not resolve browser URL query strings.
-import * as ByteTransportLive from './byte-transport.mjs?ver=3.1';
+import * as ByteTransportLive from './byte-transport.mjs?ver=3.2';
 
 const { decodeBase64url, decodeUtf8, encodeBase64url } =
 	/** @type {typeof import('./byte-transport.mjs')} */ ( ByteTransportLive );
@@ -66,7 +66,7 @@ export function parseCanonicalUrl( url ) {
 		throw new CanonicalUrlError( 'The legacy URL was not migrated.' );
 	}
 
-	const raw = getCanonicalRawValues( url );
+	const { values: raw, needsCanonicalization } = getCanonicalRawValues( url );
 	if ( raw.format !== 'v1' ) {
 		throw new CanonicalUrlError( 'Unknown or missing URL format.' );
 	}
@@ -91,7 +91,7 @@ export function parseCanonicalUrl( url ) {
 			contextBytes: decodeBase64url( raw.context64 ),
 			selector,
 			opts: raw.opts,
-			needsCanonicalization: false,
+			needsCanonicalization,
 		};
 	} catch {
 		throw new CanonicalUrlError( 'Invalid canonical byte field.' );
@@ -146,24 +146,33 @@ export function canonicalUrlPath( url ) {
  * such as `ht%6Dl64` cannot hide behind URLSearchParams normalization.
  *
  * @param {URL} url URL to inspect.
- * @returns {Record<(typeof CANONICAL_PARAMETERS)[number], string>} Raw values.
+ * A single bare literal parameter is the unambiguous empty value, but is
+ * reported as noncanonical so the caller can rewrite it to `name=`.
+ *
+ * @returns {{values: Record<(typeof CANONICAL_PARAMETERS)[number], string>, needsCanonicalization: boolean}} Raw values and whether their spelling needs a rewrite.
  */
 function getCanonicalRawValues( url ) {
 	const pairs = url.search.length === 0 ? [] : url.search.slice( 1 ).split( '&' );
 	/** @type {Partial<Record<(typeof CANONICAL_PARAMETERS)[number], string>>} */
 	const values = {};
+	let needsCanonicalization = false;
 
 	for ( const name of CANONICAL_PARAMETERS ) {
 		const prefix = `${ name }=`;
 		const literalValues = pairs
 			.filter( ( pair ) => pair === name || pair.startsWith( prefix ) )
-			.map( ( pair ) => ( pair.startsWith( prefix ) ? pair.slice( prefix.length ) : null ) );
+			.map( ( pair ) => {
+				if ( pair === name ) {
+					needsCanonicalization = true;
+					return '';
+				}
+				return pair.slice( prefix.length );
+			} );
 
 		const literalValue = literalValues[ 0 ];
 		if (
 			url.searchParams.getAll( name ).length !== literalValues.length ||
 			literalValues.length !== 1 ||
-			literalValue === null ||
 			literalValue === undefined
 		) {
 			throw new CanonicalUrlError( `Missing, duplicate, or aliased ${ name } parameter.` );
@@ -171,9 +180,13 @@ function getCanonicalRawValues( url ) {
 		values[ name ] = literalValue;
 	}
 
-	return /** @type {Record<(typeof CANONICAL_PARAMETERS)[number], string>} */ (
-		values
-	);
+	return {
+		values:
+			/** @type {Record<(typeof CANONICAL_PARAMETERS)[number], string>} */ (
+				values
+			),
+		needsCanonicalization,
+	};
 }
 
 /**

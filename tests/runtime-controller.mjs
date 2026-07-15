@@ -57,6 +57,31 @@ await bareController.start();
 assert.equal( bareRequests.length, 1 );
 assert.deepEqual( bareRequests[0], { html64: '', context64: '', selector: '' } );
 
+const bareEmptyRequests = [];
+const bareEmptyReplacements = [];
+const bareEmptyController = new ByteRuntimeController( {
+	url: new URL(
+		`${ admin }&format=v1&html64=PGZvbz4&context64&selector&opts`,
+	),
+	supports: { create_fragment_advanced: true },
+	request: async ( body ) => {
+		bareEmptyRequests.push( body );
+		return responseFor( body );
+	},
+	replaceUrl: ( url ) => bareEmptyReplacements.push( url ),
+	confirmConversion: () => false,
+} );
+assert.equal( bareEmptyController.urlError, null );
+assert.equal( bareEmptyReplacements.length, 1 );
+assert.equal(
+	bareEmptyReplacements[ 0 ].href,
+	`${ admin }&format=v1&html64=PGZvbz4&context64=&selector=&opts=`,
+);
+await bareEmptyController.start();
+assert.deepEqual( bareEmptyRequests, [
+	{ html64: 'PGZvbz4', context64: '', selector: '' },
+] );
+
 for ( const suffix of [
 	'&format=v2&html64=&context64=&selector=&opts=',
 	'&format=v1&html64=Zg==&context64=&selector=&opts=',

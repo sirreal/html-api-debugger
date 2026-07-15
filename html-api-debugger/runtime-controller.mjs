@@ -1,11 +1,11 @@
 // @ts-expect-error TypeScript does not resolve browser URL query strings.
-import * as CanonicalUrlLive from './canonical-url.mjs?ver=3.1';
+import * as CanonicalUrlLive from './canonical-url.mjs?ver=3.2';
 // @ts-expect-error TypeScript does not resolve browser URL query strings.
-import * as BytePreviewLive from './byte-preview.mjs?ver=3.1';
+import * as BytePreviewLive from './byte-preview.mjs?ver=3.2';
 // @ts-expect-error TypeScript does not resolve browser URL query strings.
-import * as ByteTransportLive from './byte-transport.mjs?ver=3.1';
+import * as ByteTransportLive from './byte-transport.mjs?ver=3.2';
 // @ts-expect-error TypeScript does not resolve browser URL query strings.
-import * as ResponseTransportLive from './response-transport.mjs?ver=3.1';
+import * as ResponseTransportLive from './response-transport.mjs?ver=3.2';
 
 const { canonicalUrlPath, parseCanonicalUrl, serializeCanonicalUrl } =
 	/** @type {typeof import('./canonical-url.mjs')} */ ( CanonicalUrlLive );

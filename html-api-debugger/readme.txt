@@ -3,7 +3,7 @@ Contributors: jonsurrell, bernhard-reiter
 Tags: HTML API, development, debug
 Requires at least: 6.7
 Tested up to: 6.8
-Stable tag: 3.1
+Stable tag: 3.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -14,6 +14,9 @@ Add a WP Admin page for debugging the HTML API.
 Please file issues and pull requests on the [GitHub repository](https://github.com/sirreal/html-api-debugger).
 
 == Changelog ==
+
+= 3.2 =
+* Normalize bare empty canonical URL fields instead of leaving a permanent warning.
 
 = 3.1 =
 * Contain rendered input in a scripting-disabled iframe while preserving DOM inspection.

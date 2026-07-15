@@ -28,6 +28,23 @@ assert.deepEqual( parseCanonicalUrl( canonicalEmpty ), {
 	needsCanonicalization: false,
 } );
 
+const bareEmptyUrl = new URL(
+	`${ admin }&format=v1&html64=PGZvbz4&context64&selector&opts`,
+);
+const parsedBareEmpty = parseCanonicalUrl( bareEmptyUrl );
+assert.deepEqual(
+	parsedBareEmpty.htmlBytes,
+	new TextEncoder().encode( '<foo>' ),
+);
+assert.deepEqual( parsedBareEmpty.contextBytes, new Uint8Array() );
+assert.equal( parsedBareEmpty.selector, '' );
+assert.equal( parsedBareEmpty.opts, '' );
+assert.equal( parsedBareEmpty.needsCanonicalization, true );
+assert.equal(
+	serializeCanonicalUrl( bareEmptyUrl, parsedBareEmpty ).href,
+	`${ admin }&format=v1&html64=PGZvbz4&context64=&selector=&opts=`,
+);
+
 const allBytes = Uint8Array.from( { length: 256 }, ( _, index ) => index );
 const state = {
 	htmlBytes: allBytes,
@@ -83,7 +100,7 @@ for ( const invalidQuery of [
 	'format=v1&html64=Zh&context64=&selector=&opts=',
 	'format=v1&html64=&context64=%5Fw&selector=&opts=',
 	'format=v1&ht%6Dl64=&context64=&selector=&opts=',
-	'format=v1&html64=&context64=&selector&opts=',
+	'format=v1&html64=&context64&context64=&selector=&opts=',
 	'format=v1&html64=&context64=&selector=&opts=%43',
 	'format=v1&html64=&context64=&selector=&opts=IC',
 	'html=x',

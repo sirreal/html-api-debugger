@@ -27,23 +27,23 @@ const graph = {
 };
 
 assert.deepEqual( runtimeRelativeImports( graph[ 'main.mjs' ] ), [
-	'./byte-preview.mjs?ver=3.1',
-	'./byte-transport.mjs?ver=3.1',
-	'./runtime-controller.mjs?ver=3.1',
-	'./runtime-wiring.mjs?ver=3.1',
-	'./ui-transactions.mjs?ver=3.1',
+	'./byte-preview.mjs?ver=3.2',
+	'./byte-transport.mjs?ver=3.2',
+	'./runtime-controller.mjs?ver=3.2',
+	'./runtime-wiring.mjs?ver=3.2',
+	'./ui-transactions.mjs?ver=3.2',
 ] );
 assert.deepEqual( runtimeRelativeImports( graph[ 'runtime-controller.mjs' ] ), [
-	'./canonical-url.mjs?ver=3.1',
-	'./byte-preview.mjs?ver=3.1',
-	'./byte-transport.mjs?ver=3.1',
-	'./response-transport.mjs?ver=3.1',
+	'./canonical-url.mjs?ver=3.2',
+	'./byte-preview.mjs?ver=3.2',
+	'./byte-transport.mjs?ver=3.2',
+	'./response-transport.mjs?ver=3.2',
 ] );
 assert.deepEqual( runtimeRelativeImports( graph[ 'canonical-url.mjs' ] ), [
-	'./byte-transport.mjs?ver=3.1',
+	'./byte-transport.mjs?ver=3.2',
 ] );
 assert.deepEqual( runtimeRelativeImports( graph[ 'response-transport.mjs' ] ), [
-	'./byte-transport.mjs?ver=3.1',
+	'./byte-transport.mjs?ver=3.2',
 ] );
 assert.deepEqual( runtimeRelativeImports( graph[ 'runtime-wiring.mjs' ] ), [] );
 assert.deepEqual( runtimeRelativeImports( graph[ 'ui-transactions.mjs' ] ), [] );
@@ -52,7 +52,7 @@ assert.deepEqual( runtimeRelativeImports( graph[ 'byte-transport.mjs' ] ), [] );
 
 for ( const [ file, text ] of Object.entries( graph ) ) {
 	for ( const specifier of runtimeRelativeImports( text ) ) {
-		assert.match( specifier, /\?ver=3\.1$/u, `${ file } has an unversioned live relative import` );
+		assert.match( specifier, /\?ver=3\.2$/u, `${ file } has an unversioned live relative import` );
 	}
 }
 

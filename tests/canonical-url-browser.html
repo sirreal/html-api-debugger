@@ -1,0 +1,51 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Canonical URL browser regression</title>
+<pre id="result">RUNNING</pre>
+<script type="module">
+	import {
+		parseCanonicalUrl,
+		serializeCanonicalUrl,
+	} from '../html-api-debugger/canonical-url.mjs';
+
+	const output = document.getElementById( 'result' );
+	const input = new URL(
+		'http://localhost:8888/wp-admin/admin.php?page=html-api-debugger&format=v1&html64=PGZvbz4&context64&selector&opts',
+	);
+
+	try {
+		const parsed = parseCanonicalUrl( input );
+		if ( new TextDecoder( 'utf-8', { fatal: true } ).decode( parsed.htmlBytes ) !== '<foo>' ) {
+			throw new Error( 'HTML bytes did not decode to <foo>' );
+		}
+		if (
+			parsed.contextBytes.length !== 0 ||
+			parsed.selector !== '' ||
+			parsed.opts !== '' ||
+			parsed.needsCanonicalization !== true
+		) {
+			throw new Error( 'bare empty fields were not accepted as noncanonical empty values' );
+		}
+
+		const canonical = serializeCanonicalUrl( input, parsed );
+		if (
+			canonical.href !==
+			'http://localhost:8888/wp-admin/admin.php?page=html-api-debugger&format=v1&html64=PGZvbz4&context64=&selector=&opts='
+		) {
+			throw new Error( `unexpected canonical URL: ${ canonical.href }` );
+		}
+
+		document.body.dataset.result = 'pass';
+		output.textContent = 'PASS';
+		void fetch( '/__canonical_url_result__/pass', { mode: 'no-cors' } ).catch(
+			() => {},
+		);
+	} catch ( error ) {
+		document.body.dataset.result = 'fail';
+		output.textContent = `FAIL\n${ error.stack ?? error }`;
+		void fetch( '/__canonical_url_result__/fail', { mode: 'no-cors' } ).catch(
+			() => {},
+		);
+		throw error;
+	}
+</script>

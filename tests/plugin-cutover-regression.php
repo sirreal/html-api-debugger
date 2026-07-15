@@ -168,7 +168,7 @@ if ( 'invalid' === $mode ) {
 
 require dirname( __DIR__ ) . '/html-api-debugger/html-api-debugger.php';
 
-html_api_debugger_cutover_assert_same( 'plugin version constant is cache-busted', '3.1', HTML_API_Debugger\VERSION );
+html_api_debugger_cutover_assert_same( 'plugin version constant is cache-busted', '3.2', HTML_API_Debugger\VERSION );
 
 do_action( 'init' );
 
@@ -191,7 +191,7 @@ html_api_debugger_cutover_assert_same(
 );
 
 foreach ( $test_modules as $id => $module ) {
-	html_api_debugger_cutover_assert_same( "module {$id} uses version 3.1", '3.1', $module['version'] );
+	html_api_debugger_cutover_assert_same( "module {$id} uses version 3.2", '3.2', $module['version'] );
 }
 html_api_debugger_cutover_assert_same(
 	'main module is registered',
@@ -200,7 +200,7 @@ html_api_debugger_cutover_assert_same(
 );
 
 do_action( 'admin_enqueue_scripts', 'toplevel_page_html-api-debugger' );
-html_api_debugger_cutover_assert_same( 'debugger stylesheet uses version 3.1', '3.1', $test_styles['html-api-debugger']['version'] );
+html_api_debugger_cutover_assert_same( 'debugger stylesheet uses version 3.2', '3.2', $test_styles['html-api-debugger']['version'] );
 html_api_debugger_cutover_assert_same( 'main module is enqueued on the debugger page', array( '@html-api-debugger/main' ), $test_enqueued_modules );
 
 do_action( 'admin_menu' );
