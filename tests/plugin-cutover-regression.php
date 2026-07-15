@@ -168,7 +168,7 @@ if ( 'invalid' === $mode ) {
 
 require dirname( __DIR__ ) . '/html-api-debugger/html-api-debugger.php';
 
-html_api_debugger_cutover_assert_same( 'plugin version constant is cache-busted', '3.0', HTML_API_Debugger\VERSION );
+html_api_debugger_cutover_assert_same( 'plugin version constant is cache-busted', '3.1', HTML_API_Debugger\VERSION );
 
 do_action( 'init' );
 
@@ -191,7 +191,7 @@ html_api_debugger_cutover_assert_same(
 );
 
 foreach ( $test_modules as $id => $module ) {
-	html_api_debugger_cutover_assert_same( "module {$id} uses version 3.0", '3.0', $module['version'] );
+	html_api_debugger_cutover_assert_same( "module {$id} uses version 3.1", '3.1', $module['version'] );
 }
 html_api_debugger_cutover_assert_same(
 	'main module is registered',
@@ -200,7 +200,7 @@ html_api_debugger_cutover_assert_same(
 );
 
 do_action( 'admin_enqueue_scripts', 'toplevel_page_html-api-debugger' );
-html_api_debugger_cutover_assert_same( 'debugger stylesheet uses version 3.0', '3.0', $test_styles['html-api-debugger']['version'] );
+html_api_debugger_cutover_assert_same( 'debugger stylesheet uses version 3.1', '3.1', $test_styles['html-api-debugger']['version'] );
 html_api_debugger_cutover_assert_same( 'main module is enqueued on the debugger page', array( '@html-api-debugger/main' ), $test_enqueued_modules );
 
 do_action( 'admin_menu' );
@@ -243,6 +243,15 @@ html_api_debugger_cutover_assert_same(
 	'shell contains byte inspection controls',
 	true,
 	false !== strpos( $first_shell[0], 'Exact REST response envelopes' ) && false !== strpos( $first_shell[0], 'Convert and edit as UTF-8' )
+);
+html_api_debugger_cutover_assert_same(
+	'rendered input is inspectable but has no active sandbox capabilities',
+	true,
+	false !== strpos( $first_shell[0], 'sandbox="allow-same-origin"' ) &&
+	false === strpos( $first_shell[0], 'allow-scripts' ) &&
+	false === strpos( $first_shell[0], 'allow-forms' ) &&
+	false === strpos( $first_shell[0], 'allow-modals' ) &&
+	false === strpos( $first_shell[0], 'allow-popups' )
 );
 
 $page_reflection = new ReflectionFunction( 'HTML_API_Debugger\\Interactivity\\generate_page' );

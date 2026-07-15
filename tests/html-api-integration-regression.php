@@ -183,6 +183,19 @@ if (
 }
 echo "ok - zero context controls normalized fragment processing\n";
 
+$noscript_context_result = HTML_API_Debugger\HTML_API_Integration\get_tree(
+	'x',
+	array(
+		'context_html' => '<noscript><body>',
+		'selector' => null,
+	)
+);
+if ( 'BODY' !== $noscript_context_result['contextNode'] ) {
+	echo "not ok - scripting-disabled NOSCRIPT context selects BODY\n";
+	exit( 1 );
+}
+echo "ok - scripting-disabled NOSCRIPT context selects BODY\n";
+
 html_api_debugger_assert_tree(
 	'full parser preserves document nesting',
 	'<div><p>a</p>b</div>c',

@@ -251,6 +251,14 @@ assert.equal(
 assert.equal(
 	resolveFragmentTarget(
 		/** @type {any} */ ( emptyContextDocument ),
+		'<noscript><body>',
+	),
+	emptyContextDocument.body,
+	'scripting-disabled NOSCRIPT exposes its BODY token',
+);
+assert.equal(
+	resolveFragmentTarget(
+		/** @type {any} */ ( emptyContextDocument ),
 		'<body a=b">',
 	),
 	emptyContextDocument.body,

@@ -138,7 +138,6 @@ const RAW_TEXT_ELEMENTS = new Set( [
 	'iframe',
 	'noembed',
 	'noframes',
-	'noscript',
 	'style',
 	'xmp',
 ] );

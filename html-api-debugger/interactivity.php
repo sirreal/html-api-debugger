@@ -161,7 +161,7 @@ function generate_page(): string {
 			src="about:blank"
 			id="rendered_iframe"
 			referrerpolicy="no-referrer"
-			sandbox="allow-forms allow-modals allow-popups allow-scripts allow-same-origin"></iframe>
+			sandbox="allow-same-origin"></iframe>
 	</div>
 
 	<details class="full-width" data-wp-bind--hidden="state.normalizedUnavailable">
