@@ -144,4 +144,69 @@ foreach ( $invalid_queries as $invalid_query ) {
 	}
 }
 
+$redirect_params = HTML_API_Debugger\get_legacy_redirect_params(
+	array(
+		'html' => html_api_debugger_legacy_slash( "\xff" ),
+		'contextHTML' => html_api_debugger_legacy_slash( "\xc3\xbf" ),
+		'selector' => html_api_debugger_legacy_slash( '*~ !()💣' ),
+		'html-opts' => html_api_debugger_legacy_slash( 'CiV' ),
+	)
+);
+$redirect_url = HTML_API_Debugger\build_canonical_admin_url(
+	'https://example.test/wp-admin/admin.php',
+	'html-api-debugger',
+	$redirect_params
+);
+html_api_debugger_legacy_assert_same(
+	'canonical redirect spelling matches browser form encoding',
+	'https://example.test/wp-admin/admin.php?page=html-api-debugger&format=v1&html64=_w&context64=w78&selector=*%7E+%21%28%29%F0%9F%92%A3&opts=CiV',
+	$redirect_url
+);
+
+$query = array();
+parse_str( (string) parse_url( $redirect_url, PHP_URL_QUERY ), $query );
+html_api_debugger_legacy_assert_same( 'redirect query round-trips raw FF', "\xff", HTML_API_Debugger\decode_base64url( $query['html64'] ) );
+html_api_debugger_legacy_assert_same( 'redirect query round-trips UTF-8 C3 BF', "\xc3\xbf", HTML_API_Debugger\decode_base64url( $query['context64'] ) );
+html_api_debugger_legacy_assert_same( 'redirect query round-trips selector', '*~ !()💣', $query['selector'] );
+
+$redirect_with_base_query = HTML_API_Debugger\build_canonical_admin_url(
+	'https://example.test/wp-admin/admin.php?unrelated=a%20b',
+	'html-api-debugger',
+	$redirect_params
+);
+html_api_debugger_legacy_assert_same(
+	'unrelated base query spelling is preserved',
+	true,
+	0 === strpos( $redirect_with_base_query, 'https://example.test/wp-admin/admin.php?unrelated=a%20b&page=' )
+);
+
+$invalid_redirects = array(
+	array( 'https://example.test/wp-admin/admin.php', 'x&format=v2', $redirect_params ),
+	array( 'https://example.test/wp-admin/admin.php', 'x y', $redirect_params ),
+	array( 'https://example.test/wp-admin/admin.php', 'x%0A', $redirect_params ),
+	array( "https://example.test/wp-admin/admin.php\r\n", 'html-api-debugger', $redirect_params ),
+	array( 'https://example.test/wp admin/admin.php', 'html-api-debugger', $redirect_params ),
+	array( 'ftp://example.test/admin.php', 'html-api-debugger', $redirect_params ),
+	array( 'https:///admin.php', 'html-api-debugger', $redirect_params ),
+	array( 'https://example.test/admin.php#fragment', 'html-api-debugger', $redirect_params ),
+	array( 'https://example.test/admin.php?format=v2', 'html-api-debugger', $redirect_params ),
+	array( 'https://example.test/admin.php?html64=bad', 'html-api-debugger', $redirect_params ),
+	array( 'https://example.test/admin.php?ht%6Dl64=bad', 'html-api-debugger', $redirect_params ),
+	array( 'https://example.test/admin.php?page=other', 'html-api-debugger', $redirect_params ),
+	array( 'https://example.test/admin.php?%GG=x', 'html-api-debugger', $redirect_params ),
+	array( 'https://example.test/admin.php', 'html-api-debugger', array_merge( $redirect_params, array( 'extra' => '' ) ) ),
+	array( 'https://example.test/admin.php', 'html-api-debugger', array_merge( $redirect_params, array( 'format' => 'v2' ) ) ),
+	array( 'https://example.test/admin.php', 'html-api-debugger', array_merge( $redirect_params, array( 'html64' => 'Zg==' ) ) ),
+	array( 'https://example.test/admin.php', 'html-api-debugger', array_merge( $redirect_params, array( 'selector' => "\xff" ) ) ),
+	array( 'https://example.test/admin.php', 'html-api-debugger', array_merge( $redirect_params, array( 'opts' => 'IC' ) ) ),
+);
+foreach ( $invalid_redirects as $invalid_redirect ) {
+	try {
+		HTML_API_Debugger\build_canonical_admin_url( $invalid_redirect[0], $invalid_redirect[1], $invalid_redirect[2] );
+		html_api_debugger_legacy_fail( 'invalid canonical redirect was accepted' );
+	} catch ( InvalidArgumentException $e ) {
+		echo "ok - invalid canonical redirect is rejected\n";
+	}
+}
+
 echo "All legacy URL migration tests passed.\n";
