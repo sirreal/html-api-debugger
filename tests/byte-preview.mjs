@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 
 import {
 	ByteDocumentPreview,
+	resolveFragmentTarget,
 	splitByteSpan,
 } from '../html-api-debugger/byte-preview.mjs';
 
@@ -128,5 +129,87 @@ for ( const [ start, length ] of [
 ] ) {
 	assert.throws( () => splitByteSpan( spanBytes, start, length ), TypeError );
 }
+
+function fakeContextDocument( walkedElements = [], bodyHasNodes = false, headHasNodes = false ) {
+	const body = { name: 'BODY', hasChildNodes: () => bodyHasNodes };
+	const head = { name: 'HEAD', hasChildNodes: () => headHasNodes };
+	const documentElement = { name: 'HTML' };
+	let offset = -1;
+	const walker = {
+		currentNode: documentElement,
+		nextNode() {
+			offset += 1;
+			if ( offset >= walkedElements.length ) {
+				return false;
+			}
+			this.currentNode = walkedElements[ offset ];
+			return true;
+		},
+	};
+	return {
+		body,
+		head,
+		documentElement,
+		createTreeWalker() {
+			return walker;
+		},
+	};
+}
+
+const emptyContextDocument = fakeContextDocument();
+assert.equal(
+	resolveFragmentTarget(
+		/** @type {any} */ ( emptyContextDocument ),
+		'<!DOCTYPE html><head>',
+	),
+	emptyContextDocument.head,
+	'empty authored HEAD remains the native fragment context',
+);
+assert.equal(
+	resolveFragmentTarget(
+		/** @type {any} */ ( emptyContextDocument ),
+		'<!DOCTYPE html><body>',
+	),
+	emptyContextDocument.body,
+	'empty authored BODY remains the native fragment context',
+);
+assert.equal(
+	resolveFragmentTarget(
+		/** @type {any} */ ( emptyContextDocument ),
+		'<!DOCTYPE html><html>',
+	),
+	emptyContextDocument.documentElement,
+	'empty authored HTML uses the document element',
+);
+assert.equal(
+	resolveFragmentTarget(
+		/** @type {any} */ ( emptyContextDocument ),
+		'<!DOCTYPE html>',
+	),
+	emptyContextDocument.documentElement,
+	'doctype-only context falls back to the document element',
+);
+
+const nestedContext = { name: 'SPAN' };
+const populatedContextDocument = fakeContextDocument(
+	[ { name: 'HTML' }, { name: 'BODY' }, { name: 'MAIN' }, nestedContext ],
+	true,
+);
+assert.equal(
+	resolveFragmentTarget(
+		/** @type {any} */ ( populatedContextDocument ),
+		'<!DOCTYPE html><body><main><span>',
+	),
+	nestedContext,
+	'populated context uses the final parsed element',
+);
+assert.throws(
+	() =>
+		resolveFragmentTarget(
+			/** @type {any} */ ( emptyContextDocument ),
+			/** @type {any} */ ( null ),
+		),
+	TypeError,
+);
 
 console.log( 'All byte preview tests passed.' );

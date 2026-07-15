@@ -5,169 +5,204 @@ import {
 import { replaceInvisible } from '@html-api-debugger/replace-invisible-chars';
 import * as I from '@wordpress/interactivity';
 
-const NS = 'html-api-debugger';
+// @ts-expect-error TypeScript does not resolve browser URL query strings.
+import * as BytePreviewLive from './byte-preview.mjs?ver=3.0';
+// @ts-expect-error TypeScript does not resolve browser URL query strings.
+import * as ByteTransportLive from './byte-transport.mjs?ver=3.0';
+// @ts-expect-error TypeScript does not resolve browser URL query strings.
+import * as RuntimeControllerLive from './runtime-controller.mjs?ver=3.0';
+// @ts-expect-error TypeScript does not resolve browser URL query strings.
+import * as RuntimeWiringLive from './runtime-wiring.mjs?ver=3.0';
 
-const DEBOUNCE_TIMEOUT = 150;
+const { ByteDocumentPreview, resolveFragmentTarget } =
+	/** @type {typeof import('./byte-preview.mjs')} */ ( BytePreviewLive );
+const { decodeUtf8, formatByteRows, isValidUtf8, projectUtf8 } =
+	/** @type {typeof import('./byte-transport.mjs')} */ ( ByteTransportLive );
+const { ByteRuntimeController } =
+	/** @type {typeof import('./runtime-controller.mjs')} */ (
+		RuntimeControllerLive
+	);
+const {
+	BytePreviewCoordinator,
+	ByteRequestBoundary,
+	DisposedRuntimeBoundaryError,
+	SupersededRuntimeOperationError,
+} = /** @type {typeof import('./runtime-wiring.mjs')} */ ( RuntimeWiringLive );
+
+const NS = 'html-api-debugger';
 const DEFAULT_HTML5_BODY_CONTEXT = '<!DOCTYPE html><body>';
+const PLAYGROUND_BASE = new URL(
+	'https://playground.wordpress.net/?plugin=html-api-debugger',
+);
+
 const RENDERED_IFRAME = /** @type {HTMLIFrameElement} */ (
 	document.getElementById( 'rendered_iframe' )
 );
 
-/** @type {Element|null} */
-let CONTEXT_ELEMENT = null;
+const cfg = /** @type {{restEndpoint: string, nonce: string, supports: {create_fragment_advanced: boolean, selectors: boolean}}} */ (
+	I.getConfig( NS )
+);
 
-const cfg = I.getConfig( NS );
-let { nonce } = cfg;
+const requestBoundary = new ByteRequestBoundary( {
+	endpoint: cfg.restEndpoint,
+	nonce: cfg.nonce,
+	fetch: window.fetch.bind( window ),
+	AbortController,
+} );
 
-/** @type {AbortController|null} */
-let inFlightRequestAbortController = null;
+const controller = new ByteRuntimeController( {
+	url: new URL( document.location.href ),
+	supports: cfg.supports,
+	request: ( body ) => requestBoundary.request( body ),
+	replaceUrl: ( url ) => history.replaceState( null, '', url ),
+	confirmConversion: ( message ) => window.confirm( message ),
+} );
 
-/** @type {AbortController|null} */
-let debounceInputAbortController = null;
-
-/** @type {MutationObserver|null} */
-let mutationObserver = null;
-
-/**
- * @typedef Link
- * @property {string} href
- * @property {string} text
- *
- *
- * @typedef DOM
- * @property {string|undefined} renderingMode
- * @property {string|undefined} documentTitle
- * @property {string|undefined} doctypeName
- * @property {string|undefined} doctypeSystemId
- * @property {string|undefined} doctypePublicId
- * @property {string|undefined} contextNode
- *
- *
- * @typedef HTMLAPISpan
- * @property {number} start
- * @property {number} length
- *
- *
- * @typedef Supports
- * @property {boolean} create_fragment_advanced
- * @property {boolean} selectors
- *
- *
- * @typedef HtmlApiResponse
- * @property {any} error
- * @property {Supports} supports
- * @property {{tree: any, compatMode: string, documentTitle: string|null, doctypeName: string|null, doctypePublicId: string|null, doctypeSystemId: string|null, playback: ReadonlyArray<[string,any]>, warnings: ReadonlyArray<string> }|null} result
- * @property {string|null} normalizedHtml
- * @property {string} html
- *
- *
- * @typedef Options
- * @property {boolean} showClosers
- * @property {boolean} showInvisible
- * @property {boolean} showVirtual
- * @property {'breadcrumbs'|'insertionMode'} hoverInfo
- *
- *
- * @typedef {'showClosers'|'showInvisible'|'showVirtual'} BooleanConfigurationOption
- *
- *
- * @typedef  State
- * @property {ReadonlyArray<string>} treeWarnings
- * @property {string} selector
- * @property {string|null} selectorErrorMessage
- * @property {boolean} showClosers
- * @property {boolean} showInvisible
- * @property {boolean} showVirtual
- * @property {'breadcrumbs'|'insertionMode'} hoverInfo
- * @property {any|undefined} playbackTree
- * @property {string|undefined} playbackHTML
- * @property {number|null} playbackPoint
- * @property {number|null} playbackLength
- * @property {string|null} htmlApiDocumentTitle
- * @property {string|null} htmlApiDoctypeName
- * @property {string|null} htmlApiDoctypePublicId
- * @property {string|null} htmlApiDoctypeSystemId
- * @property {string|null} normalizedHtml
- * @property {string} formattedHtmlapiResponse
- * @property {HtmlApiResponse} htmlapiResponse
- * @property {URL} playgroundLink
- * @property {string} html
- * @property {string} contextHTML
- * @property {string|null} contextHTMLForUse
- * @property {number|null} previewCorePrNumber
- * @property {number|null} previewGutenbergPrNumber
- * @property {Link|null} previewCoreLink
- * @property {Link|null} previewGutenbergLink
- * @property {boolean} checkingForPRPlaygroundLink
- * @property {boolean} hoverBreadcrumbs
- * @property {boolean} hoverInsertion
- * @property {DOM} DOM
- * @property {boolean} hasMutatedDom
- * @property {HTMLAPISpan|false} span
- * @property {string} htmlForDisplay
- * @property {Options} options
- *
- *
- * @typedef Store
- * @property {()=>void} callAPI
- * @property {()=>void} clearSpan
- * @property {(e: InputEvent)=>void} handleContextHtmlInput
- * @property {()=>void} handleCopyClick
- * @property {()=>void} handleCopyPrClick
- * @property {()=>void} handleCopyPrInput
- * @property {()=>void} handleDefaultBodyContextClick
- * @property {()=>void} handleInput
- * @property {()=>void} handleShowClosersClick
- * @property {()=>void} handleShowInvisibleClick
- * @property {()=>void} handleShowVirtualClick
- * @property {()=>void} onRenderedIframeLoad
- * @property {()=>void} redrawDOMTreeFromIframe
- * @property {()=>void} render
- * @property {()=>void} watch
- * @property {()=>void} watchURL
- * @property {State} state
- */
-
-const createStore = /** @type {typeof I.store<Store>} */ ( I.store );
-
-const HTML_OPTIONS_PARAM = 'html-opts';
+/** @typedef {'showClosers'|'showInvisible'|'showVirtual'} BooleanConfigurationOption */
+/** @typedef {'html'|'context'} SourceKind */
 
 const BOOLEAN_CONFIGURATION_OPTIONS = /** @type {const} */ ( [
 	[ 'C', 'c', 'showClosers' ],
 	[ 'I', 'i', 'showInvisible' ],
 	[ 'V', 'v', 'showVirtual' ],
 ] );
-
 const booleanConfigurationOverrides = getInitialBooleanConfigurationOverrides();
 
-/** @type {Store} */
-const store = createStore( NS, {
-	// @ts-expect-error Server provided state is not included here.
-	state: {
-		showClosers: getInitialBooleanConfigurationValue( 'showClosers' ),
-		showInvisible: getInitialBooleanConfigurationValue( 'showInvisible' ),
-		showVirtual: getInitialBooleanConfigurationValue( 'showVirtual' ),
+/** @type {Element|null} */
+let CONTEXT_ELEMENT = null;
+/** @type {MutationObserver|null} */
+let mutationObserver = null;
+/** @type {InstanceType<typeof BytePreviewCoordinator>} */
+let previewCoordinator;
 
+const initialHtmlValid = isValidUtf8( controller.htmlBytes );
+const initialContextValid = isValidUtf8( controller.contextBytes );
+const storedHoverInfo = localStorage.getItem( `${ NS }-hoverInfo` );
+
+const createStore = /** @type {any} */ ( I.store );
+const store = createStore( NS, {
+	state: {
+		revision: 0,
+		urlError: controller.urlError,
+		transportError: null,
+		previewError: null,
+		urlUnusuallyLong: false,
+		fragmentProjectionLossy: false,
+		contextUnsupported: ! cfg.supports.create_fragment_advanced,
+		processing: false,
+		htmlView: initialHtmlValid ? 'text' : 'bytes',
+		contextView: initialContextValid ? 'text' : 'bytes',
+		processedView: initialHtmlValid ? 'text' : 'bytes',
+		normalizedView: 'text',
 		playbackPoint: null,
 		previewCorePrNumber: null,
 		previewGutenbergPrNumber: null,
+		selector: controller.selector,
+		selectorErrorMessage: null,
+		showClosers: getInitialBooleanConfigurationValue( 'showClosers' ),
+		showInvisible: getInitialBooleanConfigurationValue( 'showInvisible' ),
+		showVirtual: getInitialBooleanConfigurationValue( 'showVirtual' ),
+		hoverInfo:
+			storedHoverInfo === 'insertionMode' ? 'insertionMode' : 'breadcrumbs',
+		hasMutatedDom: false,
+		DOM: {
+			renderingMode: '',
+			documentTitle: '',
+			doctypeName: '',
+			doctypeSystemId: '',
+			doctypePublicId: '',
+			contextNode: '',
+		},
+		htmlapiResponse: {
+			supports: cfg.supports,
+			html: '',
+			error: null,
+			result: null,
+			normalizedHtml: null,
+		},
 
+		get htmlText() {
+			void store.state.revision;
+			return sourceText( 'html' );
+		},
+		get contextText() {
+			void store.state.revision;
+			return sourceText( 'context' );
+		},
+		get htmlByteRows() {
+			void store.state.revision;
+			return byteRowsText( controller.htmlBytes );
+		},
+		get contextByteRows() {
+			void store.state.revision;
+			return byteRowsText( controller.contextBytes );
+		},
+		get htmlTextHidden() {
+			return store.state.htmlView !== 'text';
+		},
+		get htmlBytesHidden() {
+			return store.state.htmlView !== 'bytes';
+		},
+		get contextTextHidden() {
+			return store.state.contextView !== 'text';
+		},
+		get contextBytesHidden() {
+			return store.state.contextView !== 'bytes';
+		},
+		get htmlConversionHidden() {
+			void store.state.revision;
+			return isValidUtf8( controller.htmlBytes );
+		},
+		get contextConversionHidden() {
+			void store.state.revision;
+			return isValidUtf8( controller.contextBytes );
+		},
+		get processedText() {
+			void store.state.revision;
+			return displayBytes( currentProcessedBytes() );
+		},
+		get processedByteRows() {
+			void store.state.revision;
+			return byteRowsText( currentProcessedBytes() );
+		},
+		get processedTextHidden() {
+			return store.state.processedView !== 'text';
+		},
+		get processedBytesHidden() {
+			return store.state.processedView !== 'bytes';
+		},
+		get normalizedText() {
+			void store.state.revision;
+			const bytes = controller.normalizedBytes;
+			return bytes === null ? '' : displayBytes( bytes );
+		},
+		get normalizedByteRows() {
+			void store.state.revision;
+			const bytes = controller.normalizedBytes;
+			return bytes === null ? '' : byteRowsText( bytes );
+		},
+		get normalizedTextHidden() {
+			return store.state.normalizedView !== 'text';
+		},
+		get normalizedBytesHidden() {
+			return store.state.normalizedView !== 'bytes';
+		},
+		get normalizedUnavailable() {
+			void store.state.revision;
+			return controller.normalizedBytes === null;
+		},
 		get options() {
 			return {
 				showClosers: store.state.showClosers,
 				showInvisible: store.state.showInvisible,
 				showVirtual: store.state.showVirtual,
 				hoverInfo: store.state.hoverInfo,
-				selector: store.state.htmlapiResponse.supports.selectors
-					? store.state.selector
-					: '',
+				selector: cfg.supports.selectors ? store.state.selector : '',
 			};
 		},
-
 		get treeWarnings() {
 			return store.state.htmlapiResponse.result?.warnings ?? [];
 		},
-
 		get playbackTree() {
 			if ( store.state.playbackPoint === null ) {
 				return undefined;
@@ -176,676 +211,602 @@ const store = createStore( NS, {
 				store.state.playbackPoint
 			]?.[ 1 ];
 		},
-
-		get playbackHTML() {
-			if ( store.state.playbackPoint === null ) {
-				return undefined;
-			}
-			return store.state.htmlapiResponse.result?.playback?.[
-				store.state.playbackPoint
-			]?.[ 0 ];
-		},
-
 		get playbackLength() {
-			return store.state.htmlapiResponse.result?.playback?.length;
+			return store.state.htmlapiResponse.result?.playback?.length ?? 0;
 		},
-
-		get contextHTMLForUse() {
-			return store.state.htmlapiResponse.supports.create_fragment_advanced
-				? store.state.contextHTML.trim() || null
-				: null;
-		},
-
-		/** @type {Link|null} */
-		get previewCoreLink() {
-			if ( ! store.state.previewCorePrNumber ) {
-				return null;
-			}
-			return {
-				href: `https://github.com/WordPress/wordpress-develop/pull/${ store.state.previewCorePrNumber }`,
-				text: `wordpress-develop #${ store.state.previewCorePrNumber }`,
-			};
-		},
-
-		/** @type {Link|null} */
-		get previewGutenbergLink() {
-			if ( ! store.state.previewGutenbergPrNumber ) {
-				return null;
-			}
-			return {
-				href: `https://github.com/WordPress/gutenberg/pull/${ store.state.previewGutenbergPrNumber }`,
-				text: `Gutenberg #${ store.state.previewGutenbergPrNumber }`,
-			};
-		},
-
-		hoverInfo: /** @type {typeof store.state.hoverInfo} */ (
-			localStorage.getItem( `${ NS }-hoverInfo` )
-		),
-
-		get htmlApiDocumentTitle() {
-			return store.state.showInvisible
-				? store.state.htmlapiResponse.result?.documentTitle &&
-						replaceInvisible( store.state.htmlapiResponse.result.documentTitle )
-				: store.state.htmlapiResponse.result?.documentTitle;
-		},
-
-		get htmlApiDoctypeName() {
-			return store.state.showInvisible
-				? store.state.htmlapiResponse.result?.doctypeName &&
-						replaceInvisible( store.state.htmlapiResponse.result.doctypeName )
-				: store.state.htmlapiResponse.result?.doctypeName;
-		},
-
-		get htmlApiDoctypePublicId() {
-			return store.state.showInvisible
-				? store.state.htmlapiResponse.result?.doctypePublicId &&
-						replaceInvisible(
-							store.state.htmlapiResponse.result.doctypePublicId,
-						)
-				: store.state.htmlapiResponse.result?.doctypePublicId;
-		},
-		get htmlApiDoctypeSystemId() {
-			return store.state.showInvisible
-				? store.state.htmlapiResponse.result?.doctypeSystemId &&
-						replaceInvisible(
-							store.state.htmlapiResponse.result.doctypeSystemId,
-						)
-				: store.state.htmlapiResponse.result?.doctypeSystemId;
-		},
-
-		get normalizedHtml() {
-			if ( ! store.state.htmlapiResponse.normalizedHtml ) {
-				return '';
-			}
-			return store.state.showInvisible
-				? replaceInvisible( store.state.htmlapiResponse.normalizedHtml )
-				: store.state.htmlapiResponse.normalizedHtml;
-		},
-
-		get formattedHtmlapiResponse() {
-			return JSON.stringify( store.state.htmlapiResponse, undefined, 2 );
-		},
-
 		get hoverBreadcrumbs() {
 			return store.state.hoverInfo === 'breadcrumbs';
 		},
-
 		get hoverInsertion() {
 			return store.state.hoverInfo === 'insertionMode';
 		},
-
-		get playgroundLink() {
-			// We'll embed a path in a URL.
-			const searchParams = new URLSearchParams( { page: NS } );
-			if ( store.state.html ) {
-				searchParams.set( 'html', store.state.html );
-			}
-			if ( store.state.contextHTMLForUse ) {
-				searchParams.set( 'contextHTML', store.state.contextHTMLForUse );
-			}
-			if ( store.state.selector ) {
-				searchParams.set( 'selector', store.state.selector );
-			}
-			searchParams.set( HTML_OPTIONS_PARAM, getResolvedHtmlOptions() );
-			const base = '/wp-admin/admin.php';
-			const u = new URL(
-				'https://playground.wordpress.net/?plugin=html-api-debugger',
+		get htmlApiDocumentTitle() {
+			return displayOptionalString(
+				store.state.htmlapiResponse.result?.documentTitle,
 			);
-			u.searchParams.set( 'url', `${ base }?${ searchParams.toString() }` );
-			return u;
 		},
+		get htmlApiDoctypeName() {
+			return displayOptionalString(
+				store.state.htmlapiResponse.result?.doctypeName,
+			);
+		},
+		get htmlApiDoctypePublicId() {
+			return displayOptionalString(
+				store.state.htmlapiResponse.result?.doctypePublicId,
+			);
+		},
+		get htmlApiDoctypeSystemId() {
+			return displayOptionalString(
+				store.state.htmlapiResponse.result?.doctypeSystemId,
+			);
+		},
+		get formattedRawResponse() {
+			void store.state.revision;
+			return controller.rawResponse === null
+				? ''
+				: JSON.stringify( controller.rawResponse, undefined, 2 );
+		},
+		get previewCoreLink() {
+			const number = store.state.previewCorePrNumber;
+			return number === null
+				? null
+				: {
+						href: `https://github.com/WordPress/wordpress-develop/pull/${ number }`,
+						text: `wordpress-develop #${ number }`,
+					};
+		},
+		get previewGutenbergLink() {
+			const number = store.state.previewGutenbergPrNumber;
+			return number === null
+				? null
+				: {
+						href: `https://github.com/WordPress/gutenberg/pull/${ number }`,
+						text: `Gutenberg #${ number }`,
+					};
+		},
+	},
 
-		get htmlForDisplay() {
-			/** @type {string | undefined} */
-			const html = store.state.playbackHTML ?? store.state.htmlapiResponse.html;
-			if ( ! html ) {
-				return '';
+	actions: {
+		showHtmlText() {
+			if ( isValidUtf8( controller.htmlBytes ) ) {
+				store.state.htmlView = 'text';
 			}
-			return store.state.showInvisible ? replaceInvisible( html ) : html;
+		},
+		showHtmlBytes() {
+			store.state.htmlView = 'bytes';
+		},
+		showContextText() {
+			if ( isValidUtf8( controller.contextBytes ) ) {
+				store.state.contextView = 'text';
+			}
+		},
+		showContextBytes() {
+			store.state.contextView = 'bytes';
+		},
+		showProcessedText() {
+			if ( isValidUtf8( currentProcessedBytes() ) ) {
+				store.state.processedView = 'text';
+			}
+		},
+		showProcessedBytes() {
+			store.state.processedView = 'bytes';
+		},
+		showNormalizedText() {
+			const bytes = controller.normalizedBytes;
+			if ( bytes !== null && isValidUtf8( bytes ) ) {
+				store.state.normalizedView = 'text';
+			}
+		},
+		showNormalizedBytes() {
+			store.state.normalizedView = 'bytes';
+		},
+		enableHtmlTextEditing: function* () {
+			yield convertSourceToText( 'html' );
+		},
+		enableContextTextEditing: function* () {
+			yield convertSourceToText( 'context' );
+		},
+		/** @param {InputEvent} event */
+		handleInput: function* ( event ) {
+			const text = /** @type {HTMLTextAreaElement} */ ( event.target ).value;
+			const operation = controller.editSource( 'html', text );
+			store.state.playbackPoint = null;
+			store.state.processedView = 'text';
+			touchState();
+			renderPreview();
+			yield settleControllerOperation( operation );
+		},
+		/** @param {InputEvent} event */
+		handleContextHtmlInput: function* ( event ) {
+			const text = /** @type {HTMLTextAreaElement} */ ( event.target ).value;
+			const operation = controller.editSource( 'context', text );
+			store.state.playbackPoint = null;
+			touchState();
+			renderPreview();
+			yield settleControllerOperation( operation );
+		},
+		handleDefaultBodyContextClick: function* () {
+			const operation = controller.editSource(
+				'context',
+				DEFAULT_HTML5_BODY_CONTEXT,
+			);
+			store.state.contextView = 'text';
+			store.state.playbackPoint = null;
+			touchState();
+			renderPreview();
+			yield settleControllerOperation( operation );
+		},
+		/** @param {InputEvent} event */
+		handleSelectorChange: function* ( event ) {
+			const selector = /** @type {HTMLTextAreaElement} */ ( event.target ).value;
+			if ( selector !== '' ) {
+				try {
+					document.createDocumentFragment().querySelector( selector );
+				} catch ( error ) {
+					if ( error instanceof DOMException && error.name === 'SyntaxError' ) {
+						store.state.selectorErrorMessage = error.message;
+						return;
+					}
+					throw error;
+				}
+			}
+			store.state.selector = selector;
+			store.state.selectorErrorMessage = null;
+			touchState();
+			yield settleControllerOperation( controller.setSelector( selector ) );
+		},
+		handleShowInvisibleClick: getToggleHandler( 'showInvisible' ),
+		handleShowClosersClick: getToggleHandler( 'showClosers' ),
+		handleShowVirtualClick: getToggleHandler( 'showVirtual' ),
+		/** @param {Event} event */
+		hoverInfoChange( event ) {
+			const value = /** @type {HTMLSelectElement} */ ( event.target ).value;
+			store.state.hoverInfo =
+				value === 'insertionMode' ? 'insertionMode' : 'breadcrumbs';
+			localStorage.setItem( `${ NS }-hoverInfo`, store.state.hoverInfo );
+		},
+		clearSpan,
+		handleSpanOver,
+		/** @param {InputEvent} event */
+		handlePlaybackChange( event ) {
+			const value = /** @type {HTMLInputElement} */ ( event.target )
+				.valueAsNumber;
+			store.state.playbackPoint = value - 1;
+			setResultViewDefault();
+			touchState();
+			renderHtmlApiOutput();
+			renderPreview();
+		},
+		/** @param {MouseEvent} event */
+		handleCopyTreeClick: function* ( event ) {
+			const useDomTree =
+				/** @type {HTMLButtonElement} */ ( event.target ).name === 'tree__dom';
+			const tree = useDomTree
+				? CONTEXT_ELEMENT ?? RENDERED_IFRAME.contentWindow?.document
+				: store.state.playbackTree ??
+					store.state.htmlapiResponse.result?.tree;
+			try {
+				yield navigator.clipboard.writeText(
+					printHtmlApiTreeText( tree, store.state.options ),
+				);
+			} catch {
+				window.alert( 'Copy failed, make sure the browser window is focused.' );
+			}
+		},
+		handleCopyClick: function* () {
+			const select = /** @type {HTMLSelectElement} */ (
+				document.getElementById( 'htmlapi-wp-version' )
+			);
+			const url = controller.getPlaygroundUrl(
+				PLAYGROUND_BASE,
+				getResolvedHtmlOptions(),
+				select.value,
+			);
+			yield copyUrl( url );
+		},
+		/** @param {InputEvent} event */
+		handleCopyCorePrInput( event ) {
+			store.state.previewCorePrNumber = positiveInputNumber( event );
+		},
+		/** @param {InputEvent} event */
+		handleCopyGutenbergPrInput( event ) {
+			store.state.previewGutenbergPrNumber = positiveInputNumber( event );
+		},
+		handleCopyPrClick: function* () {
+			const url = controller.getPlaygroundUrl(
+				PLAYGROUND_BASE,
+				getResolvedHtmlOptions(),
+			);
+			if ( store.state.previewCorePrNumber !== null ) {
+				url.searchParams.set(
+					'core-pr',
+					String( store.state.previewCorePrNumber ),
+				);
+			}
+			if ( store.state.previewGutenbergPrNumber !== null ) {
+				url.searchParams.set(
+					'gutenberg-pr',
+					String( store.state.previewGutenbergPrNumber ),
+				);
+			}
+			yield copyUrl( url );
 		},
 	},
 
-	clearSpan() {
-		const el = /** @type {HTMLElement} */ (
-			document.getElementById( 'processed-html' )
+	callbacks: {
+		run: function* () {
+			mutationObserver = new MutationObserver( () => {
+				store.state.hasMutatedDom = true;
+				const document = RENDERED_IFRAME.contentWindow?.document;
+				if ( document !== undefined ) {
+					redrawDomTree( document, CONTEXT_ELEMENT );
+				}
+			} );
+			touchState();
+			renderPreview();
+			if ( controller.urlError === null ) {
+				yield settleControllerOperation( controller.start() );
+			}
+		},
+		watch() {
+			renderHtmlApiOutput();
+			redrawCurrentDomTree();
+		},
+	},
+} );
+
+const documentPreview = new ByteDocumentPreview( RENDERED_IFRAME );
+previewCoordinator = new BytePreviewCoordinator( {
+	preview: documentPreview,
+	iframe: RENDERED_IFRAME,
+	resolveFragmentTarget: ( document ) =>
+		resolveFragmentTarget(
+			document,
+			projectUtf8( controller.contextBytes ),
+		),
+	onCurrentDocument( details ) {
+		CONTEXT_ELEMENT = details.contextElement;
+		store.state.fragmentProjectionLossy = details.fragmentLossy;
+		store.state.hasMutatedDom = false;
+		updateDomInfo( details.document, details.contextElement );
+		redrawDomTree( details.document, details.contextElement );
+		observeDocument( details.document );
+		touchState();
+	},
+	restoreCurrentDocument( details ) {
+		CONTEXT_ELEMENT = null;
+		store.state.fragmentProjectionLossy = false;
+		store.state.hasMutatedDom = false;
+		updateDomInfo( details.document, null );
+		redrawDomTree( details.document, null );
+		observeDocument( details.document );
+		touchState();
+	},
+	disconnectObserver() {
+		mutationObserver?.disconnect();
+	},
+	pagehideTarget: window,
+} );
+
+window.addEventListener( 'pagehide', () => requestBoundary.dispose(), {
+	once: true,
+} );
+
+/** @param {SourceKind} kind */
+function sourceBytes( kind ) {
+	return kind === 'html' ? controller.htmlBytes : controller.contextBytes;
+}
+
+/** @param {SourceKind} kind */
+function sourceText( kind ) {
+	const bytes = sourceBytes( kind );
+	return isValidUtf8( bytes ) ? decodeUtf8( bytes ) : projectUtf8( bytes );
+}
+
+/** @param {Uint8Array} bytes */
+function displayBytes( bytes ) {
+	const text = projectUtf8( bytes );
+	return store.state.showInvisible ? replaceInvisible( text ) : text;
+}
+
+/** @param {unknown} value */
+function displayOptionalString( value ) {
+	if ( typeof value !== 'string' ) {
+		return value ?? null;
+	}
+	return store.state.showInvisible ? replaceInvisible( value ) : value;
+}
+
+/** @param {Uint8Array} bytes */
+function byteRowsText( bytes ) {
+	const rows = formatByteRows( bytes );
+	if ( rows.length === 0 ) {
+		return '(empty)';
+	}
+	return rows
+		.map(
+			( row ) =>
+				`${ row.offset.toString( 16 ).toUpperCase().padStart( 8, '0' ) }  ${ row.hex.padEnd( 47 ) }  |${ row.gutter }|`,
+		)
+		.join( '\n' );
+}
+
+function currentProcessedBytes() {
+	return controller.getProcessedBytes( store.state.playbackPoint );
+}
+
+function touchState() {
+	store.state.revision += 1;
+	store.state.urlUnusuallyLong =
+		controller.urlError === null && controller.isUrlUnusuallyLong( 8192 );
+}
+
+/** @param {Promise<unknown>} operation */
+async function settleControllerOperation( operation ) {
+	beginPendingResponse();
+	try {
+		const result = await operation;
+		if ( result !== null ) {
+			applyControllerResponse();
+		}
+	} catch ( error ) {
+		if (
+			error instanceof SupersededRuntimeOperationError ||
+			error instanceof DisposedRuntimeBoundaryError
+		) {
+			return;
+		}
+		store.state.transportError = describeError( error );
+	} finally {
+		store.state.processing = controller.isProcessing;
+		touchState();
+		renderHtmlApiOutput();
+		renderPreview();
+	}
+}
+
+function applyControllerResponse() {
+	const projected = controller.projectedResponse;
+	if ( projected === null ) {
+		return;
+	}
+	store.state.htmlapiResponse = projected;
+	store.state.playbackPoint = null;
+	setResultViewDefault();
+	const normalized = controller.normalizedBytes;
+	store.state.normalizedView =
+		normalized === null || isValidUtf8( normalized ) ? 'text' : 'bytes';
+}
+
+function beginPendingResponse() {
+	store.state.playbackPoint = null;
+	store.state.htmlapiResponse = {
+		supports: cfg.supports,
+		html: '',
+		error: null,
+		result: null,
+		normalizedHtml: null,
+	};
+	store.state.transportError = null;
+	store.state.processing = true;
+	touchState();
+	renderHtmlApiOutput();
+}
+
+function setResultViewDefault() {
+	store.state.processedView = isValidUtf8( currentProcessedBytes() )
+		? 'text'
+		: 'bytes';
+}
+
+/** @param {SourceKind} kind */
+async function convertSourceToText( kind ) {
+	store.state.transportError = null;
+	try {
+		const operation = controller.requestTextEditing( kind );
+		if ( controller.isProcessing ) {
+			beginPendingResponse();
+		}
+		const text = await operation;
+		if ( text === null ) {
+			return;
+		}
+		store.state[ `${ kind }View` ] = 'text';
+		store.state.playbackPoint = null;
+		applyControllerResponse();
+	} catch ( error ) {
+		store.state.transportError = describeError( error );
+	} finally {
+		store.state.processing = controller.isProcessing;
+		touchState();
+		renderHtmlApiOutput();
+		renderPreview();
+	}
+}
+
+function renderPreview() {
+	if ( controller.urlError !== null ) {
+		return;
+	}
+	try {
+		const started = previewCoordinator.render(
+			controller.getPreviewPlan( store.state.playbackPoint ),
 		);
-		el.classList.remove( 'has-highlighted-span' );
-		el.textContent = store.state.htmlForDisplay;
-	},
-
-	/** @param {MouseEvent} e */
-	handleSpanOver( e ) {
-		const target = /** @type {HTMLElement} */ ( e.target );
-
-		const html = store.state.playbackHTML ?? store.state.htmlapiResponse.html;
-		if ( ! html ) {
-			return;
+		if ( started ) {
+			store.state.previewError = null;
+			store.state.fragmentProjectionLossy = false;
 		}
+	} catch ( error ) {
+		store.state.previewError = describeError( error );
+	}
+}
 
-		/** @type {HTMLElement|null} */
-		const spanElement = target.dataset[ 'spanStart' ]
-			? target
-			: target.closest( '[data-span-start]' );
+function renderHtmlApiOutput() {
+	const processed = document.getElementById( 'processed-html' );
+	if ( processed !== null ) {
+		processed.classList.remove( 'has-highlighted-span' );
+		processed.textContent = store.state.processedText;
+	}
 
-		if ( ! spanElement ) {
-			return;
+	const tree =
+		store.state.playbackTree ?? store.state.htmlapiResponse.result?.tree;
+	const holder = document.getElementById( 'html_api_result_holder' );
+	if ( holder !== null ) {
+		if ( tree ) {
+			printHtmlApiTree(
+				tree,
+				/** @type {HTMLUListElement} */ ( holder ),
+				store.state.options,
+			);
+		} else {
+			holder.replaceChildren();
 		}
+	}
+}
 
-		const { spanStart: spanStartVal, spanLength: spanLengthVal } =
-			spanElement.dataset;
-		if ( ! spanStartVal || ! spanLengthVal ) {
-			return;
-		}
-		const spanStart = Number( spanStartVal );
-		const spanLength = Number( spanLengthVal );
+function clearSpan() {
+	const element = document.getElementById( 'processed-html' );
+	if ( element === null ) {
+		return;
+	}
+	element.classList.remove( 'has-highlighted-span' );
+	element.textContent = store.state.processedText;
+}
 
-		const buf = new TextEncoder().encode( html );
-		const decoder = new TextDecoder();
-
-		const spanEnd = spanStart + spanLength;
-		/** @type {readonly [Text,Text,Text]} */
-		// @ts-expect-error trust me!
-		const [ before, current, after ] = /** @type {const} */ ( [
-			decoder.decode( buf.slice( 0, spanStart ) ),
-			decoder.decode( buf.slice( spanStart, spanEnd ) ),
-			decoder.decode( buf.slice( spanEnd ) ),
-		] ).map( ( text ) => {
-			const t = store.state.showInvisible ? replaceInvisible( text ) : text;
-			return document.createTextNode( t );
-		} );
-
-		const highlightCurrent = document.createElement( 'span' );
-		highlightCurrent.className = 'highlight-span';
-		highlightCurrent.appendChild( current );
-
-		const el = /** @type {HTMLElement} */ (
-			document.getElementById( 'processed-html' )
+/** @param {MouseEvent} event */
+function handleSpanOver( event ) {
+	const target = /** @type {HTMLElement} */ ( event.target );
+	const spanElement = target.hasAttribute( 'data-span-start' )
+		? target
+		: target.closest( '[data-span-start]' );
+	if ( ! ( spanElement instanceof HTMLElement ) ) {
+		return;
+	}
+	const start = Number( spanElement.dataset[ 'spanStart' ] );
+	const length = Number( spanElement.dataset[ 'spanLength' ] );
+	let split;
+	try {
+		split = controller.splitProcessedSpan(
+			start,
+			length,
+			store.state.playbackPoint,
 		);
-		el.classList.add( 'has-highlighted-span' );
-		el.replaceChildren( before, highlightCurrent, after );
-	},
+	} catch ( error ) {
+		store.state.previewError = describeError( error );
+		return;
+	}
 
-	run() {
-		RENDERED_IFRAME.addEventListener( 'load', store.onRenderedIframeLoad, {
-			passive: true,
-		} );
+	const nodes = [ split.before, split.current, split.after ].map( ( bytes ) =>
+		document.createTextNode( displayBytes( bytes ) ),
+	);
+	const before = /** @type {Text} */ ( nodes[ 0 ] );
+	const current = /** @type {Text} */ ( nodes[ 1 ] );
+	const after = /** @type {Text} */ ( nodes[ 2 ] );
+	const highlight = document.createElement( 'span' );
+	highlight.className = 'highlight-span';
+	highlight.append( current );
+	const element = document.getElementById( 'processed-html' );
+	if ( element !== null ) {
+		element.classList.add( 'has-highlighted-span' );
+		element.replaceChildren( before, highlight, after );
+	}
+}
 
-		// The HTML parser will replace null bytes from the HTML.
-		// Force print them if we have null bytes.
-		if ( store.state.html.includes( '\0' ) ) {
-			/** @type {HTMLTextAreaElement} */ (
-				document.getElementById( 'input-html' )
-			).value = store.state.html;
-		}
-		if ( store.state.contextHTML.includes( '\0' ) ) {
-			/** @type {HTMLTextAreaElement} */ (
-				document.getElementById( 'context-html' )
-			).value = store.state.contextHTML;
-		}
-		if ( store.state.selector.includes( '\0' ) ) {
-			/** @type {HTMLTextAreaElement} */ (
-				document.getElementById( 'selector-input' )
-			).value = store.state.selector;
-		}
+/** @param {Document} document @param {Element|null} contextElement */
+function updateDomInfo( document, contextElement ) {
+	store.state.DOM.documentTitle = document.title;
+	store.state.DOM.renderingMode = document.compatMode;
+	store.state.DOM.doctypeName = document.doctype?.name ?? '';
+	store.state.DOM.doctypeSystemId = document.doctype?.systemId ?? '';
+	store.state.DOM.doctypePublicId = document.doctype?.publicId ?? '';
+	store.state.DOM.contextNode = contextElement?.nodeName ?? '';
+}
 
-		store.render();
+/** @param {Document} document @param {Element|null} contextElement */
+function redrawDomTree( document, contextElement ) {
+	const holder = globalThis.document.getElementById( 'dom_tree' );
+	if ( holder === null ) {
+		return;
+	}
+	printHtmlApiTree(
+		contextElement ?? document,
+		/** @type {HTMLUListElement} */ ( holder ),
+		store.state.options,
+	);
+}
 
-		// browsers "eat" some characters from search params…
-		// newlines seem especially problematic in chrome.
-		// Let's clean up the URL
-		store.watchURL();
+function redrawCurrentDomTree() {
+	const document = RENDERED_IFRAME.contentWindow?.document;
+	if ( document !== undefined ) {
+		redrawDomTree( document, CONTEXT_ELEMENT );
+	}
+}
 
-		mutationObserver = new MutationObserver( () => {
-			store.state.hasMutatedDom = true;
-			store.redrawDOMTreeFromIframe();
-		} );
-	},
-
-	onRenderedIframeLoad() {
-		store.redrawDOMTreeFromIframe();
-
-		// @ts-expect-error It better be defined!
-		const doc = RENDERED_IFRAME.contentWindow.document;
-
-		mutationObserver?.observe( doc, {
+/** @param {Document} document */
+function observeDocument( document ) {
+	if ( mutationObserver === null ) {
+		return;
+	}
+	mutationObserver.observe( document, {
+		subtree: true,
+		childList: true,
+		attributes: true,
+		characterData: true,
+	} );
+	for ( const template of document.getElementsByTagNameNS(
+		'http://www.w3.org/1999/xhtml',
+		'template',
+	) ) {
+		mutationObserver.observe( /** @type {HTMLTemplateElement} */ ( template ).content, {
 			subtree: true,
 			childList: true,
 			attributes: true,
 			characterData: true,
 		} );
-		Array.prototype.forEach.call(
-			doc.getElementsByTagNameNS( 'http://www.w3.org/1999/xhtml', 'template' ),
-			/** @param {HTMLTemplateElement} template */
-			( template ) => {
-				mutationObserver?.observe( template.content, {
-					subtree: true,
-					childList: true,
-					attributes: true,
-					characterData: true,
-				} );
-			},
-		);
-	},
-
-	redrawDOMTreeFromIframe() {
-		// @ts-expect-error It better be defined!
-		const doc = RENDERED_IFRAME.contentWindow.document;
-
-		store.state.DOM.documentTitle = doc.title;
-		store.state.DOM.renderingMode = doc.compatMode;
-		store.state.DOM.doctypeName = doc.doctype?.name;
-		store.state.DOM.doctypeSystemId = doc.doctype?.systemId;
-		store.state.DOM.doctypePublicId = doc.doctype?.publicId;
-
-		/** @type {Element|null} */
-		let contextElement = null;
-		if ( store.state.contextHTMLForUse ) {
-			// An HTML document will always make HTML > HEAD + BODY.
-			// But that may not be the intended context.
-			// Guess the intended context in case the HEAD and BODY elements are empty.
-			if ( doc.body.hasChildNodes() || doc.head.hasChildNodes() ) {
-				const walker = doc.createTreeWalker( doc, NodeFilter.SHOW_ELEMENT );
-				while ( walker.nextNode() ) {
-					// @ts-expect-error It's an Element!
-					contextElement = walker.currentNode;
-				}
-			} else {
-				if ( /<body\W/i.test( store.state.contextHTMLForUse ) ) {
-					contextElement = doc.body;
-				} else if ( /<head\W/i.test( store.state.contextHTMLForUse ) ) {
-					contextElement = doc.head;
-				} else {
-					contextElement = doc.documentElement;
-				}
-			}
-			if ( contextElement ) {
-				store.state.DOM.contextNode = contextElement.nodeName;
-				contextElement.innerHTML = store.state.playbackHTML ?? store.state.html;
-				CONTEXT_ELEMENT = contextElement;
-			}
-		}
-
-		printHtmlApiTree(
-			contextElement ?? doc,
-			// @ts-expect-error
-			document.getElementById( 'dom_tree' ),
-			store.state.options,
-		);
-	},
-
-	/** @param {InputEvent} e */
-	handleInput: function* ( e ) {
-		const val = /** @type {HTMLTextAreaElement} */ ( e.target ).value;
-
-		store.state.html = val;
-
-		const u = new URL( document.location.href );
-		u.searchParams.set( 'html', val );
-		history.replaceState( null, '', u );
-
-		debounceInputAbortController?.abort( 'debounced' );
-		debounceInputAbortController = new AbortController();
-		try {
-			yield new Promise( ( resolve, reject ) => {
-				const t = setTimeout( resolve, DEBOUNCE_TIMEOUT );
-				debounceInputAbortController?.signal.addEventListener( 'abort', () => {
-					clearInterval( t );
-					reject( debounceInputAbortController?.signal.reason );
-				} );
-			} );
-		} catch ( e ) {
-			if ( e === 'debounced' ) {
-				return;
-			}
-			throw e;
-		}
-
-		yield store.callAPI();
-	},
-
-	handleCopyClick: function* () {
-		const url = new URL( store.state.playgroundLink );
-
-		// @ts-expect-error This better exist.
-		const wpVersion = document.getElementById( 'htmlapi-wp-version' ).value;
-		url.searchParams.set( 'wp', wpVersion );
-
-		try {
-			yield navigator.clipboard.writeText( url.href );
-		} catch {
-			alert( 'Copy failed, make sure the browser window is focused.' );
-		}
-	},
-
-	handleShowInvisibleClick: getToggleHandler( 'showInvisible' ),
-	handleShowClosersClick: getToggleHandler( 'showClosers' ),
-	handleShowVirtualClick: getToggleHandler( 'showVirtual' ),
-
-	/** @param {Event} e */
-	hoverInfoChange: ( e ) => {
-		// @ts-expect-error
-		store.state.hoverInfo = e.target.value;
-		localStorage.setItem( `${ NS }-hoverInfo`, store.state.hoverInfo );
-	},
-
-	watch() {
-		store.render();
-	},
-
-	watchURL() {
-		const u = new URL( document.location.href );
-		let shouldReplace = false;
-		for ( const [ param, getValue ] of /** @type {const} */ ( [
-			[ 'html', () => store.state.html ],
-			[ 'contextHTML', () => store.state.contextHTMLForUse ],
-			[ 'selector', () => store.state.selector ],
-			[ HTML_OPTIONS_PARAM, getExplicitHtmlOptions ],
-		] ) ) {
-			const value = getValue();
-			if ( value ) {
-				if ( u.searchParams.get( param ) !== value ) {
-					u.searchParams.set( param, value );
-					shouldReplace = true;
-				}
-			} else if ( u.searchParams.has( param ) ) {
-				u.searchParams.delete( param );
-				shouldReplace = true;
-			}
-		}
-		if ( shouldReplace ) {
-			history.replaceState( null, '', u );
-		}
-	},
-
-	callAPI: function* () {
-		inFlightRequestAbortController?.abort( 'request superseded' );
-		inFlightRequestAbortController = new AbortController();
-		let data;
-		try {
-			/** @type {Response} */
-			const response = yield fetch( cfg.restEndpoint, {
-				method: 'POST',
-				body: JSON.stringify( {
-					html: store.state.html,
-					contextHTML: store.state.contextHTMLForUse,
-					selector: store.state.selector,
-				} ),
-				headers: {
-					'Content-Type': 'application/json',
-					'X-WP-Nonce': nonce,
-				},
-				signal: inFlightRequestAbortController.signal,
-			} );
-
-			if ( response.headers.has( 'X-WP-Nonce' ) ) {
-				nonce = response.headers.get( 'X-WP-Nonce' );
-			}
-			if ( ! response.ok ) {
-				throw response;
-			}
-
-			// @ts-expect-error It's fine.
-			data = yield response.json();
-		} catch ( /** @type {any} */ err ) {
-			if ( err === 'request superseded' || err instanceof DOMException ) {
-				return;
-			}
-
-			store.state.htmlapiResponse.result = null;
-
-			if ( err instanceof Response ) {
-				yield err
-					.json()
-					.then( ( j ) => {
-						let msg = '';
-						if ( j?.code ) {
-							msg = j.code;
-						}
-						if ( j?.data?.error ) {
-							if ( msg ) {
-								msg += ': ';
-							}
-							msg += `${ j.data.error.message } in ${ j.data.error.file }:${ j.data.error.line }`;
-						}
-						if ( msg ) {
-							store.state.htmlapiResponse.error = msg;
-						} else {
-							// Fallback to catch
-							throw 'no msg';
-						}
-					} )
-					.catch( () =>
-						err.text().then( ( t ) => {
-							store.state.htmlapiResponse.error = t;
-						} ),
-					)
-					.catch( () => {
-						store.state.htmlapiResponse.error = 'unknown error';
-					} );
-				return;
-			}
-			throw err;
-		}
-
-		store.state.htmlapiResponse = data;
-		store.state.playbackPoint = null;
-		store.clearSpan();
-
-		if ( data.error ) {
-			/** @type {HTMLUListElement} */ (
-				document.getElementById( 'html_api_result_holder' )
-			).innerHTML = '';
-		}
-	},
-
-	render() {
-		// @ts-expect-error This should not be null.
-		const iframeDocument = RENDERED_IFRAME.contentWindow.document;
-		mutationObserver?.disconnect();
-
-		store.state.hasMutatedDom = false;
-
-		const html =
-			store.state.contextHTMLForUse ??
-			store.state.playbackHTML ??
-			store.state.html;
-
-		CONTEXT_ELEMENT = null;
-		iframeDocument.open();
-		iframeDocument.write( html );
-		iframeDocument.close();
-
-		const tree =
-			store.state.playbackTree ?? store.state.htmlapiResponse.result?.tree;
-
-		const processedHtmlEl = /** @type {HTMLElement} */ (
-			document.getElementById( 'processed-html' )
-		);
-		processedHtmlEl.classList.remove( 'has-highlighted-span' );
-		processedHtmlEl.textContent = store.state.htmlForDisplay;
-
-		if ( tree ) {
-			printHtmlApiTree(
-				tree,
-				// @ts-expect-error
-				document.getElementById( 'html_api_result_holder' ),
-				store.state.options,
-			);
-		}
-	},
-
-	/** @param {InputEvent} e */
-	handleContextHtmlInput: function* ( e ) {
-		store.state.contextHTML = /** @type {HTMLTextAreaElement} */ (
-			e.target
-		).value;
-		yield store.callAPI();
-	},
-
-	handleDefaultBodyContextClick: function* () {
-		const contextHtmlElement = /** @type {HTMLTextAreaElement} */ (
-			document.getElementById( 'context-html' )
-		);
-		contextHtmlElement.value = store.state.contextHTML =
-			DEFAULT_HTML5_BODY_CONTEXT;
-		yield store.callAPI();
-	},
-
-	/** @param {InputEvent} e */
-	handleCopyCorePrInput( e ) {
-		const val = /** @type {HTMLInputElement} */ ( e.target ).valueAsNumber;
-		if ( Number.isFinite( val ) && val > 0 ) {
-			store.state.previewCorePrNumber = val;
-			return;
-		}
-		store.state.previewCorePrNumber = null;
-	},
-
-	/** @param {InputEvent} e */
-	handleCopyGutenbergPrInput( e ) {
-		const val = /** @type {HTMLInputElement} */ ( e.target ).valueAsNumber;
-		if ( Number.isFinite( val ) && val > 0 ) {
-			store.state.previewGutenbergPrNumber = val;
-			return;
-		}
-		store.state.previewGutenbergPrNumber = null;
-	},
-
-	handleCopyPrClick: function* () {
-		const corePrNumber = store.state.previewCorePrNumber;
-		const gbPrNumber = store.state.previewGutenbergPrNumber;
-
-		const playgroundLink = new URL( store.state.playgroundLink );
-		if ( corePrNumber ) {
-			playgroundLink.searchParams.set( 'core-pr', String( corePrNumber ) );
-		}
-		if ( gbPrNumber ) {
-			playgroundLink.searchParams.set( 'gutenberg-pr', String( gbPrNumber ) );
-		}
-
-		try {
-			yield navigator.clipboard.writeText( playgroundLink.href );
-		} catch {
-			alert( 'Copy failed, make sure the browser window is focused.' );
-		}
-	},
-
-	/**
-	 * @param {Event} e
-	 */
-	handleCopyTreeClick: function* ( e ) {
-		const useDomTree =
-			/** @type {HTMLButtonElement} */ ( e.target ).name === 'tree__dom';
-
-		let tree;
-		if ( useDomTree ) {
-			tree =
-				CONTEXT_ELEMENT ||
-				// @ts-expect-error It's an Element!
-				RENDERED_IFRAME.contentWindow.document;
-		} else {
-			tree =
-				store.state.playbackTree ?? store.state.htmlapiResponse.result?.tree;
-		}
-
-		const textualTree = printHtmlApiTreeText( tree, store.state.options );
-
-		try {
-			yield navigator.clipboard.writeText( textualTree );
-		} catch {
-			alert( 'Copy failed, make sure the browser window is focused.' );
-		}
-	},
-
-	/** @param {InputEvent} e */
-	handlePlaybackChange( e ) {
-		const val = /** @type {HTMLInputElement} */ ( e.target ).valueAsNumber;
-		store.state.playbackPoint = val - 1;
-	},
-
-	/** @param {InputEvent} e */
-	handleSelectorChange: function* ( e ) {
-		const val =
-			/** @type {HTMLInputElement} */ ( e.target ).value.trim() || null;
-		if ( val ) {
-			try {
-				// Test whether the selector is valid before setting it so it isn't applied.
-				document.createDocumentFragment().querySelector( val );
-				store.state.selector = val;
-				store.state.selectorErrorMessage = null;
-				yield store.callAPI();
-				return;
-			} catch ( /** @type {unknown} */ e ) {
-				if ( e instanceof DOMException && e.name === 'SyntaxError' ) {
-					let msg = e.message;
-
-					/*
-					 * The error message includes methods about our test.
-					 * Chrome:
-					 * > Failed to execute 'querySelector' on 'DocumentFragment': 'foo >' is not a valid selector.
-					 * Firefox:
-					 * > DocumentFragment.querySelector: 'foo >' is not a valid selector
-					 * Safari:
-					 * > 'foo >' is not a valid selector.
-					 *
-					 * Try to strip the irrelevant parts.
-					 */
-					let idx = msg.indexOf( val );
-					if ( idx > 0 ) {
-						if ( msg[ idx - 1 ] === '"' || msg[ idx - 1 ] === "'" ) {
-							idx -= 1;
-						}
-						msg = msg.slice( idx );
-					}
-
-					store.state.selectorErrorMessage = msg;
-				} else {
-					throw e;
-				}
-			}
-		}
-		store.state.selector = '';
-		yield store.callAPI();
-	},
-} );
-
-/**
- * @param {BooleanConfigurationOption} option
- * @returns {boolean}
- */
-function getInitialBooleanConfigurationValue( option ) {
-	const override = booleanConfigurationOverrides[ option ];
-	if ( override !== null ) {
-		return override;
 	}
-	return getStoredBooleanConfigurationValue( option );
 }
 
-/**
- * @returns {Record<BooleanConfigurationOption, boolean|null>}
- */
-function getInitialBooleanConfigurationOverrides() {
-	const overrides =
-		/** @type {Record<BooleanConfigurationOption, boolean|null>} */ ( {
-			showClosers: null,
-			showInvisible: null,
-			showVirtual: null,
-		} );
-	const searchParams = new URL( document.location.href ).searchParams;
-	if ( ! searchParams.has( HTML_OPTIONS_PARAM ) ) {
-		return overrides;
+/** @param {unknown} error */
+function describeError( error ) {
+	if ( error instanceof Response ) {
+		return `REST request failed with HTTP ${ error.status }.`;
 	}
+	return error instanceof Error ? error.message : String( error );
+}
 
-	const htmlOptions = searchParams.get( HTML_OPTIONS_PARAM ) ?? '';
-	for ( const value of htmlOptions ) {
-		for ( const [
-			enabledCode,
-			disabledCode,
-			option,
-		] of BOOLEAN_CONFIGURATION_OPTIONS ) {
-			if ( value === enabledCode ) {
+/** @param {URL} url */
+async function copyUrl( url ) {
+	try {
+		await navigator.clipboard.writeText( url.href );
+	} catch {
+		window.alert( 'Copy failed, make sure the browser window is focused.' );
+	}
+}
+
+/** @param {Event} event */
+function positiveInputNumber( event ) {
+	const value = /** @type {HTMLInputElement} */ ( event.target ).valueAsNumber;
+	return Number.isFinite( value ) && value > 0 ? value : null;
+}
+
+/** @param {BooleanConfigurationOption} option */
+function getInitialBooleanConfigurationValue( option ) {
+	const override = booleanConfigurationOverrides[ option ];
+	return override ?? Boolean( localStorage.getItem( `${ NS }-${ option }` ) );
+}
+
+/** @returns {Record<BooleanConfigurationOption, boolean|null>} */
+function getInitialBooleanConfigurationOverrides() {
+	const overrides = /** @type {Record<BooleanConfigurationOption, boolean|null>} */ ( {
+		showClosers: null,
+		showInvisible: null,
+		showVirtual: null,
+	} );
+	for ( const value of controller.opts ) {
+		for ( const [ enabled, disabled, option ] of BOOLEAN_CONFIGURATION_OPTIONS ) {
+			if ( value === enabled ) {
 				overrides[ option ] = true;
-			} else if ( value === disabledCode ) {
+			} else if ( value === disabled ) {
 				overrides[ option ] = false;
 			}
 		}
@@ -853,60 +814,41 @@ function getInitialBooleanConfigurationOverrides() {
 	return overrides;
 }
 
-/** @param {BooleanConfigurationOption} option */
-function getStoredBooleanConfigurationValue( option ) {
-	return Boolean( localStorage.getItem( `${ NS }-${ option }` ) );
-}
-
-/**
- * @param {( option: BooleanConfigurationOption ) => boolean|null} getValue
- * @returns {string}
- */
+/** @param {(option: BooleanConfigurationOption) => boolean|null} getValue */
 function buildHtmlOptions( getValue ) {
-	let htmlOptions = '';
-	for ( const [
-		enabledCode,
-		disabledCode,
-		option,
-	] of BOOLEAN_CONFIGURATION_OPTIONS ) {
+	let options = '';
+	for ( const [ enabled, disabled, option ] of BOOLEAN_CONFIGURATION_OPTIONS ) {
 		const value = getValue( option );
 		if ( value === true ) {
-			htmlOptions += enabledCode;
+			options += enabled;
 		} else if ( value === false ) {
-			htmlOptions += disabledCode;
+			options += disabled;
 		}
 	}
-	return htmlOptions;
+	return options;
 }
 
-/** @returns {string} */
 function getExplicitHtmlOptions() {
-	return buildHtmlOptions(
-		( option ) => booleanConfigurationOverrides[ option ],
-	);
+	return buildHtmlOptions( ( option ) => booleanConfigurationOverrides[ option ] );
 }
 
-/** @returns {string} */
 function getResolvedHtmlOptions() {
 	return buildHtmlOptions( ( option ) => Boolean( store.state[ option ] ) );
 }
 
 /** @param {BooleanConfigurationOption} stateKey */
 function getToggleHandler( stateKey ) {
-	/**
-	 * @param {Event} e
-	 * @returns {void}
-	 */
-	return ( e ) => {
-		const isChecked = /** @type {HTMLInputElement} */ ( e.target ).checked;
-
-		store.state[ stateKey ] = isChecked;
-		booleanConfigurationOverrides[ stateKey ] = isChecked;
-		if ( isChecked ) {
+	/** @param {Event} event */
+	return ( event ) => {
+		const checked = /** @type {HTMLInputElement} */ ( event.target ).checked;
+		store.state[ stateKey ] = checked;
+		booleanConfigurationOverrides[ stateKey ] = checked;
+		if ( checked ) {
 			localStorage.setItem( `${ NS }-${ stateKey }`, '1' );
 		} else {
 			localStorage.removeItem( `${ NS }-${ stateKey }` );
 		}
-		store.watchURL();
+		controller.setOpts( getExplicitHtmlOptions() );
+		touchState();
 	};
 }

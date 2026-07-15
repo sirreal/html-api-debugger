@@ -1,8 +1,8 @@
-import {
-	decodeBase64url,
-	isByteEnvelope,
-	projectResponseStrings,
-} from './byte-transport.mjs';
+// @ts-expect-error TypeScript does not resolve browser URL query strings.
+import * as ByteTransportLive from './byte-transport.mjs?ver=3.0';
+
+const { decodeBase64url, isByteEnvelope, projectResponseStrings } =
+	/** @type {typeof import('./byte-transport.mjs')} */ ( ByteTransportLive );
 
 /**
  * Decode a successful byte-enveloped HTML API response.

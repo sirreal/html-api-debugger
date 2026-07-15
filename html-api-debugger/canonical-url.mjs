@@ -1,8 +1,8 @@
-import {
-	decodeBase64url,
-	decodeUtf8,
-	encodeBase64url,
-} from './byte-transport.mjs';
+// @ts-expect-error TypeScript does not resolve browser URL query strings.
+import * as ByteTransportLive from './byte-transport.mjs?ver=3.0';
+
+const { decodeBase64url, decodeUtf8, encodeBase64url } =
+	/** @type {typeof import('./byte-transport.mjs')} */ ( ByteTransportLive );
 
 const CANONICAL_PARAMETERS = /** @type {const} */ ( [
 	'format',

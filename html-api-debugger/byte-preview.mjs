@@ -101,3 +101,40 @@ export function splitByteSpan( bytes, start, length ) {
 		after: bytes.subarray( end ),
 	};
 }
+
+/**
+ * Resolve the element whose native `innerHTML` setter parses a fragment.
+ *
+ * The parsed context document usually exposes its authored final element via
+ * the tree. Empty HEAD, BODY, and HTML contexts need the original authored
+ * context projection to distinguish the browser-created empty elements.
+ *
+ * @param {Document} document Parsed exact-byte context document.
+ * @param {string} contextText Safe Unicode projection of the context bytes.
+ * @returns {Element} Native fragment parsing context.
+ */
+export function resolveFragmentTarget( document, contextText ) {
+	if ( typeof contextText !== 'string' ) {
+		throw new TypeError( 'Fragment context text must be a string.' );
+	}
+
+	if ( document.body?.hasChildNodes() || document.head?.hasChildNodes() ) {
+		const walker = document.createTreeWalker( document, 1 );
+		/** @type {Element|null} */
+		let lastElement = null;
+		while ( walker.nextNode() ) {
+			lastElement = /** @type {Element} */ ( walker.currentNode );
+		}
+		if ( lastElement !== null ) {
+			return lastElement;
+		}
+	}
+
+	if ( /<body\W/iu.test( contextText ) && document.body !== null ) {
+		return document.body;
+	}
+	if ( /<head\W/iu.test( contextText ) && document.head !== null ) {
+		return document.head;
+	}
+	return document.documentElement;
+}

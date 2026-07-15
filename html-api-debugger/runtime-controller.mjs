@@ -1,17 +1,28 @@
-import {
-	canonicalUrlPath,
-	parseCanonicalUrl,
-	serializeCanonicalUrl,
-} from './canonical-url.mjs';
-import { splitByteSpan } from './byte-preview.mjs';
-import {
+// @ts-expect-error TypeScript does not resolve browser URL query strings.
+import * as CanonicalUrlLive from './canonical-url.mjs?ver=3.0';
+// @ts-expect-error TypeScript does not resolve browser URL query strings.
+import * as BytePreviewLive from './byte-preview.mjs?ver=3.0';
+// @ts-expect-error TypeScript does not resolve browser URL query strings.
+import * as ByteTransportLive from './byte-transport.mjs?ver=3.0';
+// @ts-expect-error TypeScript does not resolve browser URL query strings.
+import * as ResponseTransportLive from './response-transport.mjs?ver=3.0';
+
+const { canonicalUrlPath, parseCanonicalUrl, serializeCanonicalUrl } =
+	/** @type {typeof import('./canonical-url.mjs')} */ ( CanonicalUrlLive );
+const { splitByteSpan } = /** @type {typeof import('./byte-preview.mjs')} */ (
+	BytePreviewLive
+);
+const {
 	decodeUtf8,
 	encodeBase64url,
 	encodeUtf8,
 	isValidUtf8,
 	projectUtf8,
-} from './byte-transport.mjs';
-import { decodeHtmlApiResponse } from './response-transport.mjs';
+} = /** @type {typeof import('./byte-transport.mjs')} */ ( ByteTransportLive );
+const { decodeHtmlApiResponse } =
+	/** @type {typeof import('./response-transport.mjs')} */ (
+		ResponseTransportLive
+	);
 
 /**
  * Byte-authoritative controller for the debugger runtime.
