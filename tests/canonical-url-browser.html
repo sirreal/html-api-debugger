@@ -7,6 +7,7 @@
 		parseCanonicalUrl,
 		serializeCanonicalUrl,
 	} from '../html-api-debugger/canonical-url.mjs';
+	import { ByteRuntimeController } from '../html-api-debugger/runtime-controller.mjs';
 
 	const output = document.getElementById( 'result' );
 	const input = new URL(
@@ -33,6 +34,35 @@
 			'http://localhost:8888/wp-admin/admin.php?page=html-api-debugger&format=v1&html64=PGZvbz4&context64=&selector=&opts='
 		) {
 			throw new Error( `unexpected canonical URL: ${ canonical.href }` );
+		}
+
+		const runtimeUrl = new URL( document.location.href );
+		runtimeUrl.search =
+			'?format=v1&html64=PGZvbz4&context64&selector&opts';
+		let replacements = 0;
+		const controller = new ByteRuntimeController( {
+			url: runtimeUrl,
+			supports: { create_fragment_advanced: true },
+			request: async () => {
+				throw new Error( 'browser constructor regression must not request' );
+			},
+			replaceUrl: ( url ) => {
+				++replacements;
+				window.history.replaceState( null, '', url.href );
+			},
+			confirmConversion: () => false,
+		} );
+		if ( controller.urlError !== null ) {
+			throw new Error( `controller URL error: ${ controller.urlError }` );
+		}
+		if ( replacements !== 1 ) {
+			throw new Error( `expected one history rewrite, got ${ replacements }` );
+		}
+		if (
+			document.location.search !==
+			'?format=v1&html64=PGZvbz4&context64=&selector=&opts='
+		) {
+			throw new Error( `unexpected rewritten location: ${ document.location.href }` );
 		}
 
 		document.body.dataset.result = 'pass';

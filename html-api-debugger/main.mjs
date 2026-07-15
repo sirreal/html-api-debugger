@@ -6,15 +6,15 @@ import { replaceInvisible } from '@html-api-debugger/replace-invisible-chars';
 import * as I from '@wordpress/interactivity';
 
 // @ts-expect-error TypeScript does not resolve browser URL query strings.
-import * as BytePreviewLive from './byte-preview.mjs?ver=3.2';
+import * as BytePreviewLive from './byte-preview.mjs?ver=3.3';
 // @ts-expect-error TypeScript does not resolve browser URL query strings.
-import * as ByteTransportLive from './byte-transport.mjs?ver=3.2';
+import * as ByteTransportLive from './byte-transport.mjs?ver=3.3';
 // @ts-expect-error TypeScript does not resolve browser URL query strings.
-import * as RuntimeControllerLive from './runtime-controller.mjs?ver=3.2';
+import * as RuntimeControllerLive from './runtime-controller.mjs?ver=3.3';
 // @ts-expect-error TypeScript does not resolve browser URL query strings.
-import * as RuntimeWiringLive from './runtime-wiring.mjs?ver=3.2';
+import * as RuntimeWiringLive from './runtime-wiring.mjs?ver=3.3';
 // @ts-expect-error TypeScript does not resolve browser URL query strings.
-import * as UiTransactionsLive from './ui-transactions.mjs?ver=3.2';
+import * as UiTransactionsLive from './ui-transactions.mjs?ver=3.3';
 
 const { ByteDocumentPreview, resolveFragmentTarget } =
 	/** @type {typeof import('./byte-preview.mjs')} */ ( BytePreviewLive );
@@ -58,7 +58,7 @@ const controller = new ByteRuntimeController( {
 	url: new URL( document.location.href ),
 	supports: cfg.supports,
 	request: ( body ) => requestBoundary.request( body ),
-	replaceUrl: ( url ) => history.replaceState( null, '', url ),
+	replaceUrl: ( url ) => window.history.replaceState( null, '', url.href ),
 	confirmConversion: ( message ) => window.confirm( message ),
 } );
 

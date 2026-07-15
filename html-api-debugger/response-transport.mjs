@@ -1,5 +1,5 @@
 // @ts-expect-error TypeScript does not resolve browser URL query strings.
-import * as ByteTransportLive from './byte-transport.mjs?ver=3.2';
+import * as ByteTransportLive from './byte-transport.mjs?ver=3.3';
 
 const { decodeBase64url, isByteEnvelope, projectResponseStrings } =
 	/** @type {typeof import('./byte-transport.mjs')} */ ( ByteTransportLive );
