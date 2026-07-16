@@ -49,10 +49,13 @@ export class ByteRequestBoundary {
 		this.#nonce = options.nonce;
 		this.#fetch = options.fetch;
 		this.#AbortController = options.AbortController;
-		this.#setTimer = options.setTimer ?? setTimeout;
+		this.#setTimer =
+			options.setTimer ??
+			( ( callback, delay ) => globalThis.setTimeout( callback, delay ) );
 		this.#clearTimer =
 			options.clearTimer ??
-			( ( timer ) => clearTimeout( /** @type {number} */ ( timer ) ) );
+			( ( timer ) =>
+				globalThis.clearTimeout( /** @type {number} */ ( timer ) ) );
 		this.#delay = options.delay ?? 150;
 
 		if ( ! Number.isInteger( this.#delay ) || this.#delay < 0 ) {

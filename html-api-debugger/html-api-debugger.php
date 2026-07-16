@@ -3,7 +3,7 @@
  * Plugin Name:       HTML API Debugger
  * Plugin URI:        https://github.com/sirreal/html-api-debugger
  * Description:       Add a page to wp-admin for debugging the HTML API.
- * Version:           3.3
+ * Version:           3.4
  * Requires at least: 6.7
  * Tested up to:      6.8
  * Author:            Jon Surrell
@@ -24,7 +24,7 @@ require_once __DIR__ . '/legacy-url.php';
 require_once __DIR__ . '/rest-api.php';
 
 const SLUG    = 'html-api-debugger';
-const VERSION = '3.3';
+const VERSION = '3.4';
 
 /** Set up the plugin. */
 function init() {

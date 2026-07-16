@@ -163,6 +163,43 @@ await assert.rejects(
 	DisposedRuntimeBoundaryError,
 );
 
+const originalSetTimeout = globalThis.setTimeout;
+const originalClearTimeout = globalThis.clearTimeout;
+let defaultSetTimerCalls = 0;
+let defaultClearTimerCalls = 0;
+globalThis.setTimeout = function ( callback, delay ) {
+	assert.equal( this, globalThis, 'default setTimeout keeps its global receiver' );
+	++defaultSetTimerCalls;
+	return originalSetTimeout( callback, delay );
+};
+globalThis.clearTimeout = function ( timer ) {
+	assert.equal( this, globalThis, 'default clearTimeout keeps its global receiver' );
+	++defaultClearTimerCalls;
+	return originalClearTimeout( timer );
+};
+try {
+	const defaultBoundary = new ByteRequestBoundary( {
+		endpoint: 'https://example.test/wp-json/html-api-debugger/v2/htmlapi',
+		nonce: 'default-nonce',
+		fetch: async () => fakeResponse( { defaultTimers: true } ),
+		AbortController: FakeAbortController,
+		delay: 0,
+	} );
+	const replaced = defaultBoundary.request( bodyA );
+	const replacedRejection = assert.rejects(
+		replaced,
+		SupersededRuntimeOperationError,
+	);
+	const current = defaultBoundary.request( bodyB );
+	await replacedRejection;
+	assert.deepEqual( await current, { defaultTimers: true } );
+	assert.equal( defaultSetTimerCalls, 2 );
+	assert.equal( defaultClearTimerCalls, 1 );
+} finally {
+	globalThis.setTimeout = originalSetTimeout;
+	globalThis.clearTimeout = originalClearTimeout;
+}
+
 class FakeIframe {
 	constructor() {
 		this.listeners = new Map();
