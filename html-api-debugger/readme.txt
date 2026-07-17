@@ -3,7 +3,7 @@ Contributors: jonsurrell, bernhard-reiter
 Tags: HTML API, development, debug
 Requires at least: 6.7
 Tested up to: 6.8
-Stable tag: 2.9
+Stable tag: 3.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -15,6 +15,20 @@ Please file issues and pull requests on the [GitHub repository](https://github.c
 
 == Changelog ==
 
+= 3.4 =
+* Call browser timers with their required global receiver.
+
+= 3.3 =
+* Normalize URLs through an explicit browser History receiver.
+
+= 3.2 =
+* Normalize bare empty canonical URL fields instead of leaving a permanent warning.
+
+= 3.1 =
+* Contain rendered input in a scripting-disabled iframe while preserving DOM inspection.
+
+= 3.0 =
+* Preserve arbitrary source, context, result, and playback bytes across URLs, REST processing, inspection, and DOM previews.
 * Add support for Processing Instruction nodes.
 * Preserve HTML tree visibility options in shared URLs.
 * Add "HTML5 Body" context button to allow setting default context.
