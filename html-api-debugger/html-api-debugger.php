@@ -20,6 +20,7 @@ use WP_REST_Request;
 use Exception;
 
 require_once __DIR__ . '/html-api-integration.php';
+require_once __DIR__ . '/kses-debugger.php';
 
 const SLUG    = 'html-api-debugger';
 const VERSION = '2.9';
