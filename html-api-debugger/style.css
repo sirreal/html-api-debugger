@@ -65,6 +65,32 @@
 		font-family: var(--monospace-font-family);
 	}
 
+	.source-panel {
+		min-width: 0;
+	}
+
+	.byte-view {
+		min-height: 4em;
+		max-height: 24em;
+		overflow: auto;
+		white-space: pre;
+		font-family: var(--monospace-font-family);
+	}
+
+	.warning-holder {
+		padding: 0.75em;
+		border-left: 4px solid #dba617;
+		background: #fcf0c3;
+	}
+
+	.view-buttons,
+	.controls-row {
+		display: flex;
+		align-items: center;
+		gap: 0.5em;
+		flex-wrap: wrap;
+	}
+
 	.context-html {
 		width: 100%;
 		font-family: var(--monospace-font-family);

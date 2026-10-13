@@ -34,7 +34,7 @@ function get_normalized_html( string $html, array $options ): ?string {
 
 	if (
 		method_exists( WP_HTML_Processor::class, 'create_fragment_at_current_node' ) &&
-		$options['context_html']
+		null !== $options['context_html']
 	) {
 		$context_processor = WP_HTML_Processor::create_full_parser( $options['context_html'] );
 
@@ -119,7 +119,7 @@ function get_tree( string $html, array $options ): array {
 
 	if (
 		method_exists( WP_HTML_Processor::class, 'create_fragment_at_current_node' ) &&
-		$options['context_html']
+		null !== $options['context_html']
 	) {
 		$context_processor = WP_HTML_Processor::create_full_parser( $options['context_html'] );
 

@@ -3,7 +3,7 @@
  * Plugin Name:       HTML API Debugger
  * Plugin URI:        https://github.com/sirreal/html-api-debugger
  * Description:       Add a page to wp-admin for debugging the HTML API.
- * Version:           2.9
+ * Version:           3.4
  * Requires at least: 6.7
  * Tested up to:      6.8
  * Author:            Jon Surrell
@@ -16,13 +16,15 @@
 
 namespace HTML_API_Debugger;
 
-use WP_REST_Request;
 use Exception;
 
 require_once __DIR__ . '/html-api-integration.php';
+require_once __DIR__ . '/byte-transport.php';
+require_once __DIR__ . '/legacy-url.php';
+require_once __DIR__ . '/rest-api.php';
 
 const SLUG    = 'html-api-debugger';
-const VERSION = '2.9';
+const VERSION = '3.4';
 
 /** Set up the plugin. */
 function init() {
@@ -36,28 +38,21 @@ function init() {
 		'rest_api_init',
 		function () {
 			register_rest_route(
-				SLUG . '/v1',
+				SLUG . '/v2',
 				'/htmlapi',
 				array(
 					'methods' => 'POST',
-					'callback' => function ( WP_REST_Request $request ) {
-						// phpcs:ignore Universal.Operators.DisallowShortTernary.Found
-						$html = $request->get_json_params()['html'] ?: '';
-						$options = array(
-							// phpcs:ignore Universal.Operators.DisallowShortTernary.Found
-							'context_html' => $request->get_json_params()['contextHTML'] ?: null,
-							// phpcs:ignore Universal.Operators.DisallowShortTernary.Found
-							'selector' => $request->get_json_params()['selector'] ?: null,
-						);
-						return prepare_html_result_object( $html, $options );
-					},
+					'callback' => __NAMESPACE__ . '\\handle_byte_htmlapi_request',
 					'permission_callback' => function () {
 						return current_user_can( 'edit_posts' );
 					},
 				)
 			);
+
 		}
 	);
+
+	add_action( 'admin_init', __NAMESPACE__ . '\\maybe_redirect_legacy_url', 0 );
 
 	wp_register_script_module(
 		'@html-api-debugger/replace-invisible-chars',
@@ -112,32 +107,53 @@ function init() {
 				SLUG,
 				function () {
 					require_once __DIR__ . '/interactivity.php';
-
-					$options = array(
-						'context_html' => null,
-						'selector' => null,
-					);
-
-					$html = '';
-					// phpcs:disable WordPress.Security.NonceVerification.Recommended
-					if ( isset( $_GET['html'] ) && \is_string( $_GET['html'] ) ) {
-						$html = stripslashes( $_GET['html'] );
-					}
-					if ( isset( $_GET['contextHTML'] ) && \is_string( $_GET['contextHTML'] ) ) {
-						$options['context_html'] = stripslashes( $_GET['contextHTML'] );
-					}
-					if ( isset( $_GET['selector'] ) && \is_string( $_GET['selector'] ) ) {
-						$options['selector'] = stripslashes( $_GET['selector'] );
-					}
-					// phpcs:enable WordPress.Security.NonceVerification.Recommended
-
 					// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-					echo namespace\Interactivity\generate_page( $html, $options );
+					echo namespace\Interactivity\generate_page();
 				},
 				include __DIR__ . '/icon.php'
 			);
 		}
 	);
+}
+
+/**
+ * Redirect legacy string URLs before the application shell is rendered.
+ */
+function maybe_redirect_legacy_url(): void {
+	// phpcs:disable WordPress.Security.NonceVerification.Recommended
+	if (
+		! isset( $_GET['page'] ) ||
+		! is_string( $_GET['page'] ) ||
+		SLUG !== wp_unslash( $_GET['page'] )
+	) {
+		return;
+	}
+
+	try {
+		$params = get_legacy_redirect_params( $_GET );
+		if ( null === $params ) {
+			return;
+		}
+		$target = build_canonical_admin_url( admin_url( 'admin.php' ), SLUG, $params );
+	} catch ( \InvalidArgumentException $e ) {
+		wp_die(
+			'Invalid legacy HTML API Debugger URL.',
+			'Invalid HTML API Debugger URL',
+			array( 'response' => 400 )
+		);
+		return;
+	}
+	// phpcs:enable WordPress.Security.NonceVerification.Recommended
+
+	if ( ! wp_safe_redirect( $target, 302, 'HTML API Debugger' ) ) {
+		wp_die(
+			'Could not redirect the legacy HTML API Debugger URL.',
+			'HTML API Debugger redirect failed',
+			array( 'response' => 500 )
+		);
+		return;
+	}
+	exit;
 }
 
 /**

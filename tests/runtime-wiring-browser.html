@@ -1,0 +1,72 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Runtime wiring browser regression</title>
+<pre id="result">RUNNING</pre>
+<script type="module">
+	import {
+		ByteRequestBoundary,
+		SupersededRuntimeOperationError,
+	} from '../html-api-debugger/runtime-wiring.mjs';
+
+	const output = document.getElementById( 'result' );
+	try {
+		const fetchBodies = [];
+		const boundary = new ByteRequestBoundary( {
+			endpoint: '/html-api-debugger/v2/htmlapi',
+			nonce: 'browser-nonce',
+			fetch: async ( url, options ) => {
+				fetchBodies.push( { url, body: JSON.parse( options.body ) } );
+				return new Response( JSON.stringify( { current: true } ), {
+					status: 200,
+					headers: { 'Content-Type': 'application/json' },
+				} );
+			},
+			AbortController,
+			delay: 0,
+		} );
+
+		const first = boundary.request( {
+			html64: 'QQ',
+			context64: '',
+			selector: '',
+		} );
+		const firstRejected = first.then(
+			() => false,
+			( error ) => error instanceof SupersededRuntimeOperationError,
+		);
+		const secondBody = {
+			html64: 'Qg',
+			context64: 'IA',
+			selector: '.x',
+		};
+		const second = boundary.request( secondBody );
+		if ( ! ( await firstRejected ) ) {
+			throw new Error( 'superseded default timer did not reject correctly' );
+		}
+		const result = await second;
+		if ( result.current !== true ) {
+			throw new Error( 'current default-timer request did not resolve' );
+		}
+		if (
+			fetchBodies.length !== 1 ||
+			fetchBodies[ 0 ].url !== '/html-api-debugger/v2/htmlapi' ||
+			JSON.stringify( fetchBodies[ 0 ].body ) !== JSON.stringify( secondBody )
+		) {
+			throw new Error( 'default timer did not preserve the newest request' );
+		}
+		boundary.dispose();
+
+		document.body.dataset.result = 'pass';
+		output.textContent = 'PASS';
+		void fetch( '/__runtime_wiring_result__/pass', { mode: 'no-cors' } ).catch(
+			() => {},
+		);
+	} catch ( error ) {
+		document.body.dataset.result = 'fail';
+		output.textContent = `FAIL\n${ error.stack ?? error }`;
+		void fetch( '/__runtime_wiring_result__/fail', { mode: 'no-cors' } ).catch(
+			() => {},
+		);
+		throw error;
+	}
+</script>

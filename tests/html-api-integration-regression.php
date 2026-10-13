@@ -155,6 +155,47 @@ function html_api_debugger_assert_tree( string $label, string $html, ?string $co
 
 $body_context = '<!DOCTYPE html><body>';
 
+try {
+	HTML_API_Debugger\HTML_API_Integration\get_tree(
+		'x',
+		array(
+			'context_html' => '0',
+			'selector' => null,
+		)
+	);
+	echo "not ok - zero context enters fragment processing\n";
+	exit( 1 );
+} catch ( Exception $error ) {
+	if ( 'Could not create processor from context HTML.' !== $error->getMessage() ) {
+		throw $error;
+	}
+	echo "ok - zero context enters fragment processing\n";
+}
+
+if (
+	null !== HTML_API_Debugger\HTML_API_Integration\get_normalized_html(
+		'x',
+		array( 'context_html' => '0' )
+	)
+) {
+	echo "not ok - zero context controls normalized fragment processing\n";
+	exit( 1 );
+}
+echo "ok - zero context controls normalized fragment processing\n";
+
+$noscript_context_result = HTML_API_Debugger\HTML_API_Integration\get_tree(
+	'x',
+	array(
+		'context_html' => '<noscript><body>',
+		'selector' => null,
+	)
+);
+if ( 'BODY' !== $noscript_context_result['contextNode'] ) {
+	echo "not ok - scripting-disabled NOSCRIPT context selects BODY\n";
+	exit( 1 );
+}
+echo "ok - scripting-disabled NOSCRIPT context selects BODY\n";
+
 html_api_debugger_assert_tree(
 	'full parser preserves document nesting',
 	'<div><p>a</p>b</div>c',
