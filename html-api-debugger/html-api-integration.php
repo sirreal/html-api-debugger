@@ -12,7 +12,6 @@ use WP_HTML_Tag_Processor;
  */
 function get_supports(): array {
 	return array(
-		'create_fragment_advanced' => method_exists( WP_HTML_Processor::class, 'create_fragment_at_current_node' ),
 		'selectors' =>
 			class_exists( '\WP_CSS_Complex_Selector_List' )
 			|| class_exists( '\WP_CSS_Compound_Selector_List' ),
@@ -27,15 +26,10 @@ function get_supports(): array {
  * @return string|null The normalized HTML or null if not supported.
  */
 function get_normalized_html( string $html, array $options ): ?string {
-	if ( method_exists( WP_HTML_Processor::class, 'create_fragment_at_current_node' ) ) {
-		$cfacn = new ReflectionMethod( WP_HTML_Processor::class, 'create_fragment_at_current_node' );
-		$cfacn->setAccessible( true );
-	}
+	$cfacn = new ReflectionMethod( WP_HTML_Processor::class, 'create_fragment_at_current_node' );
+	$cfacn->setAccessible( true );
 
-	if (
-		method_exists( WP_HTML_Processor::class, 'create_fragment_at_current_node' ) &&
-		$options['context_html']
-	) {
+	if ( $options['context_html'] ) {
 		$context_processor = WP_HTML_Processor::create_full_parser( $options['context_html'] );
 
 		add_filter( 'doing_it_wrong_trigger_error', __NAMESPACE__ . '\filter_doing_it_wrong_trigger_error', 10, 2 );
@@ -103,10 +97,8 @@ function get_tree( string $html, array $options ): array {
 	$processor_bookmarks = new ReflectionProperty( WP_HTML_Processor::class, 'bookmarks' );
 	$processor_bookmarks->setAccessible( true );
 
-	if ( method_exists( WP_HTML_Processor::class, 'create_fragment_at_current_node' ) ) {
-		$cfacn = new ReflectionMethod( WP_HTML_Processor::class, 'create_fragment_at_current_node' );
-		$cfacn->setAccessible( true );
-	}
+	$cfacn = new ReflectionMethod( WP_HTML_Processor::class, 'create_fragment_at_current_node' );
+	$cfacn->setAccessible( true );
 
 	$is_fragment_processor  = false;
 	$processor_depth_offset = 0;
@@ -117,10 +109,7 @@ function get_tree( string $html, array $options ): array {
 	$doctype_public_identifier = null;
 	$doctype_system_identifier = null;
 
-	if (
-		method_exists( WP_HTML_Processor::class, 'create_fragment_at_current_node' ) &&
-		$options['context_html']
-	) {
+	if ( $options['context_html'] ) {
 		$context_processor = WP_HTML_Processor::create_full_parser( $options['context_html'] );
 
 		add_filter( 'doing_it_wrong_trigger_error', __NAMESPACE__ . '\filter_doing_it_wrong_trigger_error', 10, 2 );
@@ -131,11 +120,7 @@ function get_tree( string $html, array $options ): array {
 					$doctype_name              = $doctype->name;
 					$doctype_public_identifier = $doctype->public_identifier;
 					$doctype_system_identifier = $doctype->system_identifier;
-					if (
-						( property_exists( $doctype, 'indicated_compatibility_mode' )
-							? $doctype->indicated_compatibility_mode
-							: $doctype->indicated_compatability_mode ) !== 'quirks'
-					) {
+					if ( $doctype->indicated_compatibility_mode !== 'quirks' ) {
 						$compat_mode = 'CSS1Compat';
 					}
 					break;
@@ -267,11 +252,7 @@ function get_tree( string $html, array $options ): array {
 				$doctype_name              = $doctype->name;
 				$doctype_public_identifier = $doctype->public_identifier;
 				$doctype_system_identifier = $doctype->system_identifier;
-				if (
-					( property_exists( $doctype, 'indicated_compatibility_mode' )
-						? $doctype->indicated_compatibility_mode
-						: $doctype->indicated_compatability_mode ) !== 'quirks'
-				) {
+				if ( $doctype->indicated_compatibility_mode !== 'quirks' ) {
 					$compat_mode = 'CSS1Compat';
 				}
 

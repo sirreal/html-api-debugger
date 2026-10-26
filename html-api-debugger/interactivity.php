@@ -65,7 +65,7 @@ function generate_page( string $html, array $options ): string {
 	data-wp-init="run"
 	class="html-api-debugger-container html-api-debugger--grid"
 >
-	<div data-wp-bind--hidden="!state.htmlapiResponse.supports.create_fragment_advanced" class="full-width">
+	<div class="full-width">
 		<div class="heading-and-button">
 			<label for="context-html">Context in which input HTML finds itself</label>
 			<button type="button" data-wp-on--click="handleDefaultBodyContextClick">Use HTML5 BODY context</button>
