@@ -47,7 +47,7 @@ function generate_page( string $html, array $options ): string {
 			'htmlApiDocumentTitle' => $htmlapi_response['result']['documentTitle'] ?? null,
 			'htmlApiDoctypeName' => $htmlapi_response['result']['doctypeName'] ?? null,
 			'htmlApiDoctypePublicId' => $htmlapi_response['result']['doctypePublicId'] ?? null,
-			'htmlApiDoctypeSytemId' => $htmlapi_response['result']['doctypeSystemId'] ?? null,
+			'htmlApiDoctypeSystemId' => $htmlapi_response['result']['doctypeSystemId'] ?? null,
 			'treeWarnings' => $htmlapi_response['result']['warnings'] ?? array(),
 			'normalizedHtml' => $htmlapi_response['normalizedHtml'] ?? '',
 
@@ -60,8 +60,8 @@ function generate_page( string $html, array $options ): string {
 	?>
 <div
 	data-wp-interactive="<?php echo esc_attr( \HTML_API_Debugger\SLUG ); ?>"
-	data-wp-watch--main="watch"
-	data-wp-watch--url="watchURL"
+	data-wp-watch---main="watch"
+	data-wp-watch---url="watchURL"
 	data-wp-init="run"
 	class="html-api-debugger-container html-api-debugger--grid"
 >
@@ -136,7 +136,7 @@ function generate_page( string $html, array $options ): string {
 			>
 				<pre class="error-holder" data-wp-bind--hidden="!state.htmlapiResponse.error" data-wp-text="state.htmlapiResponse.error"></pre>
 				<div data-wp-bind--hidden="state.htmlapiResponse.error">
-					<ul id="html_api_result_holder" data-wp-ignore></ul>
+					<ul id="html_api_result_holder"></ul>
 				</div>
 			</div>
 		</div>
@@ -145,7 +145,7 @@ function generate_page( string $html, array $options ): string {
 				<h2>Interpreted from DOM</h2>
 				<button type="button" data-wp-on--click="handleCopyTreeClick" name="tree__dom">Copy tree 📋</button>
 			</div>
-			<div data-wp-class--mutated="state.hasMutatedDom"><ul id="dom_tree" data-wp-ignore></ul></div>
+			<div data-wp-class--mutated="state.hasMutatedDom"><ul id="dom_tree"></ul></div>
 		</div>
 	</div>
 
@@ -192,7 +192,7 @@ function generate_page( string $html, array $options ): string {
 					>
 				</label>
 			</div>
-			<pre class="html-text" id="processed-html" data-wp-ignore><?php echo esc_html( $html ); ?></pre>
+			<pre class="html-text" id="processed-html"><?php echo esc_html( $html ); ?></pre>
 		</div>
 
 		<p>
@@ -201,7 +201,7 @@ function generate_page( string $html, array $options ): string {
 					<option value="latest">latest</option>
 					<option value="nightly">nightly</option>
 					<option value="beta">beta</option>
-					<option value="6.7">6.7</option>
+					<option value="6.9">6.9</option>
 				</select>
 			</label>
 			<button data-wp-on--click="handleCopyClick" type="button">Copy shareable playground link</button><br>
