@@ -21,8 +21,7 @@ Please file issues and pull requests on the [GitHub repository](https://github.c
 * Fix fragment tree depth so nodes following atomic elements (`textarea`, `script`, `style`) nest correctly to match the DOM tree.
 * Use `get_full_comment_text()` to get comment text in the tree.
 * Change `on-async` (deprecated) directives to `on`.
-* Fix tree views not updating after edits in WordPress 7.2, which ignores `data-wp-watch` directives with a two-hyphen suffix.
-* Remove `data-wp-ignore` (deprecated) directives.
+* Fix tree views not updating in WordPress 7.2.
 * Drop support for WordPress 6.7 and 6.8.
 
 = 2.9 =
