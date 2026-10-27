@@ -201,6 +201,8 @@ function generate_page( string $html, array $options ): string {
 					<option value="latest">latest</option>
 					<option value="nightly">nightly</option>
 					<option value="beta">beta</option>
+					<option value="7.1">7.1</option>
+					<option value="7.0">7.0</option>
 					<option value="6.9">6.9</option>
 				</select>
 			</label>
