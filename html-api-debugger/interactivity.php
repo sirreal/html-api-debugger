@@ -47,7 +47,7 @@ function generate_page( string $html, array $options ): string {
 			'htmlApiDocumentTitle' => $htmlapi_response['result']['documentTitle'] ?? null,
 			'htmlApiDoctypeName' => $htmlapi_response['result']['doctypeName'] ?? null,
 			'htmlApiDoctypePublicId' => $htmlapi_response['result']['doctypePublicId'] ?? null,
-			'htmlApiDoctypeSytemId' => $htmlapi_response['result']['doctypeSystemId'] ?? null,
+			'htmlApiDoctypeSystemId' => $htmlapi_response['result']['doctypeSystemId'] ?? null,
 			'treeWarnings' => $htmlapi_response['result']['warnings'] ?? array(),
 			'normalizedHtml' => $htmlapi_response['normalizedHtml'] ?? '',
 
@@ -60,15 +60,15 @@ function generate_page( string $html, array $options ): string {
 	?>
 <div
 	data-wp-interactive="<?php echo esc_attr( \HTML_API_Debugger\SLUG ); ?>"
-	data-wp-watch--main="watch"
-	data-wp-watch--url="watchURL"
+	data-wp-watch---main="watch"
+	data-wp-watch---url="watchURL"
 	data-wp-init="run"
 	class="html-api-debugger-container html-api-debugger--grid"
 >
-	<div data-wp-bind--hidden="!state.htmlapiResponse.supports.create_fragment_advanced" class="full-width">
+	<div class="full-width">
 		<div class="heading-and-button">
 			<label for="context-html">Context in which input HTML finds itself</label>
-			<button type="button" data-wp-on-async--click="handleDefaultBodyContextClick">Use HTML5 BODY context</button>
+			<button type="button" data-wp-on--click="handleDefaultBodyContextClick">Use HTML5 BODY context</button>
 		</div>
 		<textarea
 			id="context-html"
@@ -76,7 +76,7 @@ function generate_page( string $html, array $options ): string {
 			placeholder="Provide a fragment context, for example:&#x0A;<!DOCTYPE html><body>"
 			title="Leave blank to parse a full document."
 			rows="2"
-			data-wp-on-async--input="handleContextHtmlInput"
+			data-wp-on--input="handleContextHtmlInput"
 		><?php echo "\n" . esc_textarea( str_replace( "\0", '', $options['context_html'] ?? '' ) ); ?></textarea>
 	</div>
 	<div>
@@ -87,7 +87,7 @@ function generate_page( string $html, array $options ): string {
 			autocomplete="off"
 			spellcheck="false"
 			wrap="off"
-			data-wp-on-async--input="handleInput"
+			data-wp-on--input="handleInput"
 		><?php echo "\n" . esc_textarea( str_replace( "\0", '', $html ) ); ?></textarea>
 	</div>
 	<div class="iframe-container">
@@ -128,41 +128,41 @@ function generate_page( string $html, array $options ): string {
 		<div>
 			<div class="heading-and-button">
 				<h2>Interpreted by HTML API</h2>
-				<button type="button" data-wp-on-async--click="handleCopyTreeClick" name="tree__html-api">Copy tree 📋</button>
+				<button type="button" data-wp-on--click="handleCopyTreeClick" name="tree__html-api">Copy tree 📋</button>
 			</div>
 			<div
-				data-wp-on-async--mouseover="handleSpanOver"
-				data-wp-on-async--mouseleave="clearSpan"
+				data-wp-on--mouseover="handleSpanOver"
+				data-wp-on--mouseleave="clearSpan"
 			>
 				<pre class="error-holder" data-wp-bind--hidden="!state.htmlapiResponse.error" data-wp-text="state.htmlapiResponse.error"></pre>
 				<div data-wp-bind--hidden="state.htmlapiResponse.error">
-					<ul id="html_api_result_holder" data-wp-ignore></ul>
+					<ul id="html_api_result_holder"></ul>
 				</div>
 			</div>
 		</div>
 		<div>
 			<div class="heading-and-button">
 				<h2>Interpreted from DOM</h2>
-				<button type="button" data-wp-on-async--click="handleCopyTreeClick" name="tree__dom">Copy tree 📋</button>
+				<button type="button" data-wp-on--click="handleCopyTreeClick" name="tree__dom">Copy tree 📋</button>
 			</div>
-			<div data-wp-class--mutated="state.hasMutatedDom"><ul id="dom_tree" data-wp-ignore></ul></div>
+			<div data-wp-class--mutated="state.hasMutatedDom"><ul id="dom_tree"></ul></div>
 		</div>
 	</div>
 
 	<div class="full-width">
 		<div>
 			<div>
-				<label>Show closers <input type="checkbox" data-wp-bind--checked="state.showClosers" data-wp-on-async--input="handleShowClosersClick"></label>
-				<label>Show invisible <input type="checkbox" data-wp-bind--checked="state.showInvisible" data-wp-on-async--input="handleShowInvisibleClick"></label>
-				<span><label>Show virtual <input type="checkbox" data-wp-bind--checked="state.showVirtual" data-wp-on-async--input="handleShowVirtualClick"></label></span>
+				<label>Show closers <input type="checkbox" data-wp-bind--checked="state.showClosers" data-wp-on--input="handleShowClosersClick"></label>
+				<label>Show invisible <input type="checkbox" data-wp-bind--checked="state.showInvisible" data-wp-on--input="handleShowInvisibleClick"></label>
+				<span><label>Show virtual <input type="checkbox" data-wp-bind--checked="state.showVirtual" data-wp-on--input="handleShowVirtualClick"></label></span>
 				<div data-wp-bind--hidden="!state.htmlapiResponse.supports.selectors">
-					<label>CSS Selectors <textarea id="selector-input" placeholder="CSS selector: .my-class" data-wp-on-async--input="handleSelectorChange"><?php echo "\n" . esc_textarea( str_replace( "\0", '', $options['selector'] ?? '' ) ); ?></textarea></label>
+					<label>CSS Selectors <textarea id="selector-input" placeholder="CSS selector: .my-class" data-wp-on--input="handleSelectorChange"><?php echo "\n" . esc_textarea( str_replace( "\0", '', $options['selector'] ?? '' ) ); ?></textarea></label>
 				</div>
 			</div>
 			<div>
 				<label>
 					Hover information
-					<select data-wp-on-async--change="hoverInfoChange">
+					<select data-wp-on--change="hoverInfoChange">
 						<option data-wp-bind--selected="state.hoverBreadcrumbs" value="breadcrumbs">(depth) Breadcrumbs…</option>
 						<option data-wp-bind--selected="state.hoverInsertion" value="insertionMode">Insertion mode</option>
 					</select>
@@ -192,7 +192,7 @@ function generate_page( string $html, array $options ): string {
 					>
 				</label>
 			</div>
-			<pre class="html-text" id="processed-html" data-wp-ignore><?php echo esc_html( $html ); ?></pre>
+			<pre class="html-text" id="processed-html"><?php echo esc_html( $html ); ?></pre>
 		</div>
 
 		<p>
@@ -201,21 +201,21 @@ function generate_page( string $html, array $options ): string {
 					<option value="latest">latest</option>
 					<option value="nightly">nightly</option>
 					<option value="beta">beta</option>
-					<option value="6.7">6.7</option>
+					<option value="6.9">6.9</option>
 				</select>
 			</label>
-			<button data-wp-on-async--click="handleCopyClick" type="button">Copy shareable playground link</button><br>
+			<button data-wp-on--click="handleCopyClick" type="button">Copy shareable playground link</button><br>
 		</p>
 		<p>
 			<label>
 				<code>WordPress/develop</code> PR number:
-				<input type="number" min="1" data-wp-on-async--input="handleCopyCorePrInput">
+				<input type="number" min="1" data-wp-on--input="handleCopyCorePrInput">
 			</label>
 			<label>
 				<code>WordPress/gutenberg</code> PR number:
-				<input type="number" min="1" data-wp-on-async--input="handleCopyGutenbergPrInput">
+				<input type="number" min="1" data-wp-on--input="handleCopyGutenbergPrInput">
 			</label>
-			<button data-wp-on-async--click="handleCopyPrClick">Copy shareable playground link to PR</button>
+			<button data-wp-on--click="handleCopyPrClick">Copy shareable playground link to PR</button>
 			<span data-wp-bind--hidden="!state.previewCoreLink">
 				<a
 					data-wp-bind--href="state.previewCoreLink.href"

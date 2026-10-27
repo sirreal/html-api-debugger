@@ -1,8 +1,8 @@
 === HTML API Debugger ===
 Contributors: jonsurrell, bernhard-reiter
 Tags: HTML API, development, debug
-Requires at least: 6.7
-Tested up to: 6.8
+Requires at least: 6.9
+Tested up to: 7.2
 Stable tag: 2.9
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -20,6 +20,9 @@ Please file issues and pull requests on the [GitHub repository](https://github.c
 * Add "HTML5 Body" context button to allow setting default context.
 * Fix fragment tree depth so nodes following atomic elements (`textarea`, `script`, `style`) nest correctly to match the DOM tree.
 * Use `get_full_comment_text()` to get comment text in the tree.
+* Change `on-async` (deprecated) directives to `on`.
+* Fix tree views not updating in WordPress 7.2.
+* Drop support for WordPress 6.7 and 6.8.
 
 = 2.9 =
 * Fix implicit nullable parameter.

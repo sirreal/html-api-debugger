@@ -49,7 +49,6 @@ let mutationObserver = null;
  *
  *
  * @typedef Supports
- * @property {boolean} create_fragment_advanced
  * @property {boolean} selectors
  *
  *
@@ -191,9 +190,7 @@ const store = createStore( NS, {
 		},
 
 		get contextHTMLForUse() {
-			return store.state.htmlapiResponse.supports.create_fragment_advanced
-				? store.state.contextHTML.trim() || null
-				: null;
+			return store.state.contextHTML.trim() || null;
 		},
 
 		/** @type {Link|null} */
