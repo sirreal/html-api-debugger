@@ -289,3 +289,19 @@
 		border-width: 0.1em;
 	}
 }
+
+.xmlrpc-debugger {
+	#xmlrpc-request {
+		width: 100%;
+		min-height: 400px;
+		font-family: var(--monospace-font-family);
+	}
+
+	#xmlrpc-response {
+		background: #fff;
+		border: 1px solid black;
+		width: 100%;
+		min-height: 400px;
+		flex-grow: 1;
+	}
+}

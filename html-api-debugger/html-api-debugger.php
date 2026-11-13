@@ -92,12 +92,23 @@ function init() {
 		VERSION
 	);
 
+	wp_register_script_module(
+		'@html-api-debugger/xmlrpc',
+		plugins_url( 'xmlrpc.mjs', __FILE__ ),
+		array(),
+		VERSION
+	);
+
 	add_action(
 		'admin_enqueue_scripts',
 		function ( $hook_suffix ) {
 			if ( $hook_suffix === 'toplevel_page_' . SLUG ) {
 					wp_enqueue_style( SLUG, plugins_url( 'style.css', __FILE__ ), array(), VERSION );
 					wp_enqueue_script_module( '@html-api-debugger/main' );
+			}
+			if ( $hook_suffix === SLUG . '_page_' . SLUG . '-xmlrpc' ) {
+					wp_enqueue_style( SLUG, plugins_url( 'style.css', __FILE__ ), array(), VERSION );
+					wp_enqueue_script_module( '@html-api-debugger/xmlrpc' );
 			}
 		}
 	);
@@ -135,6 +146,18 @@ function init() {
 					echo namespace\Interactivity\generate_page( $html, $options );
 				},
 				include __DIR__ . '/icon.php'
+			);
+
+			add_submenu_page(
+				SLUG,
+				'XML-RPC Debugger',
+				'XML-RPC',
+				'edit_posts',
+				SLUG . '-xmlrpc',
+				function () {
+					require_once __DIR__ . '/xmlrpc.php';
+					namespace\XMLRPC\print_page();
+				}
 			);
 		}
 	);
