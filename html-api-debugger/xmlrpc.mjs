@@ -22,6 +22,42 @@ const link = /** @type {HTMLAnchorElement} */ (
 	document.getElementById( 'xmlrpc-response-link' )
 );
 
+function updateURL() {
+	const u = new URL( document.location.href );
+	u.searchParams.set( 'request', body.value );
+	if ( endpoint.value !== endpoint.dataset[ 'default' ] ) {
+		u.searchParams.set( 'endpoint', endpoint.value );
+	} else {
+		u.searchParams.delete( 'endpoint' );
+	}
+	history.replaceState( null, '', u );
+}
+body.addEventListener( 'input', updateURL );
+endpoint.addEventListener( 'input', updateURL );
+
+/**
+ * Remove whitespace-only text nodes from elements that have element children.
+ *
+ * @param {Document} doc
+ */
+function removeWhitespaceText( doc ) {
+	const walker = doc.createTreeWalker( doc, NodeFilter.SHOW_TEXT );
+	/** @type {Text[]} */
+	const remove = [];
+	while ( walker.nextNode() ) {
+		const text = /** @type {Text} */ ( walker.currentNode );
+		if (
+			/^[ \t\r\n]*$/.test( text.data ) &&
+			text.parentElement?.firstElementChild
+		) {
+			remove.push( text );
+		}
+	}
+	for ( const text of remove ) {
+		text.remove();
+	}
+}
+
 form.addEventListener( 'submit', async ( event ) => {
 	event.preventDefault();
 	status.textContent = 'Sending…';
@@ -65,5 +101,6 @@ form.addEventListener( 'submit', async ( event ) => {
 		error.hidden = false;
 		return;
 	}
+	removeWhitespaceText( doc );
 	printHtmlApiTree( doc, tree );
 } );

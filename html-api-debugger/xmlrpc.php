@@ -11,11 +11,22 @@ XML;
 
 /** Print the XML-RPC debugger page. */
 function print_page() {
+	$default_endpoint = site_url( 'xmlrpc.php' );
+	$endpoint         = $default_endpoint;
+	$request          = DEFAULT_REQUEST;
+	// phpcs:disable WordPress.Security.NonceVerification.Recommended
+	if ( isset( $_GET['endpoint'] ) && \is_string( $_GET['endpoint'] ) ) {
+		$endpoint = stripslashes( $_GET['endpoint'] );
+	}
+	if ( isset( $_GET['request'] ) && \is_string( $_GET['request'] ) ) {
+		$request = stripslashes( $_GET['request'] );
+	}
+	// phpcs:enable WordPress.Security.NonceVerification.Recommended
 	?>
 <form id="xmlrpc-form" class="html-api-debugger-container xmlrpc-debugger">
 	<p>
 		<label for="xmlrpc-endpoint">Endpoint</label>
-		<input id="xmlrpc-endpoint" type="url" class="regular-text code" value="<?php echo esc_url( site_url( 'xmlrpc.php' ) ); ?>">
+		<input id="xmlrpc-endpoint" type="url" class="regular-text code" value="<?php echo esc_attr( $endpoint ); ?>" data-default="<?php echo esc_attr( $default_endpoint ); ?>">
 		<button type="submit" class="button button-primary">Send</button>
 	</p>
 	<div class="html-api-debugger--grid">
@@ -27,7 +38,7 @@ function print_page() {
 				autocomplete="off"
 				spellcheck="false"
 				wrap="off"
-			><?php echo "\n" . esc_textarea( DEFAULT_REQUEST ); ?></textarea>
+			><?php echo "\n" . esc_textarea( str_replace( "\0", '', $request ) ); ?></textarea>
 		</div>
 		<div>
 			<h2>Response <a id="xmlrpc-response-link" target="_blank" hidden>Open in new tab</a></h2>
