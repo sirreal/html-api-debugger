@@ -1,3 +1,5 @@
+import { printHtmlApiTree } from '@html-api-debugger/print-html-tree';
+
 const form = /** @type {HTMLFormElement} */ (
 	document.getElementById( 'xmlrpc-form' )
 );
@@ -10,16 +12,21 @@ const body = /** @type {HTMLTextAreaElement} */ (
 const status = /** @type {HTMLPreElement} */ (
 	document.getElementById( 'xmlrpc-status' )
 );
-const iframe = /** @type {HTMLIFrameElement} */ (
+const tree = /** @type {HTMLUListElement} */ (
 	document.getElementById( 'xmlrpc-response' )
 );
-
-/** @type {string|null} */
-let blobUrl = null;
+const error = /** @type {HTMLPreElement} */ (
+	document.getElementById( 'xmlrpc-error' )
+);
+const link = /** @type {HTMLAnchorElement} */ (
+	document.getElementById( 'xmlrpc-response-link' )
+);
 
 form.addEventListener( 'submit', async ( event ) => {
 	event.preventDefault();
 	status.textContent = 'Sending…';
+	tree.replaceChildren();
+	error.hidden = true;
 
 	let res;
 	try {
@@ -29,8 +36,8 @@ form.addEventListener( 'submit', async ( event ) => {
 			body: body.value,
 			credentials: 'omit',
 		} );
-	} catch ( error ) {
-		status.textContent = String( error );
+	} catch ( e ) {
+		status.textContent = String( e );
 		return;
 	}
 
@@ -43,11 +50,20 @@ form.addEventListener( 'submit', async ( event ) => {
 		...headers,
 	].join( '\n' );
 
-	if ( blobUrl ) {
-		URL.revokeObjectURL( blobUrl );
+	const blob = new Blob( [ await res.arrayBuffer() ], { type: 'text/xml' } );
+	if ( link.href ) {
+		URL.revokeObjectURL( link.href );
 	}
-	blobUrl = URL.createObjectURL(
-		new Blob( [ await res.arrayBuffer() ], { type: 'text/xml' } ),
-	);
-	iframe.src = blobUrl;
+	link.href = URL.createObjectURL( blob );
+	link.hidden = false;
+
+	const text = await blob.text();
+	const doc = new DOMParser().parseFromString( text, 'application/xml' );
+	const parserError = doc.querySelector( 'parsererror' );
+	if ( parserError ) {
+		error.textContent = `${ parserError.textContent }\n\n${ text }`;
+		error.hidden = false;
+		return;
+	}
+	printHtmlApiTree( doc, tree );
 } );

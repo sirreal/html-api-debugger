@@ -95,7 +95,7 @@ function init() {
 	wp_register_script_module(
 		'@html-api-debugger/xmlrpc',
 		plugins_url( 'xmlrpc.mjs', __FILE__ ),
-		array(),
+		array( '@html-api-debugger/print-html-tree' ),
 		VERSION
 	);
 

@@ -29,9 +29,10 @@ function print_page() {
 				wrap="off"
 			><?php echo "\n" . esc_textarea( DEFAULT_REQUEST ); ?></textarea>
 		</div>
-		<div class="iframe-container">
-			<h2>Response</h2>
-			<iframe id="xmlrpc-response" src="about:blank"></iframe>
+		<div>
+			<h2>Response <a id="xmlrpc-response-link" target="_blank" hidden>Open in new tab</a></h2>
+			<pre id="xmlrpc-error" class="error-holder" hidden></pre>
+			<ul id="xmlrpc-response"></ul>
 		</div>
 	</div>
 	<pre id="xmlrpc-status"></pre>

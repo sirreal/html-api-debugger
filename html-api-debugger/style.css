@@ -149,7 +149,8 @@
 }
 
 #html_api_result_holder,
-#dom_tree {
+#dom_tree,
+#xmlrpc-response {
 	border: inset 1px;
 	padding: 0.5em 0.5em 0.5em 1em;
 	color: black;
@@ -295,13 +296,5 @@
 		width: 100%;
 		min-height: 400px;
 		font-family: var(--monospace-font-family);
-	}
-
-	#xmlrpc-response {
-		background: #fff;
-		border: 1px solid black;
-		width: 100%;
-		min-height: 400px;
-		flex-grow: 1;
 	}
 }
