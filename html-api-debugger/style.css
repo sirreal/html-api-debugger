@@ -150,6 +150,7 @@
 
 #html_api_result_holder,
 #dom_tree,
+#xmlrpc-request-tree,
 #xmlrpc-response {
 	border: inset 1px;
 	padding: 0.5em 0.5em 0.5em 1em;
@@ -292,6 +293,11 @@
 }
 
 .xmlrpc-debugger {
+	.error-holder {
+		white-space: pre;
+		overflow-x: auto;
+	}
+
 	#xmlrpc-request {
 		width: 100%;
 		min-height: 400px;

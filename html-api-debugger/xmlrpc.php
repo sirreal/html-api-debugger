@@ -39,6 +39,8 @@ function print_page() {
 				spellcheck="false"
 				wrap="off"
 			><?php echo "\n" . esc_textarea( str_replace( "\0", '', $request ) ); ?></textarea>
+			<pre id="xmlrpc-request-error" class="error-holder" hidden></pre>
+			<ul id="xmlrpc-request-tree"></ul>
 		</div>
 		<div>
 			<h2>Response <a id="xmlrpc-response-link" target="_blank" hidden>Open in new tab</a></h2>
