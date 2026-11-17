@@ -11,7 +11,7 @@
 	"license": "GPL-2.0",
 	"devDependencies": {
 		"@biomejs/biome": "^2.5.15",
-		"@tsconfig/strictest": "^2.0.8",
+		"@tsconfig/strictest": "^2.0.9",
 		"@typescript/lib-dom": "npm:@types/web@^0.0.349",
 		"@wordpress/interactivity": "^7.0.0",
 		"typescript": "^6.0.3"
